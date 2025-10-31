@@ -1,0 +1,4 @@
+.vscode
+
+out
+!out/main.pdf
