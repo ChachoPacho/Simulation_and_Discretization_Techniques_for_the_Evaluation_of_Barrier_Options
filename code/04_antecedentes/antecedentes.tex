@@ -1,4 +1,42 @@
 \chapter{Antecedentes}
 \label{chapter:antecedentes}
 
-\completar{Desde el fenómeno hasta lo que se quiere hacer, todo lo que se vaya a usar en la tesis tiene que ir en esta sección: Técnicas, contexto TODO}
+\section{Opciones Barrera}
+Las opciones tipo barrera son derivados financieros cuya existencia depende de si el precio del activo subyacente cruza o no un nivel de precio predeterminado (la barrera) durante el periodo de vida de la opción.
+
+\subsection{Clasificación y Payoffs}
+\begin{itemize}
+    \item \textbf{Knock-in}: La opción vale sólo si se alcanzó la barrera.
+    \begin{itemize}
+        \item Up-and-In (UI): La barrera $B$ está por encima del precio inicial $S_0$.
+        \item Down-and-In (DI): La barrera $B$ está por debajo del precio inicial $S_0$.
+    \end{itemize}
+    \item \textbf{Knock-out}: La opción deja de valer si se alcanzó la barrera.
+    \begin{itemize}
+        \item Up-and-Out (UO): La barrera $B$ está por encima del precio inicial $S_0$.
+        \item Down-and-Out (DO): La barrera $B$ está por debajo del precio inicial $S_0$.
+    \end{itemize}
+\end{itemize}
+
+Formalmente, el payoff de una opción barrera europea con vencimiento $T$, precio de ejercicio $K$ y barrera $B$ puede expresarse utilizando la función indicadora $\mathbb{I}_{A}$. Por ejemplo, para una opción \textit{Down-and-Out Call}:
+
+\begin{equation}
+    \text{Payoff}_{DO} = \max(S_T - K, 0) \cdot \mathbb{I}_{\{\min_{0 \leq t \leq T} S_t > B\}}
+\end{equation}
+
+Y para una opción \textit{Down-and-In Call}:
+
+\begin{equation}
+    \text{Payoff}_{DI} = \max(S_T - K, 0) \cdot \mathbb{I}_{\{\min_{0 \leq t \leq T} S_t \leq B\}}
+\end{equation}
+
+De manera análoga se definen los payoffs para las variantes \textit{Up} considerando el máximo del proceso en lugar del mínimo: $\mathbb{I}_{\{\max_{0 \leq t \leq T} S_t < B\}}$ para \textit{Up-and-Out} y $\mathbb{I}_{\{\max_{0 \leq t \leq T} S_t \geq B\}}$ para \textit{Up-and-In}.
+
+\section{Dinámica de Precios y Modelado}
+\subsection{Movimiento Browniano Geométrico}
+El modelo estándar de valoración asume que el precio del activo subyacente $S_t$ sigue un proceso...
+
+\subsection{Primer Tiempo de Pasaje}
+Para las opciones barrera, es fundamental el estudio del primer instante en que el proceso alcanza el nivel $B$...
+
+\completar{Desarrollar definiciones matemáticas y fórmulas de payoff}
