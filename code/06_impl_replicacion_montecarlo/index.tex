@@ -1,0 +1,144 @@
+\chapter{Implementación - Replicación Estática y Monte Carlo}
+\label{chapter:impl_replicacion_mc}
+
+% OBJETIVO: Documentar implementación de MÉTODO 3 y MÉTODO 4
+
+\section{Replicación Estática}
+\label{sec:impl_replicacion}
+
+% QUÉ ESCRIBIR AQUÍ:
+% Implementación del portafolio replicante (MÉTODO 3)
+
+\subsection{Descripción del Algoritmo}
+
+% Explicar:
+% - Cómo construyes el portafolio
+% - Selección de strikes
+% - Cálculo de pesos
+
+\subsubsection{Selección de Strikes}
+
+% Explicar:
+% - Qué strikes eliges para las opciones vanilla
+% - Criterio de selección
+% - Número de opciones en el portafolio
+
+\subsubsection{Cálculo de Pesos}
+
+% Explicar:
+% - Cómo calculas el peso de cada opción
+% - Fórmulas utilizadas
+% - Normalización
+
+\subsection{Detalles de Implementación}
+
+% Explicar:
+% - Lenguaje y librerías
+% - Código relevante
+
+\subsection{Validación del Portafolio Replicante}
+
+% QUÉ ESCRIBIR AQUÍ:
+% - Comparar con R&R
+% - Análisis de error de replicación
+% - Ejemplos numéricos
+
+\subsubsection{Comparación con Rubinstein-Reiner}
+
+% INCLUIR TABLA:
+% Caso | R&R | Replicante | Error | N_opciones
+
+\subsubsection{Análisis de Convergencia}
+
+% Mostrar:
+% - Error vs número de opciones en portafolio
+% - Gráfico de convergencia
+
+\subsubsection{Ejemplos Numéricos}
+
+% INCLUIR 2-3 CASOS:
+% - Down-and-Out Call
+% - Up-and-In Put
+% - Mostrar composición del portafolio
+
+\section{Monte Carlo para Opciones Americanas}
+\label{sec:impl_montecarlo}
+
+% QUÉ ESCRIBIR AQUÍ:
+% Implementación de Monte Carlo (MÉTODO 4)
+
+\subsection{Descripción del Algoritmo}
+
+% Explicar:
+% - Generación de trayectorias
+% - Monitoreo de barrera
+% - Método de Longstaff-Schwartz
+
+\subsubsection{Generación de Trayectorias}
+
+% Explicar:
+% - Fórmula: S_{t+Δt} = S_t exp[(r-σ²/2)Δt + σ√Δt·Z]
+% - Número de pasos temporales
+% - Número de simulaciones M
+
+\subsubsection{Monitoreo de Barrera}
+
+% Explicar:
+% - Frecuencia de monitoreo
+% - Qué pasa cuando se toca la barrera
+% - Knock-in vs Knock-out
+
+\subsubsection{Método de Longstaff-Schwartz}
+
+% Explicar:
+% - Regresión para estimar valor de continuación
+% - Decisión de ejercicio en cada nodo
+% - Algoritmo backward
+
+\subsection{Detalles de Implementación}
+
+% Explicar:
+% - Lenguaje y librerías
+% - Generador de números aleatorios
+% - Código relevante
+
+\subsubsection{Código Relevante}
+
+% INCLUIR CÓDIGO:
+% - Generación de trayectorias
+% - Algoritmo LSM
+% - Decisión de ejercicio
+
+\subsection{Validación de Monte Carlo}
+
+% QUÉ ESCRIBIR AQUÍ:
+% - Comparar con literatura (si hay benchmarks)
+% - Análisis de convergencia
+% - Intervalos de confianza
+
+\subsubsection{Análisis de Convergencia}
+
+% Mostrar:
+% - Error vs número de simulaciones
+% - Error vs número de pasos temporales
+% - Gráficos
+
+\subsubsection{Intervalos de Confianza}
+
+% Explicar:
+% - Cálculo de IC al 95%
+% - Error estándar: SE = σ̂/√M
+
+\subsubsection{Ejemplos Numéricos}
+
+% INCLUIR 2-3 CASOS:
+% - American Down-and-Out Call
+% - American Up-and-In Put
+% - Comparar con europeas (límite superior)
+
+\subsection{Técnicas de Reducción de Varianza}
+
+% SI LAS USAS:
+% - Variables antitéticas
+% - Variables de control
+% - Impacto en precisión y tiempo

@@ -1,0 +1,119 @@
+\chapter{Introducción}
+\label{chapter:intro}
+
+Las opciones barrera son instrumentos derivados ampliamente utilizados en los mercados financieros modernos. Su popularidad se debe principalmente a dos factores: son significativamente más baratas que las opciones vanilla equivalentes, y permiten a los inversores y empresas cubrir riesgos específicos de manera más eficiente.
+
+A diferencia de las opciones europeas estándar, cuyo valor depende únicamente del precio del activo subyacente al vencimiento, las opciones barrera tienen una característica adicional: su existencia depende de si el precio del activo cruza o no un nivel predeterminado (la barrera) durante la vida del contrato. Esta dependencia de la trayectoria completa del precio, y no solo de su valor final, introduce complejidades significativas en su valoración.
+
+\section{Motivación}
+
+Las opciones barrera se utilizan en diversos contextos financieros:
+
+\begin{itemize}
+    \item \textbf{Gestión de riesgos corporativos}: Una empresa exportadora puede usar una opción barrera para protegerse contra movimientos adversos del tipo de cambio, pero solo si estos superan un umbral crítico para su operación.
+    
+    \item \textbf{Productos estructurados}: Los bancos de inversión incorporan opciones barrera en productos estructurados para ofrecer perfiles de riesgo-retorno específicos a menor costo.
+    
+    \item \textbf{Especulación dirigida}: Los traders pueden expresar visiones de mercado sofisticadas (por ejemplo, "el activo subirá pero no superará cierto nivel") con menor capital que usando opciones vanilla.
+    
+    \item \textbf{Optimización de costos}: Las opciones barrera permiten obtener cobertura a un costo significativamente menor que las opciones estándar, lo que las hace atractivas para empresas con presupuestos limitados.
+\end{itemize}
+
+\section{El Problema de Valoración}
+
+\subsection{Fórmulas Analíticas y sus Limitaciones}
+
+Bajo el modelo de Black-Scholes con monitoreo continuo de la barrera, existen fórmulas cerradas para valorar opciones barrera europeas, desarrolladas por Reiner y Rubinstein (1991). Estas fórmulas son matemáticamente elegantes y computacionalmente eficientes.
+
+Sin embargo, presentan limitaciones importantes en la práctica:
+
+\begin{enumerate}
+    \item \textbf{Monitoreo discreto vs continuo}: En la realidad, las barreras se monitorean en momentos discretos (diariamente, o incluso solo al cierre del mercado), no continuamente. Esto puede generar diferencias significativas en el precio, especialmente para barreras cercanas al precio actual del activo.
+    
+    \item \textbf{Volatilidad constante}: El supuesto de volatilidad constante es particularmente problemático para opciones de largo plazo o en mercados con alta variabilidad de la volatilidad.
+    
+    \item \textbf{Saltos en el precio}: El modelo no considera saltos discontinuos en el precio del subyacente, que pueden hacer que el precio "salte" sobre la barrera sin tocarla, afectando significativamente la valoración.
+    
+    \item \textbf{Barreras complejas}: Para barreras dependientes del tiempo, barreras dobles, o barreras parciales (monitoreadas solo en ciertos períodos), no existen fórmulas cerradas.
+\end{enumerate}
+
+\subsection{Desafíos Computacionales}
+
+Los métodos numéricos para valorar opciones barrera enfrentan desafíos específicos:
+
+\begin{itemize}
+    \item \textbf{Sensibilidad cerca de la barrera}: El valor de la opción y sus derivadas (las "griegas") cambian drásticamente cuando el precio del subyacente se aproxima a la barrera. Esto requiere una resolución muy fina en esa región.
+    
+    \item \textbf{Discontinuidades}: En el momento en que se toca la barrera, el valor de una opción knock-out cae abruptamente a cero (o al valor del rebate). Esta discontinuidad es difícil de capturar numéricamente.
+    
+    \item \textbf{Trade-off precisión-velocidad}: Métodos muy precisos pueden ser computacionalmente costosos, mientras que métodos rápidos pueden carecer de la precisión necesaria, especialmente para el cálculo de sensibilidades.
+\end{itemize}
+
+\section{Objetivos del Trabajo}
+
+\subsection{Objetivo General}
+
+Comparar sistemáticamente diferentes métodos numéricos para la valoración de opciones barrera europeas, evaluando su precisión, eficiencia computacional, y aplicabilidad en diferentes escenarios.
+
+\subsection{Objetivos Específicos}
+
+\begin{enumerate}
+    \item \textbf{Estudiar el modelo de Black-Scholes}: Analizar las fórmulas cerradas de Reiner y Rubinstein para opciones barrera europeas, comprendiendo su derivación y limitaciones.
+    
+    \item \textbf{Implementar métodos numéricos}: Desarrollar implementaciones de:
+    \begin{itemize}
+        \item Mallas adaptativas (Adaptive Mesh Model de Figlewski-Gao)
+        \item Simulación de Monte Carlo con técnicas de reducción de varianza
+        \item Árboles trinomiales (opcional)
+        \item Diferencias finitas con esquema Crank-Nicolson (opcional)
+    \end{itemize}
+    
+    \item \textbf{Validar las implementaciones}: Comparar los resultados numéricos con las fórmulas analíticas de Reiner-Rubinstein en casos donde estas son aplicables.
+    
+    \item \textbf{Analizar el desempeño}: Evaluar cada método en términos de:
+    \begin{itemize}
+        \item Precisión absoluta y relativa
+        \item Tiempo de cómputo
+        \item Estabilidad numérica
+        \item Capacidad para calcular sensibilidades (griegas)
+    \end{itemize}
+    
+    \item \textbf{Identificar casos de uso óptimos}: Determinar qué método es más apropiado según:
+    \begin{itemize}
+        \item Tipo de opción barrera (knock-in, knock-out, up, down)
+        \item Posición relativa del precio actual respecto a la barrera
+        \item Tiempo al vencimiento
+        \item Volatilidad del subyacente
+        \item Requerimientos de precisión
+    \end{itemize}
+    
+    \item \textbf{Proporcionar recomendaciones prácticas}: Ofrecer guías para la selección del método más apropiado en diferentes contextos de aplicación.
+\end{enumerate}
+
+\section{Contribuciones del Trabajo}
+
+Este trabajo contribuye a la literatura y práctica de valoración de opciones barrera en los siguientes aspectos:
+
+\begin{enumerate}
+    \item \textbf{Comparación sistemática}: Proporciona una comparación rigurosa y sistemática de múltiples métodos numéricos bajo un marco común de evaluación.
+    
+    \item \textbf{Implementaciones validadas}: Ofrece implementaciones cuidadosamente validadas de métodos avanzados como mallas adaptativas, que pueden servir como referencia para futuros trabajos.
+    
+    \item \textbf{Guías prácticas}: Proporciona recomendaciones concretas sobre qué método usar en diferentes situaciones, útiles tanto para académicos como para profesionales.
+    
+    \item \textbf{Análisis de sensibilidad}: Estudia cómo el desempeño de cada método varía con los parámetros del problema, identificando regiones donde ciertos métodos son superiores.
+\end{enumerate}
+
+\section{Organización del Trabajo}
+
+Los capítulos de este trabajo se organizan de la siguiente manera:
+
+En el \autoref{chapter:marco_teorico} se presentan los fundamentos financieros necesarios para comprender la valoración de opciones. Se introducen los mercados de derivados, los diferentes tipos de opciones (europeas, americanas, exóticas), y en particular las opciones barrera. Se desarrolla el modelo de Black-Scholes estableciendo el marco teórico fundamental.
+
+El \autoref{chapter:metodos} describe los cuatro métodos de valoración que serán implementados y comparados: las fórmulas analíticas de Reiner y Rubinstein, árboles trinomiales con mallas adaptativas, replicación estática mediante portafolios, y simulación de Monte Carlo con el método de Longstaff-Schwartz para opciones americanas. Para cada método se explican sus principios básicos, ventajas y desventajas.
+
+Los Capítulos~\ref{chapter:impl_rr}, \ref{chapter:impl_arboles_mallas} y~\ref{chapter:impl_replicacion_mc} documentan la implementación de cada uno de los métodos. Se detallan los algoritmos, criterios de refinamiento, técnicas de reducción de varianza, y detalles de implementación. Se presentan resultados de validación comparando con fórmulas analíticas cuando es posible.
+
+En el \autoref{chapter:resultados} se presenta una comparación sistemática de todos los métodos implementados. Se diseñan experimentos numéricos con diferentes parámetros (precio del subyacente, strike, barrera, volatilidad, tiempo al vencimiento) y se analizan los resultados en términos de precisión, tiempo de cómputo, y estabilidad. Se identifican los casos de uso óptimos para cada método.
+
+Finalmente, las conclusiones generales son presentadas en el \autoref{chapter:conclusiones}, donde se resumen los resultados principales del trabajo, se presentan las conclusiones sobre qué método es más apropiado en diferentes situaciones, se discuten las limitaciones del estudio, y se proponen direcciones para trabajo futuro.

@@ -1,0 +1,146 @@
+\chapter{Resultados y Comparación}
+\label{chapter:resultados}
+
+% OBJETIVO: Comparar los 4 métodos
+% Este es el CORAZÓN de tu tesis
+
+\section{Diseño de Experimentos}
+\label{sec:diseno_experimentos}
+
+% QUÉ ESCRIBIR AQUÍ:
+% - Casos de prueba definidos
+% - Métricas de evaluación
+
+\subsection{Casos de Prueba para Opciones Europeas}
+
+% DEFINIR BATERÍA DE CASOS:
+% Variar: S, K, H, σ, r, T
+% 
+% Tabla ejemplo:
+% Caso | Tipo | S | K | H | σ | r | T | Descripción
+% 1    | DOC  | 100 | 100 | 90 | 0.20 | 0.05 | 1.0 | S lejos de H
+% 2    | DOC  | 92  | 100 | 90 | 0.20 | 0.05 | 1.0 | S cerca de H
+% ...
+
+\subsection{Casos de Prueba para Opciones Americanas}
+
+% DEFINIR CASOS para Monte Carlo
+
+\subsection{Métricas de Evaluación}
+
+% Definir:
+% - Error absoluto: |V_método - V_R&R|
+% - Error relativo: |V_método - V_R&R| / V_R&R
+% - Tiempo de cómputo
+% - Eficiencia: precisión / tiempo
+
+\section{Resultados para Opciones Europeas}
+\label{sec:resultados_europeas}
+
+% QUÉ ESCRIBIR AQUÍ:
+% Comparar: R&R vs Árboles+Mallas vs Replicante
+
+\subsection{Tablas Comparativas}
+
+% INCLUIR TABLA GRANDE:
+% Caso | R&R | Árboles | Error | Tiempo | Replicante | Error | Tiempo
+
+\subsection{Análisis de Precisión}
+
+% Analizar:
+% - Qué método es más preciso
+% - En qué casos cada método funciona mejor
+% - Casos problemáticos
+
+\subsection{Análisis de Tiempo Computacional}
+
+% Analizar:
+% - Qué método es más rápido
+% - Trade-off precisión vs tiempo
+% - Gráficos scatter: tiempo vs error
+
+\subsection{Comportamiento Cerca de la Barrera}
+
+% Analizar:
+% - Qué pasa cuando S está muy cerca de H
+% - Qué método maneja mejor esta situación
+% - Problemas numéricos observados
+
+\subsection{Gráficos Comparativos}
+
+% INCLUIR GRÁFICOS:
+% - Error vs parámetros (S, σ, T)
+% - Tiempo vs parámetros
+% - Convergencia de cada método
+
+\section{Resultados para Opciones Americanas}
+\label{sec:resultados_americanas}
+
+% QUÉ ESCRIBIR AQUÍ:
+% Resultados de Monte Carlo
+
+\subsection{Tablas de Resultados}
+
+% INCLUIR TABLA:
+% Caso | Valor MC | IC 95% | Tiempo | N_simulaciones
+
+\subsection{Análisis de Convergencia}
+
+% Mostrar:
+% - Convergencia con número de simulaciones
+% - Convergencia con número de pasos temporales
+
+\subsection{Comparación con Europeas}
+
+% Comparar:
+% - Valor americano vs europeo (límite superior)
+% - Prima de ejercicio anticipado
+
+\section{Comparación Global de Métodos}
+\label{sec:comparacion_global}
+
+% QUÉ ESCRIBIR AQUÍ:
+% Síntesis de todos los resultados
+
+\subsection{Tabla Resumen}
+
+% CREAR TABLA RESUMEN:
+% Método | Precisión | Velocidad | Flexibilidad | Casos de Uso
+
+\subsection{Análisis de Casos de Uso Óptimos}
+
+% Identificar:
+% - R&R: mejor cuando... (referencia, muy rápido)
+% - Árboles+Mallas: mejor cuando... (buena precisión, flexible)
+% - Replicante: mejor cuando... (cobertura, no requiere rebalanceo)
+% - Monte Carlo: mejor cuando... (americanas, único método)
+
+\subsection{Recomendaciones Prácticas}
+
+% DAR GUÍAS CONCRETAS:
+% - Si necesitas velocidad → usar R&R
+% - Si S está cerca de H → usar Árboles+Mallas
+% - Si necesitas cobertura → usar Replicante
+% - Si es americana → usar Monte Carlo
+% - Para producción → usar X
+% - Para análisis de riesgo → usar Y
+
+\section{Discusión}
+\label{sec:discusion}
+
+% QUÉ ESCRIBIR AQUÍ:
+% Interpretación de resultados
+
+\subsection{Ventajas y Desventajas Observadas}
+
+% Para cada método:
+% - Ventajas principales
+% - Desventajas principales
+% - Sorpresas o hallazgos inesperados
+
+\subsection{Limitaciones del Estudio}
+
+% Mencionar:
+% - Qué no se pudo hacer
+% - Supuestos mantenidos
+% - Casos no considerados

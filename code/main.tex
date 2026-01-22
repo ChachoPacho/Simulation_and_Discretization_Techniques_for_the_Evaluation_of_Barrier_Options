@@ -116,13 +116,11 @@
 \begin{document}
 
 
-\input{./00_tapa/tapa.tex} \cleardoublepage
+\input{./tapa/index.tex} \cleardoublepage
 
 
 \pagenumbering{gobble}
-Certifico que el trabajo incluido en este documento es el resultado de tareas de investigación
-originales y que no ha sido presentado para optar a un título en ninguna otra
-Universidad o Institución.
+Certifico que el trabajo incluido en este documento es el resultado de tareas de investigación originales y que no ha sido presentado para optar a un título en ninguna otra Universidad o Institución.
 
 \vspace{3cm}
 \begin{flushright}
@@ -149,7 +147,7 @@ Universidad o Institución.
 \pagenumbering{Roman} % para comenzar la numeracion de paginas en numeros romanos
 \addcontentsline{toc}{chapter}{Agradecimientos} % si queremos que aparezca en el índice
 \markboth{AGRADECIMIENTOS}{AGRADECIMIENTOS} % encabezado
-\input{./01_agradecimientos/agradecimientos.tex}
+\input{./agradecimientos/index.tex}
 
 % ABSTRACT ====================================================================
 
@@ -162,7 +160,7 @@ Universidad o Institución.
 \chapter*{Resumen} % si no queremos que añada la palabra "Capitulo"
 \addcontentsline{toc}{chapter}{Resumen} % si queremos que aparezca en el índice
 \markboth{RESUMEN}{RESUMEN} % encabezado
-\input{./02_resumen/resumen_es.tex}
+\input{./abstract/resumen_es.tex}
 
 \phantom{p. 1}
 \clearpage
@@ -171,7 +169,7 @@ Universidad o Institución.
 \chapter*{Abstract} % si no queremos que añada la palabra "Capitulo"
 \addcontentsline{toc}{chapter}{Abstract} % si queremos que aparezca en el índice
 \markboth{ABSTRACT}{ABSTRACT} % encabezado
-\input{./02_resumen/resumen_en.tex}
+\input{./abstract/resumen_en.tex}
 
 \clearpage
 \phantom{p. 1}
@@ -237,12 +235,21 @@ Universidad o Institución.
 
 % CONTENT =====================================================================
 
+\input{./01_intro/index.tex} \cleardoublepage % Cap 1: Introducción
 
-\input{./03_intro/intro.tex} \cleardoublepage % 3 pag
-\input{./04_antecedentes/antecedentes.tex} \cleardoublepage % 30 - 40 pag
-% \input{./05_implementacion/05_implementacion.tex} \cleardoublepage % 10
-% \input{./06_resultados/06_resultados.tex} \cleardoublepage % ~5
-\input{./07_conclu/conclu.tex} \cleardoublepage
+\input{./02_marco_teorico/index.tex} \cleardoublepage % Cap 2: Marco Teórico
+
+\input{./03_metodos_valoracion/index.tex} \cleardoublepage % Cap 3: Métodos (4 métodos)
+
+\input{./04_impl_rr/index.tex} \cleardoublepage % Cap 4: Implementación R&R
+
+\input{./05_impl_arboles_mallas/index.tex} \cleardoublepage % Cap 5: Impl. Árboles+Mallas
+
+\input{./06_impl_replicacion_montecarlo/index.tex} \cleardoublepage % Cap 6: Impl. Replicante y MC
+
+\input{./07_resultados/index.tex} \cleardoublepage % Cap 7: Resultados
+
+\input{./08_conclusiones/index.tex} \cleardoublepage % Cap 8: Conclusiones
 
 
 % APENDICES====================================================================

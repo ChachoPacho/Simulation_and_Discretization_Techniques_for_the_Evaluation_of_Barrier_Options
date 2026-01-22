@@ -1,0 +1,83 @@
+\chapter{Implementación - Fórmulas de Reiner y Rubinstein}
+\label{chapter:impl_rr}
+
+% OBJETIVO: Documentar tu implementación de las fórmulas de R&R
+% Este es tu MÉTODO 1
+
+\section{Descripción de la Implementación}
+\label{sec:desc_impl_rr}
+
+% QUÉ ESCRIBIR AQUÍ:
+% - Cómo implementaste las fórmulas
+% - Lenguaje y librerías
+% - Estructura del código
+
+\subsection{Cálculo de Variables Auxiliares}
+
+% Explicar:
+% - Implementación de r, d, σ, t, φ, η
+% - Cálculo de μ, λ, x, x_1, y, y_1, z, b
+
+\subsection{Cálculo de Términos de Valoración}
+
+% Explicar:
+% - Implementación de términos [1] a [6]
+% - Uso de funciones de densidad f(u), g(u), h(τ)
+% - Cálculo de N(·) (CDF normal)
+
+\subsection{Construcción de Fórmulas para Cada Tipo}
+
+% Explicar:
+% - Cómo implementas las 8 fórmulas (DI, DO, UI, UO para Call y Put)
+% - Manejo de casos especiales (K > H, K < H)
+% - Uso de relaciones de paridad
+
+\section{Detalles de Implementación}
+\label{sec:detalles_impl_rr}
+
+% QUÉ ESCRIBIR AQUÍ:
+% - Lenguaje: Python/C++/MATLAB/etc
+% - Librerías: NumPy, SciPy, etc
+% - Snippets de código
+
+\subsection{Código Relevante}
+
+% INCLUIR CÓDIGO:
+% Ejemplo de función para calcular Down-and-Out Call
+
+\section{Cálculo de Griegas}
+\label{sec:griegas_rr}
+
+% SI CALCULAS GRIEGAS:
+% - Delta, Gamma, Vega, Theta
+% - Cómo las calculas (derivadas analíticas o diferencias finitas)
+
+\section{Validación}
+\label{sec:validacion_rr}
+
+% QUÉ ESCRIBIR AQUÍ:
+% - Verificar propiedades matemáticas
+% - Verificar relaciones de paridad
+% - Verificar límites asintóticos
+
+\subsection{Verificación de Relaciones de Paridad}
+
+% Verificar:
+% - C_DI + C_DO = C_vanilla
+% - C_UI + C_UO = C_vanilla
+% - Similar para puts
+
+\subsection{Verificación de Límites Asintóticos}
+
+% Verificar:
+% - Cuando H → 0 (barrera muy baja): C_DO → C_vanilla
+% - Cuando H → ∞ (barrera muy alta): C_UO → C_vanilla
+% - Cuando σ → 0: convergencia a payoffs determinísticos
+
+\subsection{Ejemplos Numéricos}
+
+% INCLUIR 3-4 EJEMPLOS:
+% - Down-and-Out Call
+% - Down-and-In Call
+% - Up-and-Out Put
+% - Verificar que paridad se cumple
