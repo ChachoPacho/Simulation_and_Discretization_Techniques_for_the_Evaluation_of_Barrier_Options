@@ -14,7 +14,7 @@ Las opciones barrera se utilizan en diversos contextos financieros:
     
     \item \textbf{Productos estructurados}: Los bancos de inversión incorporan opciones barrera en productos estructurados para ofrecer perfiles de riesgo-retorno específicos a menor costo.
     
-    \item \textbf{Especulación dirigida}: Los traders pueden expresar visiones de mercado sofisticadas (por ejemplo, "el activo subirá pero no superará cierto nivel") con menor capital que usando opciones vanilla.
+    \item \textbf{Especulación dirigida}: Los traders pueden expresar visiones de mercado sofisticadas (por ejemplo, 'el activo subirá pero no superará cierto nivel') con menor capital que usando opciones vanilla.
     
     \item \textbf{Optimización de costos}: Las opciones barrera permiten obtener cobertura a un costo significativamente menor que las opciones estándar, lo que las hace atractivas para empresas con presupuestos limitados.
 \end{itemize}
@@ -32,7 +32,7 @@ Sin embargo, presentan limitaciones importantes en la práctica:
     
     \item \textbf{Volatilidad constante}: El supuesto de volatilidad constante es particularmente problemático para opciones de largo plazo o en mercados con alta variabilidad de la volatilidad.
     
-    \item \textbf{Saltos en el precio}: El modelo no considera saltos discontinuos en el precio del subyacente, que pueden hacer que el precio "salte" sobre la barrera sin tocarla, afectando significativamente la valoración.
+    \item \textbf{Saltos en el precio}: El modelo no considera saltos discontinuos en el precio del subyacente, que pueden hacer que el precio 'salte' sobre la barrera sin tocarla, afectando significativamente la valoración.
     
     \item \textbf{Barreras complejas}: Para barreras dependientes del tiempo, barreras dobles, o barreras parciales (monitoreadas solo en ciertos períodos), no existen fórmulas cerradas.
 \end{enumerate}
@@ -42,7 +42,7 @@ Sin embargo, presentan limitaciones importantes en la práctica:
 Los métodos numéricos para valorar opciones barrera enfrentan desafíos específicos:
 
 \begin{itemize}
-    \item \textbf{Sensibilidad cerca de la barrera}: El valor de la opción y sus derivadas (las "griegas") cambian drásticamente cuando el precio del subyacente se aproxima a la barrera. Esto requiere una resolución muy fina en esa región.
+    \item \textbf{Sensibilidad cerca de la barrera}: El valor de la opción y sus derivadas (las 'griegas') cambian drásticamente cuando el precio del subyacente se aproxima a la barrera. Esto requiere una resolución muy fina en esa región.
     
     \item \textbf{Discontinuidades}: En el momento en que se toca la barrera, el valor de una opción knock-out cae abruptamente a cero (o al valor del rebate). Esta discontinuidad es difícil de capturar numéricamente.
     
@@ -64,8 +64,8 @@ Comparar sistemáticamente diferentes métodos numéricos para la valoración de
     \begin{itemize}
         \item Mallas adaptativas (Adaptive Mesh Model de Figlewski-Gao)
         \item Simulación de Monte Carlo con técnicas de reducción de varianza
-        \item Árboles trinomiales (opcional)
-        \item Diferencias finitas con esquema Crank-Nicolson (opcional)
+        % \item Árboles trinomiales (opcional)
+        % \item Diferencias finitas con esquema Crank-Nicolson (opcional)
     \end{itemize}
     
     \item \textbf{Validar las implementaciones}: Comparar los resultados numéricos con las fórmulas analíticas de Reiner-Rubinstein en casos donde estas son aplicables.
