@@ -1,60 +1,303 @@
 \chapter{Marco Teórico}
 \label{chapter:marco_teorico}
 
-% OBJETIVO: Fundamentos financieros básicos
-% NO incluir R&R aquí (eso va en Cap 3)
+Este capítulo presenta los fundamentos teóricos necesarios para comprender la valoración de opciones barrera. Se introducen los conceptos básicos de mercados de derivados, los diferentes tipos de opciones, y el modelo de Black-Scholes que constituye la base teórica para los métodos de valoración que se desarrollarán en capítulos posteriores.
 
 \section{Mercados de Derivados}
 
-% Conceptos básicos de derivados financieros
-% Qué son, para qué sirven, tipos principales
+Los derivados financieros son instrumentos cuyo valor depende (se deriva) del valor de otro activo, llamado activo subyacente. Los subyacentes más comunes incluyen acciones, índices bursátiles, divisas, tasas de interés, y commodities.
+
+\subsection{Características de los Mercados de Derivados}
+
+Los mercados de derivados cumplen varias funciones económicas importantes:
+
+\begin{itemize}
+    \item \textbf{Gestión de riesgos}: Permiten a empresas e inversores transferir riesgos no deseados a otros participantes dispuestos a asumirlos.
+    
+    \item \textbf{Descubrimiento de precios}: Los precios de los derivados reflejan las expectativas del mercado sobre el comportamiento futuro de los activos subyacentes.
+    
+    \item \textbf{Apalancamiento}: Permiten tomar posiciones significativas con una inversión inicial relativamente pequeña.
+    
+    \item \textbf{Eficiencia de mercado}: Facilitan el arbitraje, contribuyendo a la eficiencia en la formación de precios.
+\end{itemize}
+
+\subsection{Tipos de Derivados}
+
+Los principales tipos de derivados son:
+
+\begin{itemize}
+    \item \textbf{Forwards}: Contratos a medida entre dos partes para comprar o vender un activo en una fecha futura a un precio acordado hoy.
+    
+    \item \textbf{Futuros}: Similares a los forwards pero estandarizados y negociados en bolsas organizadas.
+    
+    \item \textbf{Swaps}: Acuerdos para intercambiar flujos de efectivo futuros según reglas predeterminadas.
+    
+    \item \textbf{Opciones}: Contratos que otorgan el derecho (pero no la obligación) de comprar o vender un activo a un precio determinado.
+\end{itemize}
 
 \section{Opciones Financieras}
 
-\subsection{Opciones Europeas y Americanas}
+Una opción es un contrato que otorga a su tenedor el derecho, pero no la obligación, de comprar (opción call) o vender (opción put) un activo subyacente a un precio predeterminado (precio de ejercicio o strike) en o antes de una fecha específica (fecha de vencimiento).
 
-% Definición de call y put
-% Diferencia europea vs americana
-% Payoffs básicos
+\subsection{Opciones Call y Put}
+
+\textbf{Opción Call}: Otorga el derecho de comprar el activo subyacente al precio de ejercicio $K$. El payoff al vencimiento es:
+\begin{equation}
+\text{Payoff}_{\text{Call}} = \max(S_T - K, 0)
+\end{equation}
+donde $S_T$ es el precio del subyacente al vencimiento.
+
+\textbf{Opción Put}: Otorga el derecho de vender el activo subyacente al precio de ejercicio $K$. El payoff al vencimiento es:
+\begin{equation}
+\text{Payoff}_{\text{Put}} = \max(K - S_T, 0)
+\end{equation}
+
+\subsection{Opciones Europeas vs Americanas}
+
+\textbf{Opciones Europeas}: Solo pueden ejercerse en la fecha de vencimiento. Son más simples de valorar analíticamente.
+
+\textbf{Opciones Americanas}: Pueden ejercerse en cualquier momento hasta el vencimiento. Esta flexibilidad adicional las hace más valiosas que sus contrapartes europeas, pero también más difíciles de valorar.
 
 \subsection{Opciones Exóticas}
 
-% Qué son las opciones exóticas
-% Clasificación general
-% Introducción a opciones path-dependent
+Las opciones exóticas son aquellas cuyas características difieren de las opciones vanilla (europeas o americanas estándar). Incluyen:
+
+\begin{itemize}
+    \item \textbf{Opciones Barrera}: Su existencia depende de si el precio del subyacente cruza un nivel predeterminado.
+    
+    \item \textbf{Opciones Asiáticas}: Su payoff depende del precio promedio del subyacente durante cierto período.
+    
+    \item \textbf{Opciones Lookback}: Permiten al tenedor 'mirar hacia atrás' y ejercer al precio más favorable observado.
+    
+    \item \textbf{Opciones Digitales}: Pagan una cantidad fija si se cumple cierta condición.
+\end{itemize}
 
 \section{Opciones Barrera}
 
-\subsection{Definición y Clasificación}
+Las opciones barrera son el foco principal de este trabajo. Su característica distintiva es que su existencia depende de si el precio del activo subyacente alcanza o no un nivel de precio predeterminado (la barrera $H$) durante la vida de la opción.
 
-% Knock-in vs Knock-out
-% Up vs Down
-% Los 8 tipos básicos
+\subsection{Clasificación de Opciones Barrera}
 
-\subsection{Payoffs y Características}
+Las opciones barrera se clasifican según dos criterios:
 
-% Payoffs formales con indicadoras
-% Rebates
-% Monitoreo continuo vs discreto
+\textbf{1. Según el efecto de tocar la barrera:}
+\begin{itemize}
+    \item \textbf{Knock-In}: La opción comienza a existir (se activa) solo si se toca la barrera.
+    \item \textbf{Knock-Out}: La opción deja de existir (se extingue) si se toca la barrera.
+\end{itemize}
 
-\section{Modelo de Black-Scholes}
+\textbf{2. Según la posición de la barrera:}
+\begin{itemize}
+    \item \textbf{Up}: La barrera $H$ está por encima del precio inicial del subyacente ($H > S_0$).
+    \item \textbf{Down}: La barrera $H$ está por debajo del precio inicial del subyacente ($H < S_0$).
+\end{itemize}
+
+Combinando estos criterios obtenemos ocho tipos básicos de opciones barrera:
+\begin{itemize}
+    \item Down-and-In Call (DIC)
+    \item Down-and-Out Call (DOC)
+    \item Up-and-In Call (UIC)
+    \item Up-and-Out Call (UOC)
+    \item Down-and-In Put (DIP)
+    \item Down-and-Out Put (DOP)
+    \item Up-and-In Put (UIP)
+    \item Up-and-Out Put (UOP)
+\end{itemize}
+
+\subsection{Payoffs de Opciones Barrera}
+
+El payoff de una opción barrera depende tanto del precio final del subyacente como de si la barrera fue tocada durante la vida de la opción.
+
+Para una \textbf{Down-and-Out Call}:
+\begin{equation}
+\text{Payoff}_{\text{DOC}} = \max(S_T - K, 0) \cdot \mathbb{I}_{\{\min_{0 \leq t \leq T} S_t > H\}}
+\end{equation}
+
+Para una \textbf{Down-and-In Call}:
+\begin{equation}
+\text{Payoff}_{\text{DIC}} = \max(S_T - K, 0) \cdot \mathbb{I}_{\{\min_{0 \leq t \leq T} S_t \leq H\}}
+\end{equation}
+
+donde $\mathbb{I}_A$ es la función indicadora que vale 1 si se cumple la condición $A$ y 0 en caso contrario.
+
+\subsection{Relaciones de Paridad}
+
+Existe una relación fundamental entre opciones knock-in y knock-out del mismo tipo:
+\begin{equation}
+\text{Opción Vanilla} = \text{Opción Knock-In} + \text{Opción Knock-Out}
+\end{equation}
+
+Por ejemplo:
+\begin{equation}
+C_{\text{europea}} = C_{\text{DI}} + C_{\text{DO}}
+\end{equation}
+
+Esta relación es útil para validar implementaciones y para valorar opciones knock-in a partir de opciones knock-out (o viceversa).
+
+\subsection{Rebates}
+
+Muchas opciones barrera incluyen un \textbf{rebate} (reembolso) $R$, que es una cantidad fija pagada al tenedor en ciertas circunstancias:
+
+\begin{itemize}
+    \item En opciones \textbf{knock-out}: El rebate se paga cuando se toca la barrera (momento en que la opción se extingue).
+    \item En opciones \textbf{knock-in}: El rebate se paga al vencimiento si la barrera nunca fue tocada (y por tanto la opción nunca se activó).
+\end{itemize}
+
+\subsection{Ventajas de las Opciones Barrera}
+
+Las opciones barrera son significativamente más baratas que las opciones vanilla equivalentes porque:
+
+\begin{itemize}
+    \item Las opciones knock-out pueden extinguirse antes del vencimiento, reduciendo el riesgo para el vendedor.
+    \item Las opciones knock-in solo comienzan a existir bajo ciertas condiciones, también reduciendo el riesgo.
+\end{itemize}
+
+Esta reducción de costo las hace atractivas para:
+\begin{itemize}
+    \item Empresas que buscan cobertura a menor costo
+    \item Inversores con visiones específicas sobre el comportamiento del mercado
+    \item Estructuración de productos financieros complejos
+\end{itemize}
+
+\section{El Modelo de Black-Scholes}
+
+El modelo de Black-Scholes, desarrollado por Fischer Black, Myron Scholes y Robert Merton en 1973, revolucionó la valoración de opciones y sentó las bases de la ingeniería financiera moderna.
 
 \subsection{Supuestos del Modelo}
 
-% Movimiento Browniano Geométrico
-% Mercado completo
-% No arbitraje
-% Tasa libre de riesgo constante
-% Volatilidad constante
+El modelo se basa en los siguientes supuestos:
+
+\begin{enumerate}
+    \item El precio del activo subyacente $S_t$ sigue un Movimiento Browniano Geométrico:
+    \begin{equation}
+    dS_t = \mu S_t dt + \sigma S_t dW_t
+    \end{equation}
+    donde $\mu$ es la tasa de retorno esperada, $\sigma$ es la volatilidad, y $W_t$ es un proceso de Wiener.
+    
+    \item Los mercados son completos y no hay fricciones:
+    \begin{itemize}
+        \item No hay costos de transacción
+        \item Es posible tomar posiciones cortas sin restricciones
+        \item Los activos son perfectamente divisibles
+        \item No hay oportunidades de arbitraje
+    \end{itemize}
+    
+    \item La tasa de interés libre de riesgo $r$ es constante y conocida.
+    
+    \item La volatilidad $\sigma$ es constante y conocida.
+    
+    \item El activo subyacente no paga dividendos (o se puede extender para incluir una tasa de dividendos constante $\delta$).
+    
+    \item Las transacciones ocurren de manera continua en el tiempo.
+\end{enumerate}
 
 \subsection{Ecuación Diferencial de Black-Scholes}
 
-% EDP de Black-Scholes
-% Condiciones de borde
-% Solución para opciones vanilla
+Bajo estos supuestos, el precio de cualquier derivado $V(S,t)$ que depende del precio del subyacente $S$ y del tiempo $t$ debe satisfacer la ecuación diferencial parcial:
+
+\begin{equation}
+\frac{\partial V}{\partial t} + \frac{1}{2}\sigma^2 S^2 \frac{\partial^2 V}{\partial S^2} + rS\frac{\partial V}{\partial S} - rV = 0
+\end{equation}
+
+Esta ecuación se resuelve sujeta a condiciones de borde apropiadas que dependen del tipo específico de derivado.
 
 \subsection{Medida Neutral al Riesgo}
 
-% Cambio de medida
-% Valoración como esperanza descontada
-% Aplicación a opciones barrera
+Un concepto fundamental del modelo es la \textbf{medida neutral al riesgo}. Bajo esta medida de probabilidad:
+
+\begin{itemize}
+    \item El precio descontado de cualquier activo es una martingala
+    \item El retorno esperado de todos los activos es la tasa libre de riesgo $r$
+    \item El precio de un derivado es el valor esperado descontado de su payoff
+\end{itemize}
+
+Bajo la medida neutral al riesgo, el proceso del precio del subyacente se convierte en:
+\begin{equation}
+dS_t = rS_t dt + \sigma S_t dW_t^{\mathbb{Q}}
+\end{equation}
+
+donde $W_t^{\mathbb{Q}}$ es un proceso de Wiener bajo la medida neutral al riesgo $\mathbb{Q}$.
+
+\subsection{Fórmula de Black-Scholes para Opciones Vanilla}
+
+Para una opción call europea con precio de ejercicio $K$ y vencimiento $T$, la fórmula de Black-Scholes es:
+
+\begin{equation}
+C(S,t) = S N(d_1) - K e^{-r(T-t)} N(d_2)
+\end{equation}
+
+donde:
+\begin{align}
+d_1 &= \frac{\ln(S/K) + (r + \sigma^2/2)(T-t)}{\sigma\sqrt{T-t}} \\
+d_2 &= d_1 - \sigma\sqrt{T-t}
+\end{align}
+
+y $N(\cdot)$ es la función de distribución acumulada de la normal estándar.
+
+Para una opción put europea:
+\begin{equation}
+P(S,t) = K e^{-r(T-t)} N(-d_2) - S N(-d_1)
+\end{equation}
+
+\subsection{Las Griegas}
+
+Las \textbf{griegas} son las derivadas parciales del precio de la opción respecto a sus parámetros. Son fundamentales para la gestión de riesgos:
+
+\begin{itemize}
+    \item \textbf{Delta} ($\Delta$): Sensibilidad al precio del subyacente
+    \begin{equation}
+    \Delta = \frac{\partial V}{\partial S}
+    \end{equation}
+    
+    \item \textbf{Gamma} ($\Gamma$): Tasa de cambio del delta
+    \begin{equation}
+    \Gamma = \frac{\partial^2 V}{\partial S^2}
+    \end{equation}
+    
+    \item \textbf{Vega} ($\mathcal{V}$): Sensibilidad a la volatilidad
+    \begin{equation}
+    \mathcal{V} = \frac{\partial V}{\partial \sigma}
+    \end{equation}
+    
+    \item \textbf{Theta} ($\Theta$): Sensibilidad al paso del tiempo
+    \begin{equation}
+    \Theta = \frac{\partial V}{\partial t}
+    \end{equation}
+    
+    \item \textbf{Rho} ($\rho$): Sensibilidad a la tasa de interés
+    \begin{equation}
+    \rho = \frac{\partial V}{\partial r}
+    \end{equation}
+\end{itemize}
+
+\subsection{Limitaciones del Modelo}
+
+A pesar de su elegancia matemática y utilidad práctica, el modelo de Black-Scholes tiene limitaciones importantes:
+
+\begin{itemize}
+    \item \textbf{Volatilidad constante}: En la realidad, la volatilidad varía con el tiempo y con el nivel del precio del subyacente (volatility smile/skew).
+    
+    \item \textbf{Distribución lognormal}: Los retornos reales exhiben colas más pesadas que la distribución normal (fat tails).
+    
+    \item \textbf{Saltos}: El modelo no captura movimientos discontinuos en el precio del subyacente.
+    
+    \item \textbf{Fricciones de mercado}: En la práctica existen costos de transacción, restricciones a las ventas en corto, y activos no perfectamente divisibles.
+    
+    \item \textbf{Tasa de interés constante}: Las tasas de interés varían en el tiempo, especialmente para opciones de largo plazo.
+\end{itemize}
+
+A pesar de estas limitaciones, el modelo de Black-Scholes sigue siendo la base conceptual para la valoración de opciones y proporciona un marco de referencia contra el cual se comparan otros modelos más sofisticados.
+
+\section{Extensiones del Modelo Black-Scholes}
+
+Para opciones barrera, el modelo de Black-Scholes se extiende incorporando condiciones de borde adicionales que reflejan el comportamiento en la barrera. Estas extensiones permiten obtener fórmulas cerradas para ciertos tipos de opciones barrera europeas, como se verá en el siguiente capítulo.
+
+Otras extensiones importantes del modelo incluyen:
+\begin{itemize}
+    \item Modelos de volatilidad estocástica (Heston, SABR)
+    \item Modelos con saltos (Merton, Kou)
+    \item Modelos de volatilidad local (Dupire)
+    \item Modelos de tasas de interés estocásticas
+\end{itemize}
+
+Sin embargo, estas extensiones quedan fuera del alcance de este trabajo, que se enfoca en métodos de valoración bajo el modelo de Black-Scholes clásico.
