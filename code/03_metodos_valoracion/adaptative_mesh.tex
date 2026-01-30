@@ -255,13 +255,22 @@ El uso de AMM reduce el Error Cuadrático Medio (RMSE) de:
 
 sin aumentar significativamente el tiempo de ejecución. Un AMM de 25 pasos es más preciso que un modelo trinomial estándar de 1000 pasos que tarda 500 veces más.
 
-% FIGURA 8: Gráfico de rendimiento RMSE vs Tiempo
+% FIGURA 8a: Precisión en Delta
 \begin{figure}[H]
 \centering
-\includegraphics[width=1\textwidth]{./03_metodos_valoracion/figures/rmse_vs_time.png}
-\caption{Gráfico de dispersión mostrando RMSE (eje Y, escala logarítmica) vs Tiempo de ejecución (eje X, escala logarítmica). Cada punto representa un modelo de la tabla anterior. Usar diferentes colores/símbolos para Binomial, Trinomial, AMM-1, AMM-2. Mostrar claramente cómo AMM logra menor error con tiempo similar al trinomial estándar. Incluir líneas de tendencia o regiones sombreadas para destacar la ``frontera de eficiencia''.}
-\label{fig:rmse_vs_time}
+\includegraphics[width=1\textwidth]{./03_metodos_valoracion/figures/delta_accuracy_comparison.png}
+\caption{Precisión en el cálculo de Delta mediante ramificación cuadrinomial. Se compara el RMSE en Delta para diferentes configuraciones AMM $(0, T)$, donde 0 es el inicio de la opción y $T$ es el final de la misma. La ramificación cuadrinomial permite calcular Delta mediante diferencias finitas. AMM (3,3) logra una mejora de 60x vs Trinomial en N=100, con un incremento de tiempo $<3\%$. Notablemente, AMM (1,0) mejora Delta sin costo adicional al refinar solo la región crítica.}
+\label{fig:delta_accuracy}
 \end{figure}
+
+% FIGURA 8b: Precisión en Gamma
+\begin{figure}[H]
+\centering
+\includegraphics[width=1\textwidth]{./03_metodos_valoracion/figures/gamma_accuracy_comparison.png}
+\caption{Precisión en el cálculo de Gamma mediante ramificación cuadrinomial. Se compara el RMSE en Gamma para diferentes configuraciones AMM. La ramificación cuadrinomial permite calcular Gamma mediante diferencias finitas de segundo orden. AMM (1,1) logra una mejora de 7.2x vs Trinomial en N=100. A diferencia de Delta, Gamma no mejora significativamente con niveles superiores a (2,2), lo que sugiere que AMM (1,1) es óptimo para este cálculo. El incremento en tiempo es $<3\%$.}
+\label{fig:gamma_accuracy}
+\end{figure}
+
 
 \subsection{Ventajas del AMM}
 
