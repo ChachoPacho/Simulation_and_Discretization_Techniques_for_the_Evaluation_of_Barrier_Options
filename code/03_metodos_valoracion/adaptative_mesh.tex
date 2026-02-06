@@ -42,7 +42,9 @@ V(S,t) = e^{-r\Delta t}[p_u V(Su,t+\Delta t) + p_m V(S,t+\Delta t) + p_d V(Sd,t+
 % FIGURA 1: Estructura básica de árbol trinomial
 \begin{figure}[H]
 \centering
-\includegraphics[width=1\textwidth]{./03_metodos_valoracion/figures/trinomial_tree_structure.png}
+\makebox[\textwidth][c]{%
+\includegraphics[width=1.5\textwidth]{./03_metodos_valoracion/figures/trinomial_tree_structure.png}
+}
 \caption{Estructura de un árbol trinomial con 3 pasos temporales. Desde cada nodo, el precio puede moverse hacia arriba (multiplicado por $u=1.15$, verde), mantenerse (multiplicado por $m=1$, azul), o bajar (multiplicado por $d=1/u\approx 0.870$, rojo). Las probabilidades neutrales al riesgo son $p_u=0.25$, $p_m=0.50$, $p_d=0.25$. El árbol es recombinante: los nodos que alcanzan el mismo precio se fusionan.}
 \label{fig:trinomial_structure}
 \end{figure}
@@ -70,7 +72,9 @@ En el modelo binomial, este error produce una convergencia ``par-impar'', donde 
 % FIGURA 2: Detalle del efecto par-impar
 \begin{figure}[H]
 \centering
-\includegraphics[width=1\textwidth]{./03_metodos_valoracion/figures/par_impar_detail.png}
+\makebox[\textwidth][c]{%
+\includegraphics[width=1.5\textwidth]{./03_metodos_valoracion/figures/par_impar_detail.png}
+}
 \caption{Detalle del efecto par-impar en el modelo binomial. Los puntos azules (N par) sistemáticamente tienen mayor error que los puntos rojos (N impar). Las líneas punteadas muestran las tendencias separadas para cada caso. Esta oscilación es causada por el error de no linealidad y es eliminada por el AMM.}
 \label{fig:par_impar_detail}
 \end{figure}
@@ -90,7 +94,9 @@ Esta estrategia permite lograr precisión comparable a un árbol uniforme muy fi
 % FIGURA 3: Concepto de malla adaptativa
 \begin{figure}[H]
 \centering
-\includegraphics[width=1\textwidth]{./03_metodos_valoracion/figures/amm_concept.png}
+\makebox[\textwidth][c]{%
+\includegraphics[width=1.5\textwidth]{./03_metodos_valoracion/figures/amm_concept.png}
+}
 \caption{Concepto del Modelo de Malla Adaptativa (AMM). Se muestra un árbol trinomial base (nodos grises, conexiones grises) que constituye la malla gruesa con pasos de precio $h$ y tiempo $k$. Sobre este árbol se injerta una malla fina (cuadrados verdes pequeños) con pasos $h/2$ y $k/4$ únicamente en la región crítica (rectángulo amarillo). Esta estrategia concentra la resolución computacional donde más se necesita, logrando alta precisión con costo mínimo adicional ($<1\%$).}
 \label{fig:amm_concept}
 \end{figure}
@@ -110,7 +116,9 @@ Se añade una malla fina con pasos de precio $h/2$ y tiempo $k/4$ solo en la reg
 % FIGURA 4: AMM para opciones vanilla
 \begin{figure}[H]
 \centering
-\includegraphics[width=1\textwidth]{./03_metodos_valoracion/figures/amm_vanilla.png}
+\makebox[\textwidth][c]{%
+\includegraphics[width=1.5\textwidth]{./03_metodos_valoracion/figures/amm_vanilla.png}
+}
 \caption{Estructura del AMM para opciones vanilla. Se muestra un árbol trinomial (nodos grises con conexiones grises) que constituye la malla gruesa. Sobre este árbol se injerta una malla fina (cuadrados verdes pequeños) con pasos $h/2$ y $k/4$ únicamente en la región crítica (rectángulo amarillo): temporal [T-k, T] y espacial [K-2h, K+2h]. La línea azul punteada marca el strike K donde ocurre la mayor no linealidad al vencimiento. Esta estrategia concentra la resolución donde más se necesita: alrededor del precio de ejercicio al vencimiento.}
 \label{fig:amm_vanilla}
 \end{figure}
@@ -193,7 +201,9 @@ Se construye una malla fina junto a la barrera $H$:
 % FIGURA 6: AMM para opciones barrera
 \begin{figure}[H]
 \centering
-\includegraphics[width=1\textwidth]{./03_metodos_valoracion/figures/amm_barrier.png}
+\makebox[\textwidth][c]{%
+\includegraphics[width=1.5\textwidth]{./03_metodos_valoracion/figures/amm_barrier.png}
+}
 \caption{Estructura del AMM para opciones barrera. Mostrar el árbol completo con una banda vertical de malla fina a lo largo de toda la dimensión temporal, centrada en la barrera H. La barrera debe aparecer como una línea horizontal clara. Indicar la región [H-2h, H+2h] con sombreado o color. Mostrar S\_0 cerca de H para ilustrar el problema del límite. Incluir flechas mostrando el flujo de información de malla gruesa a malla fina.}
 \label{fig:amm_barrier}
 \end{figure}
@@ -258,7 +268,9 @@ sin aumentar significativamente el tiempo de ejecución. Un AMM de 25 pasos es m
 % FIGURA 8a: Precisión en Delta
 \begin{figure}[H]
 \centering
-\includegraphics[width=1\textwidth]{./03_metodos_valoracion/figures/delta_accuracy_comparison.png}
+\makebox[\textwidth][c]{%
+\includegraphics[width=1.5\textwidth]{./03_metodos_valoracion/figures/delta_accuracy_comparison.png}
+}
 \caption{Precisión en el cálculo de Delta mediante ramificación cuadrinomial. Se compara el RMSE en Delta para diferentes configuraciones AMM $(0, T)$, donde 0 es el inicio de la opción y $T$ es el final de la misma. La ramificación cuadrinomial permite calcular Delta mediante diferencias finitas. AMM (3,3) logra una mejora de 60x vs Trinomial en N=100, con un incremento de tiempo $<3\%$. Notablemente, AMM (1,0) mejora Delta sin costo adicional al refinar solo la región crítica.}
 \label{fig:delta_accuracy}
 \end{figure}
@@ -266,7 +278,9 @@ sin aumentar significativamente el tiempo de ejecución. Un AMM de 25 pasos es m
 % FIGURA 8b: Precisión en Gamma
 \begin{figure}[H]
 \centering
-\includegraphics[width=1\textwidth]{./03_metodos_valoracion/figures/gamma_accuracy_comparison.png}
+\makebox[\textwidth][c]{%
+\includegraphics[width=1.5\textwidth]{./03_metodos_valoracion/figures/gamma_accuracy_comparison.png}
+}
 \caption{Precisión en el cálculo de Gamma mediante ramificación cuadrinomial. Se compara el RMSE en Gamma para diferentes configuraciones AMM. La ramificación cuadrinomial permite calcular Gamma mediante diferencias finitas de segundo orden. AMM (1,1) logra una mejora de 7.2x vs Trinomial en N=100. A diferencia de Delta, Gamma no mejora significativamente con niveles superiores a (2,2), lo que sugiere que AMM (1,1) es óptimo para este cálculo. El incremento en tiempo es $<3\%$.}
 \label{fig:gamma_accuracy}
 \end{figure}

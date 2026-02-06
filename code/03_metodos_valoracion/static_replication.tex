@@ -1,26 +1,117 @@
 \section{Método 3: Replicación Estática}
 \label{sec:metodo_replicacion}
 
-% QUÉ ESCRIBIR AQUÍ:
-% Descripción conceptual del método de replicación estática
+La replicación estática es un método desarrollado para cubrir o replicar el valor de una opción objetivo (frecuentemente una opción exótica) mediante la construcción de un portafolio compuesto por otras opciones, generalmente opciones estándar o ``vanilla''. A diferencia de la cobertura dinámica, que requiere ajustes continuos en la posición del activo subyacente, este enfoque busca establecer un portafolio de cobertura con pesos fijos que no requiera ajustes posteriores durante la vida de la opción o dentro de un rango específico de precios y tiempos.
+
+Esta técnica se fundamenta en los supuestos estándar de la teoría de valoración de opciones (como el modelo Black-Scholes), permitiendo descomponer teóricamente una opción exótica en un portafolio de opciones estándar, cuyos precios de mercado y bid-ask spreads suelen ser más transparentes y líquidos. Aunque una replicación perfecta teórica podría requerir un número infinito de opciones estándar, en la práctica es posible lograr una aproximación adecuada utilizando un número limitado de instrumentos.
 
 \subsection{Concepto de Replicación Estática}
 
-% Explicar:
-% - Idea: replicar opción barrera con portafolio de opciones vanilla
-% - Por qué funciona
-% - Ventajas: no requiere rebalanceo
+El concepto central de la replicación estática radica en igualar los flujos de caja y los valores de frontera de la opción objetivo utilizando un portafolio de instrumentos más simples.
+
+\subsubsection*{La idea: replicación con un portafolio de opciones vanilla} 
+
+La estrategia consiste en construir un portafolio de opciones estándar (calls y puts europeas con diferentes precios de ejercicio y vencimientos) que replique el valor de la opción exótica en sus fronteras. Por ejemplo, para una opción barrera up-and-out (que deja de existir si el precio del subyacente toca un nivel superior), el objetivo es crear un portafolio que tenga el mismo pago que la opción estándar al vencimiento (si no toca la barrera), pero cuyo valor neto sea cero si el precio del activo alcanza la barrera antes del vencimiento.
+
+Esto se logra ``anulando'' el valor de la opción original en la barrera mediante la venta en corto de otras opciones que tengan valor positivo en ese mismo punto. De esta manera, el portafolio estático imita el comportamiento de ``desaparición'' de la opción barrera sin necesidad de vender la opción exótica en sí misma.
+
+\subsubsection*{Fundamento teórico: ¿Por qué funciona?} 
+
+La validez del método descansa en el Principio de Replicación Estática. Este principio establece que si dos portafolios tienen los mismos valores en todas las fronteras de una región determinada (precio del activo y tiempo) y satisfacen la misma ecuación diferencial (la ecuación backward o de Black-Scholes) dentro de dicha región, entonces deben tener el mismo valor en cualquier punto interior de esa región.
+
+Por lo tanto, no es necesario igualar el valor de la opción en cada punto posible del futuro; basta con construir un portafolio que coincida con el valor de la opción objetivo en sus fronteras naturales (por ejemplo, al vencimiento y sobre la barrera de precio). Una vez que los valores en la frontera están alineados, la teoría de valoración por inducción hacia atrás (backward induction) garantiza que el valor actual y la sensibilidad del portafolio replicante serán iguales a los de la opción objetivo.
+
+\subsubsection*{Ventajas frente a la cobertura dinámica} 
+
+La principal ventaja de este método es que elimina la necesidad de rebalanceo continuo. La cobertura dinámica tradicional (Delta hedging) requiere ajustar las posiciones constantemente a medida que pasa el tiempo o cambia el precio del activo, lo cual presenta dos dificultades mayores: 
+\begin{enumerate} 
+  \item El ajuste continuo es imposible en la práctica, y el rebalanceo discreto genera errores de cobertura. 
+  \item Los costos de transacción asociados al ajuste frecuente pueden erosionar el margen de beneficio de la opción. 
+\end{enumerate}
+
+La replicación estática utiliza pesos fijos determinados al inicio, evitando estos costos y dificultades operativas. Además, es particularmente útil para opciones exóticas con alta ``gamma'' (como las opciones barrera cerca de su nivel de activación/desactivación), donde la cobertura dinámica se vuelve costosa e imprecisa debido a la necesidad de realizar grandes ajustes ante pequeños movimientos del mercado.
 
 \subsection{Metodología de Derman-Ergener-Kani}
 
-% Explicar:
-% - Cómo se construye el portafolio
-% - Selección de strikes
-% - Cálculo de pesos
+La metodología propuesta por Derman, Ergener y Kani \cite{derman1994static} se basa en la construcción sistemática de un portafolio de cobertura que iguala el valor de la opción objetivo en una serie de puntos discretos sobre su frontera (espacio y tiempo). El enfoque fundamental es recursivo: comienza igualando el pago al vencimiento y retrocede en el tiempo para ajustar los valores en la barrera, aprovechando que el valor de la opción exótica es conocido en dichas fronteras (por ejemplo, cero en una opción knock-out o un valor de reembolso específico).
+
+\subsubsection{Construcción del Portafolio y Selección de Strikes}
+
+La construcción del portafolio replicante se realiza paso a paso, asegurando que la adición de nuevas opciones para corregir el valor en un punto de la frontera no altere la replicación ya lograda en puntos anteriores o regiones interiores. Para lograr esto, la selección de los precios de ejercicio (strikes) es crítica y sigue reglas estrictas dependiendo de la ubicación de la frontera respecto al precio actual del activo:
+
+\begin{itemize} 
+  \item \textbf{Frontera de Vencimiento:} Se inicia replicando el pago final de la opción objetivo ($t_{exp}$) utilizando una combinación de opciones vanilla (calls o puts) con diferentes strikes que vencen en esa fecha. Esto constituye el portafolio inicial.
+  
+  \item \textbf{Fronteras Superiores (por encima del precio actual):} Para ajustar el valor del portafolio en una barrera superior en tiempos anteriores al vencimiento ($t < t_{exp}$), se deben utilizar opciones de compra (\textit{calls}) con strikes iguales o superiores al nivel de la barrera ($K \geq B$). Esto garantiza que dichas opciones expiren *out-of-the-money* si el precio del activo se mantiene por debajo de la barrera, evitando así generar flujos de caja no deseados dentro de la región de replicación.
+  \item \textbf{Fronteras Inferiores (por debajo del precio actual):} De manera análoga, para ajustar el valor en una barrera inferior, se deben utilizar opciones de venta (\textit{puts}) con strikes iguales o inferiores al nivel de la barrera ($K \leq B$). Al igual que en el caso anterior, estas opciones no tendrán valor al vencimiento si el precio se mantiene por encima de la frontera inferior, preservando la integridad de la replicación interior.
+\end{itemize}
+
+\subsubsection{Cálculo de Pesos y Procedimiento Recursivo}
+
+Una vez seleccionados los instrumentos adecuados, los pesos (cantidad de opciones a comprar o vender) se calculan mediante un proceso iterativo hacia atrás en el tiempo. Si dividimos el tiempo hasta el vencimiento en intervalos discretos $t_1,t_2,…,t_{exp}$, el procedimiento es el siguiente:
+
+\begin{enumerate} 
+  \item \textbf{Ajuste al Vencimiento ($t_{exp}$):} Se seleccionan opciones estándar que igualen el pago de la opción objetivo al vencimiento. Por ejemplo, para una opción up-and-out call que no ha tocado la barrera, esto equivale simplemente a una call estándar con el mismo strike que la opción exótica.
+  
+  \item \textbf{Retroceso al paso anterior ($t_{n-1}$):} Se calcula el valor teórico del portafolio replicante existente en el punto de la frontera correspondiente al tiempo $t_{n-1}$ (por ejemplo, en la barrera $B$). Generalmente, este valor no coincidirá con el valor de la opción objetivo (que suele ser cero en el caso de opciones *knock-out*).
+  
+  \item \textbf{Cálculo del Peso de Corrección:} Para eliminar esta discrepancia, se añade una nueva posición en una opción estándar que venza en $t_{exp}$ (o en el tiempo correspondiente a la frontera, dependiendo de la implementación exacta). El peso ($w$) de esta nueva opción se calcula para que su valor compense exactamente el error del portafolio en ese punto:
+
+  \begin{equation}
+  w = - \frac{V_{portafolio}(B, t_{n-1}) - V_{objetivo}(B, t_{n-1})}{V_{nueva\_opcion}(B, t_{n-1})}
+  \end{equation}
+
+  Donde $V_{portafolio}$ es el valor acumulado de las opciones añadidas en pasos previos y $V_{nueva\_opcion}$ es el valor de la opción utilizada para el ajuste.
+
+  \item \textbf{Iteración:} Este proceso se repite para $t_{n-2}, t_{n-3}, \dots, t_1$, añadiendo en cada paso opciones adicionales que corrijan el valor en la frontera sin afectar los puntos ya ajustados en el futuro (gracias a la selección de strikes descrita anteriormente).
+\end{enumerate}
+
+Teóricamente, si se utilizara un número infinito de opciones para cubrir todos los puntos de la frontera, la replicación sería exacta. En la práctica, se utiliza un número finito de opciones para igualar el valor en puntos discretos, lo que proporciona una aproximación robusta cuyo error disminuye al aumentar la cantidad de instrumentos de cobertura
 
 \subsection{Construcción del Portafolio}
 
-% Explicar:
-% - Qué opciones vanilla se usan
-% - Cómo se determinan los pesos
-% - Aproximación de la barrera
+La construcción práctica del portafolio replicante sigue un proceso sistemático que transforma la frontera continua de la opción exótica en un conjunto discreto de puntos de control. Este proceso requiere una selección cuidadosa de los instrumentos vanilla para garantizar que la corrección del valor en un punto de la frontera no introduzca flujos de caja no deseados en regiones ya cubiertas.
+
+\subsubsection{Selección de Opciones Vanilla}
+
+La regla fundamental para elegir los instrumentos de cobertura es asegurar que estos no tengan valor intrínseco dentro de la región válida de la opción objetivo (es decir, antes de que se toque la barrera). Según Derman, Ergener y Kani, la selección se realiza en función de la ubicación de la frontera respecto al precio actual del activo:
+
+\begin{itemize} 
+  \item \textbf{Frontera de Vencimiento ($t_{exp}$):} Para replicar el pago final de la opción, se pueden utilizar tanto opciones call como put de cualquier precio de ejercicio ($K$) conveniente, combinándolas para igualar el perfil de pago de la opción objetivo al vencimiento.
+
+  \item \textbf{Fronteras Superiores ($S > S_{actual}$):} Para ajustar el valor en una barrera superior (como en una opción *up-and-out*), se deben utilizar exclusivamente opciones de compra (\textbf{calls}) con precios de ejercicio iguales o superiores al nivel de la barrera ($K \geq B$). Esto asegura que, si el precio del activo se mantiene por debajo de la barrera, estas opciones expiren *out-of-the-money* (sin valor), preservando así la replicación lograda en el interior de la región.
+
+  \item \textbf{Fronteras Inferiores ($S < S_{actual}$):} De manera análoga, para replicar condiciones en una frontera inferior (como en una opción *down-and-out*), se deben emplear opciones de venta (\textbf{puts}) con precios de ejercicio iguales o inferiores al nivel de la barrera ($K \leq B$). Estas opciones no generarán flujos de caja si el precio del activo se mantiene por encima de la frontera inferior.
+\end{itemize}
+
+\subsubsection{Determinación de los Pesos}
+
+Una vez seleccionados los instrumentos, los pesos (cantidad de opciones a comprar o vender) se determinan mediante un proceso recursivo hacia atrás en el tiempo. El objetivo es ``anular'' la discrepancia entre el valor del portafolio acumulado y el valor de la opción objetivo en puntos discretos de la frontera.
+El cálculo matemático para el peso $\alpha_i$ de una nueva opción que se añade en el paso i para corregir el valor en el tiempo $t_i$ y precio $B_i$ se define formalmente como:
+
+\begin{equation} 
+  \alpha_i = \frac{\xi_{i-1} - V_{portafolio}(B_{i-1}, t_{i-1})}{C(B_{i-1}, t_{i-1})} 
+\end{equation}
+Donde: 
+
+\begin{itemize} 
+  \item $\varepsilon_{i-1}$ es el valor conocido de la opción objetivo en la frontera (usualmente cero para opciones knock-out o un valor de reembolso específico). 
+  
+  \item $V_{portafolio}$ es el valor teórico acumulado de todas las opciones estándar añadidas en pasos anteriores (vencimientos futuros ya cubiertos). 
+  
+  \item $C(B_{i-1},t_{i-1})$ es el valor de la nueva opción estándar utilizada para el ajuste en ese punto de la frontera
+\end{itemize}
+
+En términos prácticos, si el portafolio actual tiene un valor positivo en una barrera donde la opción objetivo vale cero, el peso $\alpha_i$ será negativo, indicando que se debe tomar una posición short en la nueva opción para cancelar dicho valor.
+
+\subsubsection{Aproximación de la Barrera}
+
+Dado que en el mundo real los precios de las acciones son continuos, una replicación estática perfecta requeriría un número infinito de opciones estándar para cubrir cada punto posible de la frontera. Sin embargo, la metodología permite una aproximación robusta mediante la discretización de la frontera:
+
+\begin{enumerate} 
+  \item \textbf{Puntos de anclaje:} Se selecciona un conjunto limitado de puntos de tiempo y precio sobre la barrera (por ejemplo, cada mes o cada semana) donde se forzará la igualdad de valores. 
+  
+  \item \textbf{Convergencia:} A medida que se aumenta el número de opciones utilizadas en el portafolio replicante (disminuyendo el intervalo de tiempo entre los puntos de ajuste), el ``error de replicación'' o mismatch en los puntos intermedios disminuye significativamente. 
+\end{enumerate}
+
+Por ejemplo, los autores demuestran que al pasar de un portafolio de 6 opciones (ajuste bimestral) a uno de 24 opciones (ajuste quincenal) para replicar una opción up-and-out a un año, el error de valor teórico se reduce drásticamente, logrando que el comportamiento del portafolio replicante sea casi indistinguible del de la opción exótica objetivo.

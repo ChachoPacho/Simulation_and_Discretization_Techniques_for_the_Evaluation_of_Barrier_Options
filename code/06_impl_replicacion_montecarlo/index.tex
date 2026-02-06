@@ -6,35 +6,47 @@
 \section{Replicación Estática}
 \label{sec:impl_replicacion}
 
-% QUÉ ESCRIBIR AQUÍ:
-% Implementación del portafolio replicante (MÉTODO 3)
+En esta sección se detalla el procedimiento computacional utilizado para implementar la metodología de replicación estática descrita teóricamente en el capítulo 3. El objetivo es construir un portafolio de opciones estándar cuyos valores en la frontera coincidan con los de una opción barrera objetivo.
 
 \subsection{Descripción del Algoritmo}
 
-% Explicar:
-% - Cómo construyes el portafolio
-% - Selección de strikes
-% - Cálculo de pesos
+El algoritmo implementado se basa en un proceso recursivo de ``inducción hacia atrás'' (backward induction), discretizando el tiempo de vida de la opción en $N$ intervalos.
 
-\subsubsection{Selección de Strikes}
+\subsubsection*{Selección de Strikes} 
 
-% Explicar:
-% - Qué strikes eliges para las opciones vanilla
-% - Criterio de selección
-% - Número de opciones en el portafolio
+Para garantizar que los instrumentos de cobertura no generen flujos de caja no deseados dentro de la región de validación, la selección de los precios de ejercicio ($K$) se automatiza siguiendo las reglas de frontera de Derman-Ergener-Kani:
 
-\subsubsection{Cálculo de Pesos}
+\begin{itemize} 
+  \item Para la frontera de vencimiento ($t=T$): Se utilizan opciones con el mismo strike que la opción original para replicar el payoff estándar.
+  
+  \item Para barreras superiores ($B>S_0$): Se seleccionan opciones Call con $K=B$. Esto asegura que si $S<B$, la opción expira out-of-the-money y no altera el valor del portafolio.
+  
+  \item Para barreras inferiores ($B<S_0$): Se seleccionan opciones Put con $K=B$. 
+\end{itemize}
 
-% Explicar:
-% - Cómo calculas el peso de cada opción
-% - Fórmulas utilizadas
-% - Normalización
+\subsubsection*{Cálculo de Pesos} 
+
+El algoritmo calcula los pesos ($w_i$ o $\alpha_i$) iterando desde el vencimiento hacia el presente. Sea $t_i$ los puntos discretos en el tiempo donde se ajusta la frontera:
+
+  1. Inicialización ($t_N=T$): Se establece el portafolio inicial igualando el pago de la opción al vencimiento.
+  2. Bucle Recursivo ($i=N-1,...,1$): 
+    \begin{itemize} 
+      \item Se calcula el valor del portafolio acumulado ($V_{port}$) en el punto de la barrera ($B,t_i$).
+      
+      \item Se calcula el valor teórico de la opción objetivo ($V_{target}$) en ese mismo punto (generalmente $0$ para knock-out o el valor del rebate).
+      
+      \item Se determina el peso de la nueva opción de ajuste ($C_{ajuste}$) mediante la fórmula discreta derivada del principio de replicación:
+        \begin{equation} 
+          \alpha_i = \frac{V_{target}(B, t_i) - V_{port}(B, t_i)}{C_{ajuste}(B, t_i)} 
+        \end{equation} 
+        Esta ecuación asegura que el error de valor en la frontera sea cero en el tiempo $t_i$. 
+    \end{itemize}
 
 \subsection{Detalles de Implementación}
 
-% Explicar:
-% - Lenguaje y librerías
-% - Código relevante
+Para la ejecución del modelo se asumen las condiciones estándar de Black-Scholes (volatilidad constante $\sigma$, tasa libre de riesgo $r$ y dividendos $d$). La implementación requiere definir la granularidad de la discretización temporal, la cual afecta directamente la precisión de la réplica.
+
+La frontera continua se aproxima mediante un conjunto finito de puntos de control ($B,t_k$). En la práctica, esto implica que el portafolio solo garantiza la igualdad de valor exactamente en estos puntos. Si el activo subyacente toca la barrera entre dos puntos de control, existe un error de discretización teórico. Asimismo, el modelo asume que, al tocarse la barrera, el portafolio estático se liquida para cubrir la obligación o eliminar la posición, un proceso teóricamente libre de costos si la replicación es perfecta.
 
 \subsection{Validación del Portafolio Replicante}
 
@@ -43,23 +55,57 @@
 % - Análisis de error de replicación
 % - Ejemplos numéricos
 
-\subsubsection{Comparación con Rubinstein-Reiner}
+Para validar la eficacia del algoritmo, se compara el valor del portafolio estático resultante contra el valor teórico analítico de la opción objetivo (calculado mediante fórmulas cerradas estándar, como Rubinstein-Reiner para opciones barrera).
+
+\subsubsection*{Comparación y Análisis de Convergencia} 
 
 % INCLUIR TABLA:
 % Caso | R&R | Replicante | Error | N_opciones
-
-\subsubsection{Análisis de Convergencia}
 
 % Mostrar:
 % - Error vs número de opciones en portafolio
 % - Gráfico de convergencia
 
-\subsubsection{Ejemplos Numéricos}
+El análisis demuestra que la calidad de la replicación depende críticamente del número de instrumentos de cobertura utilizados (frecuencia de ajuste en la frontera).
+
+Basado en los resultados de Derman et al., se observa que: 
+
+\begin{itemize} 
+  \item Replicación de baja frecuencia (6 opciones): Al ajustar la frontera cada 2 meses (6 puntos de contacto), el desajuste (mismatch) entre el portafolio y la opción objetivo puede ser significativo, alcanzando errores cercanos al $19\%$ del valor de la opción en regiones próximas a la barrera y cercanas al vencimiento. 
+  
+  \item Replicación de alta frecuencia (24 opciones): Al aumentar la discretización a ajustes quincenales (24 puntos), el error de valor disminuye drásticamente. El perfil de valor del portafolio replicante converge hacia el de la opción barrera teórica, reduciendo el desajuste a niveles marginales (aprox. 0.10 en valor monetario frente a un valor objetivo de ~2.00). 
+\end{itemize}
+
+Esto confirma que, aunque una réplica perfecta requeriría infinitas opciones, una aproximación con un número finito (ej. 24) logra una convergencia robusta para fines prácticos.
+
+\subsubsection*{Ejemplos Numéricos} 
 
 % INCLUIR 2-3 CASOS:
 % - Down-and-Out Call
 % - Up-and-In Put
 % - Mostrar composición del portafolio
+
+Consideremos una opción Up-and-Out Call con los siguientes parámetros: $S_0=100$, Strike $K=100$, Barrera $B=120$, Vencimiento $T=1$ año, Volatilidad $\sigma=15\%, r=5\%$.
+
+\begin{enumerate} 
+  \item Valor Objetivo: El valor teórico de esta opción es 1.913. 
+  
+  \item Portafolio (6 ajustes): Construido con 1 Call estándar ($K=100$) y 6 Calls ($K=120$) con vencimientos bimestrales. 
+    \begin{itemize} 
+      \item El valor resultante del portafolio es $2.284$.
+
+      \item Error: $0.37$ (aprox. $19\%$). El error se concentra principalmente cerca de la barrera cuando falta poco tiempo para el vencimiento. 
+    \end{itemize} 
+    
+  \item Portafolio (24 ajustes): Construido con ajustes cada 0.5 meses. 
+    \begin{itemize} 
+      \item El valor resultante del portafolio es $2.01$. 
+      
+      \item Error: $0.10$ (aprox. $5\%$). La superficie de valor del portafolio es casi indistinguible de la opción objetivo. 
+    \end{itemize} 
+\end{enumerate}
+
+Estos resultados validan que el método de replicación estática permite descomponer una opción exótica compleja en una suma lineal de opciones vanilla, facilitando su valoración y cobertura sin necesidad de rebalanceo dinámico continuo.
 
 \section{Monte Carlo para Opciones Americanas}
 \label{sec:impl_montecarlo}
