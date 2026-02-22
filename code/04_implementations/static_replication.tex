@@ -1,8 +1,3 @@
-\chapter{Implementación - Replicación Estática y Monte Carlo}
-\label{chapter:impl_replicacion_mc}
-
-% OBJETIVO: Documentar implementación de MÉTODO 3 y MÉTODO 4
-
 \section{Replicación Estática}
 \label{sec:impl_replicacion}
 
@@ -50,21 +45,9 @@ La frontera continua se aproxima mediante un conjunto finito de puntos de contro
 
 \subsection{Validación del Portafolio Replicante}
 
-% QUÉ ESCRIBIR AQUÍ:
-% - Comparar con R&R
-% - Análisis de error de replicación
-% - Ejemplos numéricos
-
 Para validar la eficacia del algoritmo, se compara el valor del portafolio estático resultante contra el valor teórico analítico de la opción objetivo (calculado mediante fórmulas cerradas estándar, como Rubinstein-Reiner para opciones barrera).
 
 \subsubsection*{Comparación y Análisis de Convergencia} 
-
-% INCLUIR TABLA:
-% Caso | R&R | Replicante | Error | N_opciones
-
-% Mostrar:
-% - Error vs número de opciones en portafolio
-% - Gráfico de convergencia
 
 El análisis demuestra que la calidad de la replicación depende críticamente del número de instrumentos de cobertura utilizados (frecuencia de ajuste en la frontera).
 
@@ -79,11 +62,6 @@ Basado en los resultados de Derman et al., se observa que:
 Esto confirma que, aunque una réplica perfecta requeriría infinitas opciones, una aproximación con un número finito (ej. 24) logra una convergencia robusta para fines prácticos.
 
 \subsubsection*{Ejemplos Numéricos} 
-
-% INCLUIR 2-3 CASOS:
-% - Down-and-Out Call
-% - Up-and-In Put
-% - Mostrar composición del portafolio
 
 Consideremos una opción Up-and-Out Call con los siguientes parámetros: $S_0=100$, Strike $K=100$, Barrera $B=120$, Vencimiento $T=1$ año, Volatilidad $\sigma=15\%, r=5\%$.
 
@@ -106,85 +84,3 @@ Consideremos una opción Up-and-Out Call con los siguientes parámetros: $S_0=10
 \end{enumerate}
 
 Estos resultados validan que el método de replicación estática permite descomponer una opción exótica compleja en una suma lineal de opciones vanilla, facilitando su valoración y cobertura sin necesidad de rebalanceo dinámico continuo.
-
-\section{Monte Carlo para Opciones Americanas}
-\label{sec:impl_montecarlo}
-
-% QUÉ ESCRIBIR AQUÍ:
-% Implementación de Monte Carlo (MÉTODO 4)
-
-\subsection{Descripción del Algoritmo}
-
-% Explicar:
-% - Generación de trayectorias
-% - Monitoreo de barrera
-% - Método de Longstaff-Schwartz
-
-\subsubsection{Generación de Trayectorias}
-
-% Explicar:
-% - Fórmula: S_{t+Δt} = S_t exp[(r-σ²/2)Δt + σ√Δt·Z]
-% - Número de pasos temporales
-% - Número de simulaciones M
-
-\subsubsection{Monitoreo de Barrera}
-
-% Explicar:
-% - Frecuencia de monitoreo
-% - Qué pasa cuando se toca la barrera
-% - Knock-in vs Knock-out
-
-\subsubsection{Método de Longstaff-Schwartz}
-
-% Explicar:
-% - Regresión para estimar valor de continuación
-% - Decisión de ejercicio en cada nodo
-% - Algoritmo backward
-
-\subsection{Detalles de Implementación}
-
-% Explicar:
-% - Lenguaje y librerías
-% - Generador de números aleatorios
-% - Código relevante
-
-\subsubsection{Código Relevante}
-
-% INCLUIR CÓDIGO:
-% - Generación de trayectorias
-% - Algoritmo LSM
-% - Decisión de ejercicio
-
-\subsection{Validación de Monte Carlo}
-
-% QUÉ ESCRIBIR AQUÍ:
-% - Comparar con literatura (si hay benchmarks)
-% - Análisis de convergencia
-% - Intervalos de confianza
-
-\subsubsection{Análisis de Convergencia}
-
-% Mostrar:
-% - Error vs número de simulaciones
-% - Error vs número de pasos temporales
-% - Gráficos
-
-\subsubsection{Intervalos de Confianza}
-
-% Explicar:
-% - Cálculo de IC al 95%
-% - Error estándar: SE = σ̂/√M
-
-\subsubsection{Ejemplos Numéricos}
-
-% INCLUIR 2-3 CASOS:
-% - American Down-and-Out Call
-% - American Up-and-In Put
-% - Comparar con europeas (límite superior)
-
-\subsection{Técnicas de Reducción de Varianza}
-
-% SI LAS USAS:
-% - Variables antitéticas
-% - Variables de control
-% - Impacto en precisión y tiempo

@@ -1,17 +1,17 @@
-\chapter{Implementación - Árboles Trinomiales con Mallas Adaptativas}
-\label{chapter:impl_arboles_mallas}
+\section{Árboles Trinomiales con Mallas Adaptativas}
+\label{sec:impl_arboles_mallas}
 
-\section{Descripción del Algoritmo}
-\label{sec:algoritmo_arboles_mallas}
+\subsection{Descripción del Algoritmo}
+\label{subsec:algoritmo_arboles_mallas}
 
 La implementación del Modelo de Malla Adaptativa (AMM) para opciones de barrera difiere fundamentalmente de los árboles trinomiales estándar en su fase de inicialización. Mientras que en un árbol estándar se define arbitrariamente el número de pasos de tiempo ($N$) y se derivan los parámetros espaciales, en el AMM la geometría de la malla está dictada por las condiciones de contorno (la barrera) y la profundidad de refinamiento deseada.
 El algoritmo comienza con una fase de calibración estricta para asegurar que los nodos de la malla fina coincidan exactamente con la barrera del precio, evitando así el ``problema del límite''.
 
-\subsection{Calibración de la Geometría (Malla Gruesa)}
+\subsubsection{Calibración de la Geometría (Malla Gruesa)}
 
 La construcción de la malla base (denotada como conjunto de nodos $A$ o malla gruesa) requiere resolver un sistema de restricciones acopladas para determinar el paso de precio ($h$) y el paso de tiempo ($k$).
 
-\subsubsection{Restricción Espacial: Alineación con la Barrera} 
+\paragraph{Restricción Espacial: Alineación con la Barrera} 
 
 Para valorar con precisión una opción barrera, es imperativo que la barrera física $H$ coincida con una capa horizontal de nodos en el árbol. En el AMM, definimos la resolución en función de la distancia entre el precio inicial del activo ($S_0$) y la barrera ($H$).
 
@@ -26,7 +26,7 @@ Esta ecuación garantiza que el nodo $B_{1,0}$ (en la malla fina) coincida con e
 
 \textbf{Nota de Implementación:} El árbol se construye en el espacio logarítmico $X=ln(S)$. Por tanto, la barrera se convierte en una constante $ln(H)$ para todos los pasos de tiempo, simplificando la verificación de knock-out.
 
-\subsubsection{Restricción Temporal: El Parámetro de Estiramiento} 
+\paragraph{Restricción Temporal: El Parámetro de Estiramiento} 
 
 Una vez fijado $h$ por la restricción espacial, el paso de tiempo $k$ no puede ser elegido libremente. Debe cumplir dos condiciones simultáneas:
 \begin{enumerate} 
@@ -50,7 +50,7 @@ Donde:
 
 El denominador representa el número total de pasos de tiempo ($N$) de la malla gruesa. Este ajuste asegura que el árbol termine exactamente en $T$ sin necesidad de truncar o interpolar el último paso.
 
-\subsubsection{Cálculo de Probabilidades de la Malla Base} 
+\paragraph{Cálculo de Probabilidades de la Malla Base} 
 
 Con $h$ y $k$ calibrados, se calculan las probabilidades de transición para los nodos de la malla gruesa. A diferencia de los árboles centrados en la media, aquí el árbol está anclado en la barrera, por lo que incluimos el término \textit{drift} en las probabilidades.
 Definimos el \textit{drift} $\alpha$ como: 
@@ -74,7 +74,7 @@ Las probabilidades de movimiento hacia arriba ($p_u$), al medio ($p_m$) y hacia 
 
 \textbf{Validación:} El código debe incluir una aserción (\textit{assert}) inmediatamente después de este cálculo para verificar que $p_u,p_m,p_d\ge0$. Si el parámetro de estiramiento $j$ es cercano a $3$, las probabilidades serán positivas y estables.
 
-\subsection{Gestión de la Interfaz entre Mallas}
+\subsubsection{Gestión de la Interfaz entre Mallas}
 
 Una vez calibrada y calculada la malla gruesa (Nodos del conjunto $A$), el siguiente paso es construir la malla fina (Nodos del conjunto $B$) en la región crítica cercana a la barrera.
 
@@ -82,7 +82,7 @@ Para una opción barrera, el flujo de información es descendente (Malla Gruesa 
 
 El desafío de implementación radica en los ``Nodos Intermedios'' (o nodos colgantes). Dado que la malla fina tiene una resolución temporal $4$ veces mayor que la gruesa, existen nodos $B$ en los tiempos $t+k/4$, $t+2k/4$ y $t+3k/4$ que no tienen un nodo $A$ correspondiente en el mismo instante temporal. Para valorarlos, debemos proyectarlos hacia los nodos $A$ del siguiente paso de tiempo completo ($t+k$).
 
-\subsubsection{Cálculo de Probabilidades Ajustadas (Ecuación de Transición)} 
+\paragraph{Cálculo de Probabilidades Ajustadas (Ecuación de Transición)} 
 
 Consideremos los nodos $B_{2,j}$ (ubicados un paso de precio grueso por encima de la barrera). Estos nodos sirven como el ``techo'' de la malla fina y deben conectarse a los nodos de la malla gruesa $A$.
 
@@ -111,7 +111,7 @@ Las probabilidades ajustadas para un nodo con paso de tiempo efectivo $\Delta t_
   \item \textbf{Para nodos en t+3k/4:} Usar $\Delta t_{eff}=k/4$. 
 \end{itemize}
 
-\subsubsection{Valoración de los Nodos Frontera} 
+\paragraph{Valoración de los Nodos Frontera} 
 
 Con las probabilidades ajustadas, calculamos el valor de la opción en estos nodos intermedios descontando desde los nodos $A$ del futuro.
 
@@ -123,7 +123,7 @@ Sea $V(B_{2,j})$ el valor de un nodo en la frontera superior de la malla fina. S
 
 \textbf{Nota crítica de implementación:} Observe que el factor de descuento es siempre $e^{-r(k/4)}$, porque estamos retrocediendo solo un micro-paso en el árbol fino, aunque las probabilidades se calculen proyectando hasta el final del intervalo grueso.
 
-\subsubsection{Relleno de la Malla Fina} 
+\paragraph{Relleno de la Malla Fina} 
 
 Una vez calculados los valores en el ``techo'' de la malla fina ($B_{2,j}$) y sabiendo que el ``piso'' de la malla es la barrera ($B_{0,j}=0$ o valor de Rebate), procedemos a calcular los nodos internos ($B_{1,j}$) que se encuentran a $h/2$ de la barrera.
 
@@ -142,11 +142,11 @@ Estos nodos no requieren conexión con la malla gruesa ya que se valoran mediant
 
 Este proceso se repite retrocediendo desde el vencimiento $T$ (o desde el final del bloque injertado) hasta llegar a $t=0$, obteniendo finalmente el valor en el nodo $B_{1,0}$, que corresponde al precio exacto de la opción con alta precisión.
 
-\subsection{Valoración Backward y Recursividad}
+\subsubsection{Valoración Backward y Recursividad}
 
 Una vez establecidas las probabilidades de transición y las reglas de interfaz, el proceso de valoración se ejecuta mediante un algoritmo secuencial estricto. A diferencia de un árbol estándar que se resuelve en un solo barrido desde $T$ hasta $0$, el AMM requiere una valoración por etapas jerárquicas.
 
-\subsubsection{Fase 1: Resolución de la Malla Gruesa (Conjunto $A$)} 
+\paragraph{Fase 1: Resolución de la Malla Gruesa (Conjunto $A$)} 
 
 El algoritmo comienza resolviendo completamente la malla base, ignorando temporalmente la existencia de la malla fina. 
 
@@ -158,7 +158,7 @@ El algoritmo comienza resolviendo completamente la malla base, ignorando tempora
   \item Resultado: Al finalizar esta fase, tenemos una matriz de valores $V(A_{i,j})$ que servirá como fuente de datos ("oráculo") para los niveles inferiores. 
 \end{enumerate}
 
-\subsubsection{Fase 2: Inyección de Valores en la Frontera Fina} 
+\paragraph{Fase 2: Inyección de Valores en la Frontera Fina} 
 
 Antes de resolver la malla fina, debemos poblar sus bordes utilizando los datos de la Fase 1. El código debe iterar sobre cada paso de tiempo grueso $j$ y calcular los valores de los nodos de interfaz $B_{2,*}$ (el "techo" de la malla fina).
 
@@ -169,7 +169,7 @@ El bucle debe manejar la interpolación temporal descrita en la sección anterio
   \item Para los nodos intermedios ($t+k/4,t+2k/4,\dots$), se ejecuta la función de proyección usando la Ecuación \ref{eq:amm_interface_val}. 
 \end{itemize}
 
-\subsubsection{Fase 3: Resolución de la Malla Fina (Conjunto $B$)} 
+\paragraph{Fase 3: Resolución de la Malla Fina (Conjunto $B$)} 
 
 Con las condiciones de frontera superior ($B_{2,j}$ calculados en Fase 2) e inferior ($B_{0,j}=0$ por la barrera), se resuelve el interior de la malla fina. 
 
@@ -181,7 +181,7 @@ Con las condiciones de frontera superior ($B_{2,j}$ calculados en Fase 2) e infe
   \item En cada paso, se calcula el valor de los nodos internos $B_{1,j}$ utilizando las probabilidades trinomiales estándar de la malla fina y los valores de los tres nodos conectados en el paso $j+1$. 
 \end{enumerate}
 
-\subsubsection{Generalización Recursiva (Para $M>1$)} 
+\paragraph{Generalización Recursiva (Para $M>1$)} 
 
 Si el modelo utiliza múltiples niveles de refinamiento ($M>1$), este proceso se vuelve recursivo. La propiedad de isomorfismo del AMM permite que, una vez resuelta la malla de Nivel 1 (Nodos $B$), esta actúe como la "Malla Gruesa" para el Nivel 2 (Nodos $C$).
 Un código preliminar es:
@@ -246,15 +246,15 @@ def build_fine_mesh(coarse_grid, h_coarse, k_coarse, N_coarse, r, sigma, H, K):
 
 Esta estructura garantiza que la información fluya correctamente desde la resolución más baja hacia la más alta (flujo downward para barreras), permitiendo obtener el precio de alta precisión en $t=0$.
 
-\section{Detalles de Implementación}
+\subsection{Detalles de Implementación}
 \label{sec:detalles_impl_arboles}
 
-\subsection{Estructuras de Datos y Memoria}
+\subsubsection{Estructuras de Datos y Memoria}
 \label{sec:data_structures}
 
 Uno de los errores más comunes al implementar métodos de refinamiento de malla es instanciar una matriz global de alta resolución y dejar la mayoría de sus entradas vacías o inutilizadas. La eficiencia del AMM radica en que la malla fina es un ``parche'' local y no una estructura global. Por tanto, la gestión de memoria debe tratar las mallas como entidades separadas pero vinculadas.
 
-\subsubsection{Arquitectura de Almacenamiento Disperso} 
+\paragraph{Arquitectura de Almacenamiento Disperso} 
 
 En lugar de crear una matriz de tamaño ($4N\times 4N$) que consumiría memoria cuadrática, la implementación debe utilizar dos estructuras distintas:
 
@@ -281,7 +281,7 @@ Donde $N$ es el número de pasos de tiempo de la malla gruesa.
 \end{itemize} 
 Esto reduce el consumo de memoria drásticamente en comparación con refinar todo el árbol.
 
-\subsubsection{Complejidad Computacional y Escalabilidad} 
+\paragraph{Complejidad Computacional y Escalabilidad} 
 
 La ventaja crítica del AMM debe documentarse en esta sección. Al añadir niveles de profundidad, el número de nodos crece, pero de manera controlada.
 
@@ -301,11 +301,11 @@ Esto implica que para un árbol estándar de $N=100$ pasos (aprox. $10,000$ nodo
 
 El código debe reflejar esta eficiencia: el tiempo de ejecución para el AMM debe ser comparable al del árbol trinomial base, mientras que el error de convergencia se reduce cuadráticamente.
 
-\subsection{Código Relevante}
+\subsubsection{Código Relevante}
 \label{sec:codigo_relevante}
 
 La implementación del AMM requiere traducir las ecuaciones de probabilidad ajustada y la lógica recursiva en estructuras de control eficientes. A continuación se presentan los tres componentes críticos que permiten la convergencia estable del modelo.
-\subsubsection{1. Calibración Geométrica y Parámetro de Estiramiento} 
+\paragraph{1. Calibración Geométrica y Parámetro de Estiramiento} 
 
 Para garantizar la estabilidad numérica descrita por Figlewski y Gao (1999), el paso de tiempo k no puede ser arbitrario; debe derivarse del paso de precio $h$ para mantener el parámetro de estiramiento $j\approx3$. El siguiente snippet muestra cómo se fuerza esta restricción para obtener un número entero de pasos $N$.
 
@@ -325,7 +325,7 @@ Para garantizar la estabilidad numérica descrita por Figlewski y Gao (1999), el
     return h_coarse, k_coarse, N_steps
 \end{lstlisting}
 
-\subsubsection{2. Probabilidades de Transición en la Interfaz} 
+\paragraph{2. Probabilidades de Transición en la Interfaz} 
 
 La mayor complejidad del AMM reside en los nodos ``colgantes'' de la interfaz (Fila 2 de la malla fina). A diferencia de los nodos estándar, estos requieren probabilidades que varían según su distancia temporal al siguiente nodo grueso, tal como se define en la Ecuación (12).
 
@@ -349,14 +349,14 @@ La mayor complejidad del AMM reside en los nodos ``colgantes'' de la interfaz (F
     return pu, pm, pd
 \end{lstlisting}
 
-\subsubsection{3. El Bucle de Refinamiento Recursivo} 
+\paragraph{3. El Bucle de Refinamiento Recursivo} 
 
-\section{Validación} 
+\subsection{Validación} 
 \label{sec:validacion_arboles}
 
 Para verificar la corrección de la implementación y demostrar la superioridad del AMM sobre los árboles estándar, se realizaron pruebas de convergencia comparando los resultados del modelo contra la solución analítica cerrada para opciones de barrera continua.
 
-\subsection{Metodología de Validación (Benchmark)} 
+\subsubsection{Metodología de Validación (Benchmark)} 
 
 Es crucial notar que el AMM converge a la solución de tiempo continuo, no a la discreta. Por lo tanto, el benchmark correcto no es un árbol binomial de pasos altos, sino la fórmula de Merton (1973) para opciones down-and-out call:
 
@@ -366,7 +366,7 @@ Es crucial notar que el AMM converge a la solución de tiempo continuo, no a la 
 
 Donde $\lambda=\frac {r-q-\sigma^2/2} {\sigma^2}$ y $C_{BS}$ es la fórmula estándar de Black-Scholes.
 
-\subsection{Prueba de Estrés: El Problema del Límite} 
+\subsubsection{Prueba de Estrés: El Problema del Límite} 
 
 Se evaluó el desempeño del modelo en el escenario crítico donde el precio inicial $S_0$ está extremadamente cerca de la barrera, una situación donde los métodos tradicionales fallan por falta de resolución o inestabilidad numérica.
 
@@ -393,6 +393,6 @@ Se evaluó el desempeño del modelo en el escenario crítico donde el precio ini
 
 \textbf{Análisis:} Como se observa en la Tabla \ref{tab:amm_results}, el árbol estándar es incapaz de valorar la opción con una malla razonable porque el paso de precio mínimo es mayor que la distancia $S_0-H$. El AMM con $M=4$ logra una precisión de $4$ decimales manteniendo el costo computacional bajo ($N=100$ pasos base), resolviendo efectivamente el problema del límite mediante la inserción local de nodos.
 
-\subsection{Análisis de Eficiencia} 
+\subsubsection{Análisis de Eficiencia} 
 
 Las pruebas de tiempo de ejecución confirman que el costo computacional del AMM escala linealmente. Añadir un nivel de refinamiento incrementa el tiempo de cálculo en aproximadamente un factor constante pequeño (correspondiente a valorar la franja de 3 filas), en contraste con el factor de $\times16$ ($4^2$) que requeriría refinar todo el árbol globalmente. Esto valida la eficiencia del método para aplicaciones en tiempo real.

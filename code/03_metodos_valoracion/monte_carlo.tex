@@ -2,26 +2,246 @@
 \section{Método 4: Monte Carlo para Opciones Americanas}
 \label{sec:metodo_montecarlo}
 
-% QUÉ ESCRIBIR AQUÍ:
-% Descripción conceptual de Monte Carlo para americanas
+La simulación de Monte Carlo es una técnica fundamental en finanzas computacionales que permite valorar derivados complejos mediante la generación de trayectorias aleatorias del precio del activo subyacente. Aunque es naturalmente adecuada para opciones europeas, su aplicación a opciones americanas presenta desafíos significativos debido a la posibilidad de ejercicio anticipado.
 
 \subsection{Desafío de las Opciones Americanas}
 
-% Explicar:
-% - Ejercicio anticipado
-% - No hay fórmulas cerradas
-% - Necesidad de métodos numéricos
+\subsubsection{El Problema del Ejercicio Óptimo}
+
+Las opciones americanas otorgan a su tenedor el derecho de ejercer en cualquier momento hasta el vencimiento $T$. Esta flexibilidad adicional implica que el valor de la opción en cualquier instante $t$ es:
+
+\begin{equation}
+V(S_t, t) = \max\left\{\text{Payoff inmediato}, \mathbb{E}^{\mathbb{Q}}[e^{-r\Delta t} V(S_{t+\Delta t}, t+\Delta t) | S_t]\right\}
+\end{equation}
+
+donde el primer término representa el valor de ejercicio inmediato y el segundo el valor de continuación (mantener la opción viva).
+
+La decisión óptima de ejercicio requiere comparar en cada instante:
+\begin{itemize}
+    \item \textbf{Valor intrínseco}: $\max(S_t - K, 0)$ para calls o $\max(K - S_t, 0)$ para puts
+    \item \textbf{Valor de continuación}: El valor esperado descontado de mantener la opción
+\end{itemize}
 
 \subsection{Simulación de Monte Carlo}
 
-% Explicar:
-% - Generación de trayectorias
-% - Monitoreo de barrera
-% - Problema: ¿cuándo ejercer?
+\subsubsection{Generación de Trayectorias}
+
+Bajo el modelo de Black-Scholes, el precio del activo subyacente bajo la medida neutral al riesgo sigue:
+
+\begin{equation}
+dS_t = (r - \delta)S_t dt + \sigma S_t dW_t^{\mathbb{Q}}
+\end{equation}
+
+donde $r$ es la tasa libre de riesgo, $\delta$ es la tasa de dividendos, $\sigma$ es la volatilidad, y $W_t^{\mathbb{Q}}$ es un proceso de Wiener bajo la medida neutral al riesgo.
+
+La solución analítica de esta ecuación diferencial estocástica es:
+
+\begin{equation}
+S_{t+\Delta t} = S_t \exp\left[\left(r - \delta - \frac{\sigma^2}{2}\right)\Delta t + \sigma\sqrt{\Delta t}\, Z\right]
+\end{equation}
+
+donde $Z \sim N(0,1)$ es una variable aleatoria normal estándar.
+
+\subsubsection{Algoritmo Básico para Opciones Europeas}
+
+Para una opción europea, el algoritmo de Monte Carlo es directo:
+
+\begin{enumerate}
+    \item Generar $M$ trayectorias del precio del subyacente desde $t=0$ hasta $t=T$
+    \item Para cada trayectoria $i$, calcular el payoff al vencimiento: $\text{Payoff}_i = \max(S_T^{(i)} - K, 0)$ para calls
+    \item Estimar el valor de la opción como:
+    \begin{equation}
+    V(S_0, 0) \approx e^{-rT} \frac{1}{M} \sum_{i=1}^{M} \text{Payoff}_i
+    \end{equation}
+\end{enumerate}
+
+El error estándar de esta estimación decrece como $O(1/\sqrt{M})$, independientemente de la dimensionalidad del problema.
+
+\subsubsection{Monitoreo de Barreras}
+
+Para opciones con barreras, es necesario monitorear si el precio cruza el nivel $H$ durante la vida de la opción. Esto requiere discretizar cada trayectoria en $N$ pasos temporales:
+
+\begin{equation}
+S_{t_j} = S_{t_{j-1}} \exp\left[\left(r - \delta - \frac{\sigma^2}{2}\right)\Delta t + \sigma\sqrt{\Delta t}\, Z_j\right]
+\end{equation}
+
+para $j = 1, 2, \ldots, N$, donde $\Delta t = T/N$ y $Z_j \sim N(0,1)$ son independientes.
+
+En cada paso se verifica si $S_{t_j}$ ha cruzado la barrera $H$:
+\begin{itemize}
+    \item Para opciones \textbf{knock-out}: Si se cruza $H$, la trayectoria se marca como extinguida
+    \item Para opciones \textbf{knock-in}: Si se cruza $H$, la trayectoria se marca como activada
+\end{itemize}
+
+\textbf{Sesgo de Discretización}: El monitoreo discreto puede no detectar cruces que ocurren entre puntos de observación. Este sesgo se reduce aumentando $N$, pero a costa de mayor tiempo computacional.
+
+\subsubsection{El Problema Fundamental: ¿Cuándo Ejercer?}
+
+Para opciones americanas, el desafío es determinar la estrategia de ejercicio óptima. En cada punto de decisión $t_j$, necesitamos saber si es óptimo ejercer o continuar.
+
+El problema es que en Monte Carlo avanzamos hacia adelante en el tiempo, pero la decisión de ejercicio requiere conocer el valor de continuación, que depende del futuro. Esto crea una paradoja:
+
+\begin{itemize}
+    \item Para decidir si ejercer en $t_j$, necesitamos $\mathbb{E}[V(S_{t_{j+1}}, t_{j+1}) | S_{t_j}]$
+    \item Pero $V(S_{t_{j+1}}, t_{j+1})$ depende de las decisiones de ejercicio futuras
+    \item Que a su vez dependen de valores de continuación aún más futuros
+\end{itemize}
+
+Este problema circular requiere un enfoque sofisticado.
 
 \subsection{Método de Longstaff-Schwartz (LSM)}
 
-% Explicar:
-% - Regresión para estimar valor de continuación
-% - Decisión de ejercicio óptimo
-% - Algoritmo backward en las simulaciones
+El método de Longstaff-Schwartz \cite{longstaff2001valuing}, también conocido como Least Squares Monte Carlo (LSM), resuelve el problema del ejercicio óptimo mediante regresión para estimar el valor de continuación.
+
+\subsubsection{Idea Central}
+
+La intuición del método es:
+
+\begin{enumerate}
+    \item Generar todas las trayectorias completas desde $t=0$ hasta $t=T$
+    \item Trabajar hacia atrás en el tiempo (backward induction)
+    \item En cada punto de decisión $t_j$, usar regresión para estimar el valor de continuación como función del precio actual
+    \item Comparar el valor de continuación estimado con el valor de ejercicio inmediato
+    \item Ejercer si el valor inmediato excede el valor de continuación
+\end{enumerate}
+
+\subsubsection{Estimación del Valor de Continuación}
+
+En el tiempo $t_j$, para todas las trayectorias que están ``in-the-money'' (donde el ejercicio inmediato tiene valor positivo) se estima el valor de continuación mediante regresión de mínimos cuadrados:
+
+\begin{equation}
+\mathbb{E}[e^{-r\Delta t} V(S_{t_{j+1}}, t_{j+1}) | S_{t_j}] \approx \sum_{k=0}^{K} a_k L_k(S_{t_j})
+\end{equation}
+
+donde $L_k$ son funciones base (típicamente polinomios de Laguerre) y $a_k$ son coeficientes determinados por regresión.
+
+\textbf{¿Por qué Polinomios de Laguerre?}
+
+Los polinomios de Laguerre ponderados $L_k(x) e^{-x/2}$ forman una base ortogonal en $[0, \infty)$, que es el dominio natural de los precios de activos. Los primeros polinomios son:
+
+\begin{align}
+L_0(x) &= 1 \\
+L_1(x) &= 1 - x \\
+L_2(x) &= 1 - 2x + \frac{x^2}{2} \\
+L_3(x) &= 1 - 3x + \frac{3x^2}{2} - \frac{x^3}{6}
+\end{align}
+
+En la práctica, se usan típicamente los primeros 3-5 polinomios.
+
+\subsubsection{Algoritmo de Longstaff-Schwartz}
+
+\textbf{Paso 1: Generación de Trayectorias}
+
+Generar $M$ trayectorias completas del precio del subyacente:
+\begin{equation}
+S^{(i)} = (S_0, S_{t_1}^{(i)}, S_{t_2}^{(i)}, \ldots, S_{t_N}^{(i)})
+\end{equation}
+para $i = 1, 2, \ldots, M$.
+
+\textbf{Paso 2: Inicialización al Vencimiento}
+
+Para cada trayectoria $i$, el valor al vencimiento es el payoff:
+\begin{equation}
+V_{t_N}^{(i)} = \max(K - S_{t_N}^{(i)}, 0) \quad \text{(para puts)}
+\end{equation}
+
+\textbf{Paso 3: Inducción Hacia Atrás}
+
+Para cada tiempo $t_j$ desde $t_{N-1}$ hasta $t_1$:
+
+\begin{enumerate}
+    \item Identificar trayectorias in-the-money: $\mathcal{I}_j = \{i : K - S_{t_j}^{(i)} > 0\}$
+    
+    \item Para estas trayectorias, calcular el valor descontado de continuación observado:
+    \begin{equation}
+    Y^{(i)} = e^{-r\Delta t} V_{t_{j+1}}^{(i)}
+    \end{equation}
+    
+    \item Realizar regresión de mínimos cuadrados:
+    \begin{equation}
+    \min_{a_0, \ldots, a_K} \sum_{i \in \mathcal{I}_j} \left[Y^{(i)} - \sum_{k=0}^{K} a_k L_k(S_{t_j}^{(i)})\right]^2
+    \end{equation}
+    
+    \item Estimar el valor de continuación para cada trayectoria:
+    \begin{equation}
+    C_{t_j}^{(i)} = \sum_{k=0}^{K} \hat{a}_k L_k(S_{t_j}^{(i)})
+    \end{equation}
+    
+    \item Decidir ejercicio óptimo:
+    \begin{equation}
+    V_{t_j}^{(i)} = \begin{cases}
+    K - S_{t_j}^{(i)} & \text{si } K - S_{t_j}^{(i)} > C_{t_j}^{(i)} \\
+    e^{-r\Delta t} V_{t_{j+1}}^{(i)} & \text{en caso contrario}
+    \end{cases}
+    \end{equation}
+\end{enumerate}
+
+\textbf{Paso 4: Valoración}
+
+El valor de la opción es el promedio descontado de los valores en $t_0$:
+\begin{equation}
+V(S_0, 0) \approx \frac{1}{M} \sum_{i=1}^{M} e^{-r\tau_i} \max(K - S_{\tau_i}^{(i)}, 0)
+\end{equation}
+
+donde $\tau_i$ es el tiempo de ejercicio óptimo para la trayectoria $i$.
+
+\subsubsection{Consideraciones Prácticas}
+
+\textbf{1. Número de Funciones Base}
+
+Usar demasiadas funciones base puede causar sobreajuste (overfitting), mientras que muy pocas pueden no capturar la estructura del valor de continuación. En la práctica, 3-5 funciones suelen ser suficientes.
+
+\textbf{2. Trayectorias In-the-Money}
+
+La regresión solo se realiza sobre trayectorias in-the-money porque:
+\begin{itemize}
+    \item Solo estas trayectorias tienen una decisión de ejercicio real
+    \item Incluir trayectorias out-of-the-money añade ruido sin información útil
+\end{itemize}
+
+\textbf{3. Número de Simulaciones}
+
+Se requieren típicamente $M = 10,000$ a $100,000$ trayectorias para obtener estimaciones precisas. El error estándar decrece como $O(1/\sqrt{M})$.
+
+\textbf{4. Número de Pasos Temporales}
+
+Para opciones con barreras, se necesitan suficientes pasos $N$ para monitorear adecuadamente la barrera. Típicamente $N = 50$ a $252$ (días de trading anuales).
+
+\subsubsection{Extensión a Opciones Barrera Americanas}
+
+Para opciones americanas con barreras, el algoritmo LSM se modifica para incorporar el monitoreo de la barrera:
+
+\begin{itemize}
+    \item \textbf{Knock-out}: Si una trayectoria cruza la barrera en $t_j$, se establece $V_{t_j}^{(i)} = R$ (rebate) y no se consideran decisiones de ejercicio futuras para esa trayectoria.
+    
+    \item \textbf{Knock-in}: La trayectoria solo puede ejercerse después de que se haya cruzado la barrera. Antes del cruce, $V_{t_j}^{(i)} = e^{-r\Delta t} V_{t_{j+1}}^{(i)}$ (solo continuación).
+\end{itemize}
+
+\subsection{Ventajas y Limitaciones del Método LSM}
+
+\textbf{Ventajas:}
+\begin{itemize}
+    \item \textbf{Flexibilidad}: Aplicable a opciones con payoffs complejos, múltiples subyacentes, y barreras
+    \item \textbf{Escalabilidad}: No sufre de la maldición de la dimensionalidad como árboles y diferencias finitas
+    \item \textbf{Implementación}: Relativamente simple de programar
+    \item \textbf{Griegas}: Pueden estimarse mediante diferencias finitas o métodos de sensibilidad
+\end{itemize}
+
+\textbf{Limitaciones:}
+\begin{itemize}
+    \item \textbf{Convergencia lenta}: Error $O(1/\sqrt{M})$ requiere muchas simulaciones para alta precisión
+    \item \textbf{Sesgo bajo}: El método tiende a subestimar ligeramente el valor verdadero (sesgo bajo)
+    \item \textbf{Elección de funciones base}: El rendimiento depende de la elección apropiada de funciones base
+    \item \textbf{Costo computacional}: Para alta precisión, puede ser más lento que métodos de árbol para problemas de baja dimensionalidad
+\end{itemize}
+
+\subsection{Comparación con Otros Métodos}
+
+El método LSM es particularmente valioso cuando:
+\begin{itemize}
+    \item El problema es de alta dimensionalidad (opciones sobre múltiples activos)
+    \item El payoff es complejo o path-dependent
+    \item Se requiere flexibilidad para incorporar características exóticas
+\end{itemize}
+
+Para opciones americanas simples de baja dimensionalidad, los árboles adaptativos (como el AMM) pueden ser más eficientes. Sin embargo, para opciones barrera americanas con múltiples características exóticas, el LSM es frecuentemente el método de elección en la práctica.
