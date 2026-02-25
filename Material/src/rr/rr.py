@@ -53,11 +53,9 @@ def calcular_terminos_rr(S, K, H, t, r_rate, d_rate, sigma, phi, eta, R=0):
             
     return term1, term2, term3, term4, term5, term6
 
-def rubison_reiner(S, K, H, t, r_rate, d_rate, sigma, R=0, isCall=True, isUp=True, isIn=True):
-    isDown = S > H
-    
+def rubison_reiner(S, K, H, t, r_rate, d_rate, sigma, R=0, isCall=True, isDown=True, isIn=True):
     phi = 1 if isCall else -1
-    eta = -1 if isUp else 1
+    eta = 1 if isDown else -1
     
     t1, t2, t3, t4, t5, t6 = calcular_terminos_rr(S, K, H, t, r_rate, d_rate, sigma, phi, eta, R)
     
@@ -93,10 +91,10 @@ if __name__ == "__main__":
     S0 = 100
     K = 100
     T = 1
-    r = 0.05
-    d = 0.03
-    sigma = 0.15
+    r = 0.10
+    d = 0.05
+    sigma = 0.25
     H = 120
 
-    precio = rubison_reiner(S0, K, H, T, r, d, sigma, isCall=True, isUp=True, isIn=False)
+    precio = rubison_reiner(S0, K, H, T, r, d, sigma, isCall=True, isDown=False, isIn=False)
     print(f"Precio de la opción: {precio}")
