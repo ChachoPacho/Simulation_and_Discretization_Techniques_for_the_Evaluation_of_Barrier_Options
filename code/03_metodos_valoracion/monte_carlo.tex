@@ -130,91 +130,45 @@ En la práctica, se usan típicamente los primeros 3-5 polinomios.
 
 \subsubsection{Algoritmo de Longstaff-Schwartz}
 
+El algoritmo LSM procede en cuatro pasos principales:
+
 \textbf{Paso 1: Generación de Trayectorias}
 
-Generar $M$ trayectorias completas del precio del subyacente:
-\begin{equation}
-S^{(i)} = (S_0, S_{t_1}^{(i)}, S_{t_2}^{(i)}, \ldots, S_{t_N}^{(i)})
-\end{equation}
-para $i = 1, 2, \ldots, M$.
+Se generan $M$ trayectorias completas del precio del subyacente desde $t=0$ hasta $t=T$, discretizadas en $N$ pasos temporales.
 
 \textbf{Paso 2: Inicialización al Vencimiento}
 
-Para cada trayectoria $i$, el valor al vencimiento es el payoff:
-\begin{equation}
-V_{t_N}^{(i)} = \max(K - S_{t_N}^{(i)}, 0) \quad \text{(para puts)}
-\end{equation}
+Para cada trayectoria, el valor al vencimiento es simplemente el payoff de la opción.
 
 \textbf{Paso 3: Inducción Hacia Atrás}
 
-Para cada tiempo $t_j$ desde $t_{N-1}$ hasta $t_1$:
+Este es el núcleo del algoritmo. Para cada tiempo $t_j$ desde $t_{N-1}$ hasta $t_1$:
 
 \begin{enumerate}
-    \item Identificar trayectorias in-the-money: $\mathcal{I}_j = \{i : K - S_{t_j}^{(i)} > 0\}$
+    \item Se identifican las trayectorias in-the-money (donde el ejercicio inmediato tiene valor positivo)
     
-    \item Para estas trayectorias, calcular el valor descontado de continuación observado:
+    \item Para estas trayectorias, se realiza una regresión de mínimos cuadrados usando funciones base (típicamente polinomios de Laguerre) para estimar el valor de continuación:
     \begin{equation}
-    Y^{(i)} = e^{-r\Delta t} V_{t_{j+1}}^{(i)}
+    \mathbb{E}[e^{-r\Delta t} V(S_{t_{j+1}}, t_{j+1}) | S_{t_j}] \approx \sum_{k=0}^{K} a_k L_k(S_{t_j})
     \end{equation}
     
-    \item Realizar regresión de mínimos cuadrados:
-    \begin{equation}
-    \min_{a_0, \ldots, a_K} \sum_{i \in \mathcal{I}_j} \left[Y^{(i)} - \sum_{k=0}^{K} a_k L_k(S_{t_j}^{(i)})\right]^2
-    \end{equation}
+    \item Se compara el valor de ejercicio inmediato con el valor de continuación estimado
     
-    \item Estimar el valor de continuación para cada trayectoria:
-    \begin{equation}
-    C_{t_j}^{(i)} = \sum_{k=0}^{K} \hat{a}_k L_k(S_{t_j}^{(i)})
-    \end{equation}
-    
-    \item Decidir ejercicio óptimo:
-    \begin{equation}
-    V_{t_j}^{(i)} = \begin{cases}
-    K - S_{t_j}^{(i)} & \text{si } K - S_{t_j}^{(i)} > C_{t_j}^{(i)} \\
-    e^{-r\Delta t} V_{t_{j+1}}^{(i)} & \text{en caso contrario}
-    \end{cases}
-    \end{equation}
+    \item Se toma la decisión de ejercicio óptima: ejercer si el valor inmediato excede el valor de continuación
 \end{enumerate}
 
 \textbf{Paso 4: Valoración}
 
-El valor de la opción es el promedio descontado de los valores en $t_0$:
-\begin{equation}
-V(S_0, 0) \approx \frac{1}{M} \sum_{i=1}^{M} e^{-r\tau_i} \max(K - S_{\tau_i}^{(i)}, 0)
-\end{equation}
-
-donde $\tau_i$ es el tiempo de ejercicio óptimo para la trayectoria $i$.
-
-\subsubsection{Consideraciones Prácticas}
-
-\textbf{1. Número de Funciones Base}
-
-Usar demasiadas funciones base puede causar sobreajuste (overfitting), mientras que muy pocas pueden no capturar la estructura del valor de continuación. En la práctica, 3-5 funciones suelen ser suficientes.
-
-\textbf{2. Trayectorias In-the-Money}
-
-La regresión solo se realiza sobre trayectorias in-the-money porque:
-\begin{itemize}
-    \item Solo estas trayectorias tienen una decisión de ejercicio real
-    \item Incluir trayectorias out-of-the-money añade ruido sin información útil
-\end{itemize}
-
-\textbf{3. Número de Simulaciones}
-
-Se requieren típicamente $M = 10,000$ a $100,000$ trayectorias para obtener estimaciones precisas. El error estándar decrece como $O(1/\sqrt{M})$.
-
-\textbf{4. Número de Pasos Temporales}
-
-Para opciones con barreras, se necesitan suficientes pasos $N$ para monitorear adecuadamente la barrera. Típicamente $N = 50$ a $252$ (días de trading anuales).
+El valor de la opción es el promedio descontado de los payoffs en los tiempos de ejercicio óptimos determinados en el paso anterior.
 
 \subsubsection{Extensión a Opciones Barrera Americanas}
 
 Para opciones americanas con barreras, el algoritmo LSM se modifica para incorporar el monitoreo de la barrera:
 
 \begin{itemize}
-    \item \textbf{Knock-out}: Si una trayectoria cruza la barrera en $t_j$, se establece $V_{t_j}^{(i)} = R$ (rebate) y no se consideran decisiones de ejercicio futuras para esa trayectoria.
+    \item \textbf{Knock-out}: Si una trayectoria cruza la barrera en $t_j$, se establece su valor en el rebate $R$ y no se consideran decisiones de ejercicio futuras para esa trayectoria.
     
-    \item \textbf{Knock-in}: La trayectoria solo puede ejercerse después de que se haya cruzado la barrera. Antes del cruce, $V_{t_j}^{(i)} = e^{-r\Delta t} V_{t_{j+1}}^{(i)}$ (solo continuación).
+    \item \textbf{Knock-in}: La trayectoria solo puede ejercerse después de que se haya cruzado la barrera. Antes del cruce, solo se considera el valor de continuación.
 \end{itemize}
 
 \subsection{Ventajas y Limitaciones del Método LSM}

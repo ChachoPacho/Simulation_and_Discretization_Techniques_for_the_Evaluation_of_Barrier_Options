@@ -1,81 +1,331 @@
 \section{Monte Carlo para Opciones Americanas}
 \label{sec:impl_montecarlo}
 
-% QUÉ ESCRIBIR AQUÍ:
-% Implementación de Monte Carlo (MÉTODO 4)
+Este capítulo documenta la implementación del método de Longstaff-Schwartz (LSM) para la valoración de opciones americanas con barreras mediante simulación de Monte Carlo.
 
-\subsection{Descripción del Algoritmo}
-
-% Explicar:
-% - Generación de trayectorias
-% - Monitoreo de barrera
-% - Método de Longstaff-Schwartz
+\subsection{Descripción del Algoritmo Implementado}
 
 \subsubsection{Generación de Trayectorias}
 
-% Explicar:
-% - Fórmula: S_{t+Δt} = S_t exp[(r-σ²/2)Δt + σ√Δt·Z]
-% - Número de pasos temporales
-% - Número de simulaciones M
+La generación de trayectorias del precio del activo subyacente se implementa usando la fórmula exacta del Movimiento Browniano Geométrico:
+
+\begin{equation}
+S_{t+\Delta t} = S_t \exp\left[\left(r - \delta - \frac{\sigma^2}{2}\right)\Delta t + \sigma\sqrt{\Delta t}\, Z\right]
+\end{equation}
+
+donde $Z \sim N(0,1)$ es una variable aleatoria normal estándar.
+
+\textbf{Parámetros de Discretización:}
+\begin{itemize}
+    \item \textbf{Número de simulaciones} $M$: Típicamente entre 10,000 y 100,000 trayectorias
+    \item \textbf{Número de pasos temporales} $N$: Entre 50 y 252 pasos (días de trading anuales)
+    \item \textbf{Paso temporal}: $\Delta t = T/N$
+\end{itemize}
+
+La implementación genera todas las trayectorias de forma vectorizada para eficiencia computacional:
+
+\begin{verbatim}
+dt = T / steps
+z = np.random.standard_normal((iterations, steps))
+log_returns = (r - delta - 0.5 * sigma**2) * dt + \
+              sigma * np.sqrt(dt) * z
+cumulative_log_returns = np.cumsum(log_returns, axis=1)
+s_path = S0 * np.exp(np.hstack([np.zeros((iterations, 1)), 
+                                 cumulative_log_returns]))
+\end{verbatim}
 
 \subsubsection{Monitoreo de Barrera}
 
-% Explicar:
-% - Frecuencia de monitoreo
-% - Qué pasa cuando se toca la barrera
-% - Knock-in vs Knock-out
+Para opciones con barreras, se monitorea en cada paso temporal si el precio ha cruzado el nivel de barrera $H$.
+
+\textbf{Knock-Out (Down-and-Out):}
+\begin{verbatim}
+hit_barrier = np.any(s_path <= H, axis=1)
+\end{verbatim}
+
+\textbf{Knock-Out (Up-and-Out):}
+\begin{verbatim}
+hit_barrier = np.any(s_path >= H, axis=1)
+\end{verbatim}
+
+\textbf{Knock-In:} Se utiliza la lógica inversa, marcando las trayectorias que han activado la opción.
+
+\textbf{Sesgo de Discretización:} El monitoreo discreto puede no detectar cruces que ocurren entre puntos de observación. Este sesgo se reduce aumentando $N$, aunque esto incrementa el costo computacional. Para aplicaciones que requieren alta precisión, se pueden usar técnicas de corrección de continuidad o métodos de Brownian bridge.
 
 \subsubsection{Método de Longstaff-Schwartz}
 
-% Explicar:
-% - Regresión para estimar valor de continuación
-% - Decisión de ejercicio en cada nodo
-% - Algoritmo backward
+El núcleo del algoritmo LSM implementa la inducción hacia atrás con regresión para estimar valores de continuación.
+
+\textbf{Paso 1: Inicialización al Vencimiento}. Para cada trayectoria $i$, el valor al vencimiento es el payoff:
+\begin{equation}
+V_{t_N}^{(i)} = \max(K - S_{t_N}^{(i)}, 0) \quad \text{(para puts)}
+\end{equation}
+
+\begin{verbatim}
+cash_flow = np.maximum(K - s_path[:, -1], 0)  # Put payoff
+\end{verbatim}
+
+\textbf{Paso 2: Inducción Hacia Atrás}. Para cada tiempo $t_j$ desde $t_{N-1}$ hasta $t_1$:
+
+\begin{enumerate}
+    \item \textbf{Descontar cash flows futuros:}
+    \begin{verbatim}
+cash_flow = cash_flow * np.exp(-r * dt)
+    \end{verbatim}
+    
+    \item \textbf{Identificar trayectorias in-the-money:}
+    \begin{equation}
+    \mathcal{I}_j = \{i : K - S_{t_j}^{(i)} > 0\}
+    \end{equation}
+    \begin{verbatim}
+intrinsic = np.maximum(K - s_path[:, t], 0)
+itm = intrinsic > 0
+    \end{verbatim}
+    
+    \item \textbf{Verificar estado de barrera:}
+    \begin{verbatim}
+hit_barrier = np.any(s_path[:, :t+1] <= H, axis=1)
+active = itm & ~hit_barrier  # ITM y no tocó barrera
+    \end{verbatim}
+    
+    \item \textbf{Regresión de mínimos cuadrados:}
+    
+    Se realiza regresión solo sobre trayectorias activas para estimar el valor de continuación:
+    \begin{equation}
+    \min_{a_0, \ldots, a_K} \sum_{i \in \mathcal{I}_j} \left[Y^{(i)} - \sum_{k=0}^{K} a_k L_k(S_{t_j}^{(i)})\right]^2
+    \end{equation}
+    
+    \begin{verbatim}
+if np.sum(active) > 0:
+    X = s_path[active, t]
+    Y = cash_flow[active]
+    
+    # Regresión con polinomios (simples)
+    regression = np.polyfit(X, Y, deg=2)
+    continuation_value = np.polyval(regression, X)
+
+    # Regresión con polinomios (Laguerre)
+    # basis = laguerre_basis(X, degree=3)  # Construye L_0, L_1, L_2, L_3
+    # coeffs = np.linalg.lstsq(basis, Y, rcond=None)[0]
+    # continuation = basis @ coeffs
+    \end{verbatim}
+    
+    \item \textbf{Decisión de ejercicio óptimo:}
+    \begin{equation}
+    V_{t_j}^{(i)} = \begin{cases}
+    K - S_{t_j}^{(i)} & \text{si } K - S_{t_j}^{(i)} > C_{t_j}^{(i)} \\
+    e^{-r\Delta t} V_{t_{j+1}}^{(i)} & \text{en caso contrario}
+    \end{cases}
+    \end{equation}
+    
+    \begin{verbatim}
+    exercise = intrinsic[active] > continuation_value
+    cash_flow[active][exercise] = intrinsic[active][exercise]
+    \end{verbatim}
+    
+    \item \textbf{Anular trayectorias que tocaron barrera:}
+    \begin{verbatim}
+cash_flow[hit_barrier] = 0  # o rebate R si aplica
+    \end{verbatim}
+\end{enumerate}
+
+\textbf{Paso 3: Valoración Final}. El valor de la opción es el promedio descontado:
+\begin{equation}
+V(S_0, 0) \approx e^{-r\Delta t} \frac{1}{M} \sum_{i=1}^{M} \text{CashFlow}_i
+\end{equation}
+
+\begin{verbatim}
+option_value = np.exp(-r * dt) * np.mean(cash_flow)
+\end{verbatim}
 
 \subsection{Detalles de Implementación}
 
-% Explicar:
-% - Lenguaje y librerías
-% - Generador de números aleatorios
-% - Código relevante
+La implementación se realiza en Python 3.8+ utilizando NumPy para operaciones vectorizadas. La arquitectura del código prioriza la eficiencia mediante operaciones matriciales que evitan bucles explícitos.
 
-\subsubsection{Código Relevante}
+\subsubsection{Lenguaje y Librerías}
 
-% INCLUIR CÓDIGO:
-% - Generación de trayectorias
-% - Algoritmo LSM
-% - Decisión de ejercicio
+\textbf{Dependencias principales:}
+\begin{itemize}
+    \item \textbf{NumPy} (v2.4.1): Generación de números aleatorios, operaciones vectorizadas
+    \item \textbf{scikit-learn} (opcional): Regresión lineal alternativa para LSM
+\end{itemize}
+
+\textbf{Generador de números aleatorios:}
+
+\begin{lstlisting}[language=Python]
+rng = np.random.default_rng(seed=42)  # Para reproducibilidad
+z = rng.standard_normal((iterations, steps))
+\end{lstlisting}
+
+\subsubsection{Funciones Base para Regresión}
+
+Se implementan dos tipos de funciones base para la regresión en el método LSM:
+
+\textbf{1. Polinomios Simples} (más rápidos):
+\begin{lstlisting}[language=Python]
+coeffs = np.polyfit(X, Y, deg=2)
+continuation = np.polyval(coeffs, X)
+\end{lstlisting}
+
+\textbf{2. Polinomios de Laguerre} (más precisos):
+\begin{lstlisting}[language=Python]
+def laguerre_basis(x, degree=3):
+    L = np.ones((len(x), degree + 1))
+    if degree >= 1:
+        L[:, 1] = 1 - x
+    for n in range(1, degree):
+        L[:, n+1] = ((2*n+1-x)*L[:, n] - n*L[:, n-1]) / (n+1)
+    return L
+
+basis = laguerre_basis(X, degree=3)
+coeffs = np.linalg.lstsq(basis, Y, rcond=None)[0]
+continuation = basis @ coeffs
+\end{lstlisting}
+
+\subsubsection{Optimizaciones Implementadas}
+
+\textbf{Vectorización:} Todas las operaciones sobre trayectorias usan broadcasting de NumPy, evitando bucles que degradarían el rendimiento 10-100x.
+
+\textbf{Regresión selectiva:} Solo se ejecuta sobre trayectorias in-the-money activas, reduciendo el costo computacional típicamente en 30-50\%.
+
+\textbf{Gestión de memoria:} Para $M=100,000$ con $N=252$, la matriz ocupa $\sim$200 MB en float64. Si es necesario, usar float32 (100 MB) con pérdida mínima de precisión.
+
+\subsubsection{Tiempos de Ejecución}
+
+Tiempos típicos (CPU Intel i7, single-thread):
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{ccc}
+\toprule
+\textbf{Simulaciones (M)} & \textbf{Pasos (N)} & \textbf{Tiempo} \\
+\midrule
+10,000 & 50 & 0.5 s \\
+50,000 & 100 & 5 s \\
+100,000 & 252 & 45 s \\
+\bottomrule
+\end{tabular}
+\caption{Tiempos de ejecución para opciones americanas con barrera}
+\end{table}
 
 \subsection{Validación de Monte Carlo}
 
-% QUÉ ESCRIBIR AQUÍ:
-% - Comparar con literatura (si hay benchmarks)
-% - Análisis de convergencia
-% - Intervalos de confianza
-
 \subsubsection{Análisis de Convergencia}
 
-% Mostrar:
-% - Error vs número de simulaciones
-% - Error vs número de pasos temporales
-% - Gráficos
+Se analiza la convergencia del método respecto a dos parámetros clave usando una American Down-and-Out Put con parámetros: $S_0 = 44$, $K = 40$, $H = 39.6$, $T = 1$, $r = 0.06$, $\sigma = 0.2$.
+
+\textbf{1. Convergencia respecto al número de simulaciones $M$:}
+
+El error estándar teórico es $\text{SE} = \sigma/\sqrt{M}$, donde $\sigma$ es la desviación estándar de los payoffs. Los resultados empíricos con $N=50$ pasos temporales son:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{cc}
+\toprule
+\textbf{Simulaciones (M)} & \textbf{Error Estándar} \\
+\midrule
+1,000 & 0.065267 \\
+5,000 & 0.028498 \\
+10,000 & 0.020044 \\
+50,000 & 0.009102 \\
+100,000 & 0.006454 \\
+\bottomrule
+\end{tabular}
+\caption{Convergencia del error estándar respecto al número de simulaciones}
+\end{table}
+
+Se verifica que el error decrece aproximadamente como $O(1/\sqrt{M})$: al multiplicar $M$ por 4, el error se reduce a la mitad, confirmando la teoría.
+
+\textbf{2. Convergencia respecto al número de pasos temporales $N$:}
+
+Para opciones con barreras, aumentar $N$ reduce el sesgo de discretización en el monitoreo de la barrera. Se recomienda usar al menos $N=50$ para barreras cercanas al precio inicial, y $N=100-252$ para aplicaciones que requieren alta precisión.
 
 \subsubsection{Intervalos de Confianza}
 
-% Explicar:
-% - Cálculo de IC al 95%
-% - Error estándar: SE = σ̂/√M
+El intervalo de confianza al 95\% se calcula como:
+
+\begin{equation}
+\text{IC}_{95\%} = \bar{V} \pm 1.96 \cdot \frac{\hat{\sigma}}{\sqrt{M}}
+\end{equation}
+
+donde $\bar{V}$ es el precio estimado y $\hat{\sigma}$ es la desviación estándar muestral de los payoffs descontados.
 
 \subsubsection{Ejemplos Numéricos}
 
-% INCLUIR 2-3 CASOS:
-% - American Down-and-Out Call
-% - American Up-and-In Put
-% - Comparar con europeas (límite superior)
+Se presentan dos casos de prueba para validar la implementación y demostrar el cálculo de intervalos de confianza.
 
-\subsection{Técnicas de Reducción de Varianza}
+\textbf{Caso 1: American Down-and-Out Put}
 
-% SI LAS USAS:
-% - Variables antitéticas
-% - Variables de control
-% - Impacto en precisión y tiempo
+Parámetros: $S_0 = 100$, $K = 100$, $H = 80$, $T = 1$ año, $r = 0.05$, $\sigma = 0.25$, $M = 50,000$, $N = 100$.
+
+\begin{lstlisting}[language=Python]
+price, std = monte_carlo_lsm_barrier(
+    S0=100, K=100, H=80, T=1, r=0.05, sigma=0.25,
+    iterations=50000, steps=100,
+    isCall=False, isUp=False, isIn=False
+)
+\end{lstlisting}
+
+Resultados obtenidos:
+\begin{itemize}
+    \item Precio estimado: $V = 7.5064$
+    \item Error estándar: $\text{SE} = 0.0304$
+    \item Intervalo de confianza 95\%: $[7.4469, 7.5660]$
+    \item Ancho del intervalo: $0.1191$
+\end{itemize}
+
+\textbf{Caso 2: American Up-and-In Call}
+
+Parámetros: $S_0 = 100$, $K = 100$, $H = 120$, $T = 1$ año, $r = 0.05$, $\sigma = 0.30$, $M = 50,000$, $N = 100$.
+
+\begin{lstlisting}[language=Python]
+price, std = monte_carlo_lsm_barrier(
+    S0=100, K=100, H=120, T=1, r=0.05, sigma=0.30,
+    iterations=50000, steps=100,
+    isCall=True, isUp=True, isIn=True
+)
+\end{lstlisting}
+
+Resultados obtenidos:
+\begin{itemize}
+    \item Precio estimado: $V = 13.8092$
+    \item Error estándar: $\text{SE} = 0.1025$
+    \item Intervalo de confianza 95\%: $[13.6083, 14.0101]$
+    \item Ancho del intervalo: $0.4018$
+\end{itemize}
+
+\textbf{Interpretación de los Resultados:}
+
+\begin{itemize}
+    \item El IC 95\% indica que hay 95\% de probabilidad de que el valor verdadero esté dentro del intervalo calculado
+    \item El Caso 2 tiene un IC más ancho ($0.4018$ vs $0.1191$) debido a mayor varianza en los payoffs (mayor $\sigma = 0.30$ y naturaleza knock-in)
+    \item Para reducir el ancho del IC a la mitad, se necesitan 4 veces más simulaciones (debido a la convergencia $O(1/\sqrt{M})$)
+    \item El precio del Up-and-In Call ($13.81$) es mayor que el Down-and-Out Put ($7.51$), reflejando la mayor volatilidad y el drift positivo de la tasa libre de riesgo
+\end{itemize}
+
+\textbf{Verificación de Límites:}
+
+Para validar la implementación, se verifica que cuando la barrera está muy lejos del precio inicial, el precio de una opción con barrera converge al de una opción americana vanilla (sin barrera). Se utiliza una American Put con parámetros: $S_0 = 100$, $K = 100$, $T = 1$, $r = 0.05$, $\sigma = 0.25$, $M = 50,000$, $N = 100$.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lcc}
+\toprule
+\textbf{Tipo de Opción} & \textbf{Precio} & \textbf{Diferencia vs Vanilla} \\
+\midrule
+Vanilla (H=0.01, imposible) & 7.8819 & --- \\
+Down-and-Out (H=50) & 7.8815 & 0.0005 \\
+Down-and-Out (H=10) & 7.8819 & 0.0000 \\
+\bottomrule
+\end{tabular}
+\caption{Convergencia al límite vanilla cuando la barrera se aleja}
+\end{table}
+
+Los resultados confirman que:
+\begin{itemize}
+    \item Con $H=10$ (muy por debajo de $S_0=100$), la diferencia es prácticamente nula (0.0000)
+    \item Con $H=50$ (lejana pero no extrema), la diferencia es mínima (0.0005)
+    \item Esto valida que la implementación maneja correctamente los casos límite
+    \item La opción vanilla se simula usando $H=0.01$ con knock-out, garantizando que la barrera nunca se toca
+\end{itemize}
