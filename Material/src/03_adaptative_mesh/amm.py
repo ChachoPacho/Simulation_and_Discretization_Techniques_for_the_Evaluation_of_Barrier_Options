@@ -1,6 +1,5 @@
 import numpy as np
 from math import ceil
-from rr.rr import reiner_rubinstein_down_out_call
 
 def AMM_Barrier_Recursivo(S0, K, T, r, sigma, H, M):
     # 1. CALIBRACIÓN GLOBAL (Para la malla más profunda)
