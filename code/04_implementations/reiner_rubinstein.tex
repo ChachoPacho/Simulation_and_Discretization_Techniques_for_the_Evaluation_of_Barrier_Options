@@ -1,83 +1,114 @@
 \section{Fórmulas de Reiner y Rubinstein}
 \label{sec:impl_rr}
 
-% OBJETIVO: Documentar tu implementación de las fórmulas de R&R
-% Este es tu MÉTODO 1
-
 \subsection{Descripción de la Implementación}
 \label{subsec:desc_impl_rr}
 
-% QUÉ ESCRIBIR AQUÍ:
-% - Cómo implementaste las fórmulas
-% - Lenguaje y librerías
-% - Estructura del código
+A diferencia de las opciones americanas estándar, las opciones barrera permiten soluciones de valoración en ``forma cerrada'' debido a que la frontera crítica del precio del activo está determinada de antemano y especificada en el contrato. El marco teórico propuesto por Reiner y Rubinstein descompone el valor de cualquier opción barrera europea en una combinación lineal de hasta seis términos analíticos de valoración.
+Desde el punto de vista de la Ingenería de Software, implementar directamente ocho ecuaciones monolíticas distintas (para las combinaciones de Up/Down, In/Out, Call/Put) resulta ineficiente, propenso a errores y difícil de mantener. Por lo tanto, la descripción algorítmica de este método se diseñó bajo un paradigma modular.
+El algoritmo base se encarga de calcular de forma independiente los componentes de las distribuciones normales y los términos de valoración. Posteriormente, la lógica de negocio ensambla estos términos dependiendo del tipo de opción requerida, apoyándose en el uso de variables binarias matemáticas definidas por los autores: $\eta$ y $\phi$.
+\begin{itemize}
+  \item La variable $\eta$ toma el valor de $1$ si la barrera es aproximada desde arriba (Down-options) y $-1$ si es aproximada desde abajo (Up-options).
+  \item La variable $\phi$ actúa como un interruptor para la función de pago, tomando el valor de $1$ para opciones Call y $-1$ para opciones Put.
+\end{itemize}
 
-\subsubsection{Cálculo de Variables Auxiliares}
-
-% Explicar:
-% - Implementación de r, d, σ, t, φ, η
-% - Cálculo de μ, λ, x, x_1, y, y_1, z, b
-
-\subsubsection{Cálculo de Términos de Valoración}
-
-% Explicar:
-% - Implementación de términos [1] a [6]
-% - Uso de funciones de densidad f(u), g(u), h(τ)
-% - Cálculo de N(·) (CDF normal)
-
-\subsubsection{Construcción de Fórmulas para Cada Tipo}
-
-% Explicar:
-% - Cómo implementas las 8 fórmulas (DI, DO, UI, UO para Call y Put)
-% - Manejo de casos especiales (K > H, K < H)
-% - Uso de relaciones de paridad
+Esta abstracción matemática permite que el código sea altamente reutilizable, ya que las mismas funciones base evalúan los seis términos principales, y las reglas de paridad y construcción simplemente suman o restan los bloques correspondientes.
 
 \subsection{Detalles de Implementación}
 \label{subsec:detalles_impl_rr}
 
-% QUÉ ESCRIBIR AQUÍ:
-% - Lenguaje: Python/C++/MATLAB/etc
-% - Librerías: NumPy, SciPy, etc
-% - Snippets de código
+La implementación computacional de estas fórmulas cerradas se desarrolló priorizando la precisión numérica y la velocidad de ejecución. Al ser este método el ``oráculo'' o valor de referencia exacto (ground truth) contra el cual se evaluarán los métodos numéricos posteriores (como el AMM y Monte Carlo), su rendimiento es cŕítico.
+
+\subsubsection{Cálculo de Variables Auxiliares}
+
+El cálculo de los términos analíticos implica evaluar múltiples variables auxiliares ($x,x_1,y,y_1,z$ y los escalares $\lambda,a,b$) que dependen directamente del precio del activo $S$, el precio de ejercicio $K$, la barrera $H$ y el tiempo $t$. Para soportar el diseño de experimentos del Capítulo \ref{chapter:resultados}, donde se requiere evaluar el precio de la opción bajo miles de trayectorias o en densas mallas de precios, el código se implementó utilizando operaciones vectorizadas (por ejemplo, mediante la librería NumPy en Python). Esto permite calcular arreglos enteros de precios simultáneamente sin incurrir en la penalización de rendimiento de los bucles iterativos.
+
+\subsubsection{Evaluación de la Distribución Normal}
+
+El núcleo computacional de las ecuaciones de Reiner y Rubinstein reside en la Función de Distribución Acumulada de la Normal Estándar, denotada como $N(\cdot)$. Dado que esta función no tiene una representación algebraica elemental, en la implementación se utilizan aproximaciones numéricas altamente optimizadas provistas por las librerías científicas estándar (como \lstinline{scipy.stats.norm.cdf}).
+
+\subsubsection{Manejo de Casos Límite y Rebates}
+
+El algoritmo incluye el manejo explícito del rebate $R$, un flujo de caja fijo que se paga al tenedor si la opción es cancelada (knock-out) o si expira sin ser activada (knock-in). El valor presente de este rebate, correspondiente al término para opciones Out y al término para opciones In, incorpora el descuento por la tasa de interés ponderada por el tiempo de primer paso (first passage time). La implementación aísla este cálculo para permitir que el usuario defina $R=0$ sin causar inestabilidades numéricas en el resto de los términos.
 
 \subsubsection{Código Relevante}
 
-% INCLUIR CÓDIGO:
-% Ejemplo de función para calcular Down-and-Out Call
+\begin{lstlisting}[language=Python, caption={Términos de RR}, label={lst:rr_example}]
+def calcular_terminos_rr(S, K, H, t, r_rate, d_rate, sigma, phi, eta, R=0):
+  r, d = exp(r_rate), exp(d_rate) # Asumimos tasas continuas estandar
+  
+  # Variables auxiliares
+  mu = log(r/d) - 0.5 * sigma^2
+  lambda_ = 1 + (mu / sigma^2)
+  a = mu / sigma^2  # Derivado del paper original de R&R
+  b = sqrt(mu^2 + 2 * log(r) * sigma^2) / sigma^2
+  
+  denom = sigma * sqrt(t)
+  x  = (log(S/K) / denom) + lambda_ * denom
+  x1 = (log(S/H) / denom) + lambda_ * denom
+  y  = (log(H^2 / (S*K)) / denom) + lambda_ * denom
+  y1 = (log(H/S) / denom) + lambda_ * denom
+  z  = (log(H/S) / denom) + b * denom
+    
+  # Factores de descuento
+  S_d_t = S * (d^(-t))
+  K_r_t = K * (r^(-t))
+  R_r_t = R * (r^(-t))
+  H_S = H / S
+  
+  term1 = phi * S_d_t * N(phi * x) - phi * K_r_t * N(phi * x - phi * denom)    
+  term2 = phi * S_d_t * N(phi * x1) - phi * K_r_t * N(phi * x1 - phi * denom)
+  term3 = phi * S_d_t * (H_S^(2 * lambda_)) * N(eta * y) \
+          - phi * K_r_t * (H_S^(2 * lambda_ - 2)) * N(eta * y - eta * denom)
+  term4 = phi * S_d_t * (H_S^(2 * lambda_)) * N(eta * y1) \
+          - phi * K_r_t * (H_S^(2 * lambda_ - 2)) * N(eta * y1 - eta * denom)
+  term5 = R_r_t * (N(eta * x1 - eta * denom) \
+          - (H_S^(2 * lambda_ - 2)) * N(eta * y1 - eta * denom))
+  term6 = R * ((H_S^(a + b)) * N(eta * z) \
+          + (H_S^(a - b)) * N(eta * z - 2 * eta * b * denom))
+          
+  return term1, term2, term3, term4, term5, term6
+\end{lstlisting}
 
 \subsection{Cálculo de Griegas}
 \label{subsec:griegas_rr}
 
-% SI CALCULAS GRIEGAS:
-% - Delta, Gamma, Vega, Theta
-% - Cómo las calculas (derivadas analíticas o diferencias finitas)
+En el contexto de la gestión de riesgos financieros, el cálculo de las ``Griegas'' (sensibilidades del precio de la opción ante cambios en los parámetros del mercado) es tan importante como la valoración misma. En los métodos basados en redes discretas, como los árboles trinomiales estándar, estimar la Delta ($\Delta$) y la Gamma ($\Gamma$) mediante la perturbación del precio inicial introduce un severo ruido numérico debido al error de no linealidad inherente a la malla. Dividir por un valor de perturbación $\epsilon$ muy pequeño magnifica dramáticamente este error.
+Sin embargo, la implementación de las fórmulas cerradas de Reiner y Rubinstein proporciona una ventaja computacional inmensa: la función de valoración es analítica y continua en todo su dominio (excepto exactamente en la barrera). Esto permite dos enfoques algorítmicos para el cálculo de las Griegas:
+\begin{itemize}
+  \item \textbf{Derivación Analítica Exacta}: Consiste en calcular las derivadas parciales exactas de los seis términos de valoración respecto a $S$ (para Delta y Gamma), respecto a $\sigma$ (para Vega), etc. Aunque matemáticamente es el enfoque más riguroso, su implementación en código es extensa y propensa a errores tipográficos en la transcripción de las fórmulas derivadas.
+
+  \item \textbf{Diferencias Finitas Centrales}: Dado que la evaluación de la función vectorizada es computacionalmente instantánea y carece del ruido de discretización espacial de los árboles, es posible aplicar diferencias finitas centrales utilizando un $\epsilon$ infinitesimal (por ejemplo, $\epsilon=10^{-4}$ o menor) con extrema estabilidad numérica.
+\end{itemize}
+
+Para esta implementación, las sensibilidades se computan mediante el segundo enfoque: 
+\begin{equation*}
+  \Delta \approx \frac{V(S+\epsilon) - V(S-\epsilon)}{2\epsilon} 
+\end{equation*}
+\begin{equation*}
+  \Gamma \approx \frac{V(S+\epsilon) - 2V(S) + V(S-\epsilon)}{\epsilon^2}
+\end{equation*}
+
+Los resultados obtenidos mediante este método poseen una alta precisión y se establecen en este trabajo como el valor de referencia exacto (ground truth) contra el cual se evaluará el rendimiento de la ramificación cuadrinomial del Modelo de Malla Adaptativa (AMM) detallado en el Capítulo \ref{subsec:algoritmo_arboles_mallas}.
 
 \subsection{Validación}
 \label{subsec:validacion_rr}
 
-% QUÉ ESCRIBIR AQUÍ:
-% - Verificar propiedades matemáticas
-% - Verificar relaciones de paridad
-% - Verificar límites asintóticos
+Para garantizar la correctitud de la implementación algorítmica de las fórmulas de Reiner y Rubinstein, se diseñó una batería de pruebas computacionales (unit tests) basadas en las propiedades matemáticas y financieras descritas por los autores originales. La validación consta de tres pruebas de estrés fundamentales:
 
 \subsubsection{Verificación de Relaciones de Paridad}
 
-% Verificar:
-% - C_DI + C_DO = C_vanilla
-% - C_UI + C_UO = C_vanilla
-% - Similar para puts
+Una propiedad teórica fundamental en la estructuración de opciones exóticas es que un portafolio compuesto por una opción knock-in y una opción knock-out idénticas (mismo strike, vencimiento y barrera) equivale exactamente a una opción europea estándar (vanilla). A nivel de código, se validó sistemáticamente que para cualquier vector de precios de entrada, la suma de las rutinas computacionales cumpla con la identidad: \lstinline{Precio_Call_Vanilla(S, K, T, r, sigma) == Precio_Down_In_Call(...) + Precio_Down_Out_Call(...)} Esta prueba garantiza que el manejo de los interruptores binarios $\eta$ y $\phi$, así como la combinación de los términos de valoración, no omiten ningún flujo de caja.
 
 \subsubsection{Verificación de Límites Asintóticos}
 
-% Verificar:
-% - Cuando H → 0 (barrera muy baja): C_DO → C_vanilla
-% - Cuando H → ∞ (barrera muy alta): C_UO → C_vanilla
-% - Cuando σ → 0: convergencia a payoffs determinísticos
+Se comprobó la robustez de la implementación analizando el comportamiento de las opciones cuando la barrera es empujada hacia los límites del dominio.
 
-\subsubsection{Ejemplos Numéricos}
+\begin{itemize}
+  \item Para una opción Down-and-Out, si se configura el parámetro de la barrera $H\to0$, el impacto de la barrera se vuelve matemáticamente irrelevante. Se verificó que el algoritmo converge suave y exactamente al valor de la fórmula de Black-Scholes clásica.
+  \item De manera análoga, si para una opción Down-and-In (donde $S>H$) la barrera se eleva de manera que $H\to S$, la opción se activa inmediatamente por definición, comprobándose que su valor computado iguala al de una opción vanilla.
+\end{itemize}
 
-% INCLUIR 3-4 EJEMPLOS:
-% - Down-and-Out Call
-% - Down-and-In Call
-% - Up-and-Out Put
-% - Verificar que paridad se cumple
+\subsubsection{Aislamiento del Término de Reembolso (Rebate)}
+
+Los autores destacan un caso particular contraintuitivo: el valor de una opción Up-and-Out Call cuando el precio de ejercicio es mayor que la barrera ($K>H$). Puesto que para que el activo subyacente alcance el strike primero debe cruzar la barrera (lo cual extingue la opción), esta configuración nunca puede generar un pago (payoff) ordinario. Por lo tanto, su valor reside única y exclusivamente en el pago del rebate al momento del impacto. Se incluyeron pruebas que verifican este caso de frontera, al ejecutar la función correspondiente con $K>H$, el algoritmo aísla y retorna correctamente solo la evaluación del Término de la ecuación, confirmando el correcto manejo de la densidad del tiempo de primer paso (first passage time) y el factor de descuento condicional
