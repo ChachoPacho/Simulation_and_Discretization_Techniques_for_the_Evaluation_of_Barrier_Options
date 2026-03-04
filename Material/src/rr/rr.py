@@ -2,10 +2,6 @@ import numpy as np
 from scipy.stats import norm
 
 def calcular_terminos_rr(S, K, H, t, r_rate, d_rate, sigma, phi, eta, R=0):
-    """
-    Calcula los 6 términos analíticos de Reiner y Rubinstein.
-    Permite el uso de arreglos (numpy arrays) para evaluar miles de precios a la vez.
-    """
     # Conversión a las variables de Reiner y Rubinstein (1 + tasa) [3, 4]
     # Asumiendo que recibimos tasas continuas estándar:
     r = np.exp(r_rate)
@@ -50,7 +46,7 @@ def calcular_terminos_rr(S, K, H, t, r_rate, d_rate, sigma, phi, eta, R=0):
             
     term6 = R * ((H_S ** (a + b)) * N(eta * z) \
             + (H_S ** (a - b)) * N(eta * z - 2 * eta * b * denominador))
-            
+    
     return term1, term2, term3, term4, term5, term6
 
 def rubison_reiner(S, K, H, t, r_rate, d_rate, sigma, R=0, isCall=True, isDown=True, isIn=True):
