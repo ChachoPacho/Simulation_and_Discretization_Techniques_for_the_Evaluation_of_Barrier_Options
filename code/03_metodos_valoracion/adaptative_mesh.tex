@@ -117,7 +117,6 @@ Se añade una malla fina con pasos de precio $h/2$ y tiempo $k/4$ solo en la reg
     \item Espacial: Alrededor de $K$, típicamente $[K - 2h, K + 2h]$
 \end{itemize}
 
-% FIGURA 4: AMM para opciones vanilla
 \begin{figure}[H]
 \centering
 \makebox[\textwidth][c]{%
@@ -202,7 +201,6 @@ Se construye una malla fina junto a la barrera $H$:
     \item \textbf{Flujo de información}: A diferencia del AMM para vanilla, acá la información fluye de la malla gruesa hacia la malla fina para valorar la opción cuando $S_0$ está cerca de $H$
 \end{itemize}
 
-% FIGURA 6: AMM para opciones barrera
 \begin{figure}[H]
 \centering
 \makebox[\textwidth][c]{%
@@ -249,7 +247,6 @@ Esto permite calcular:
 
 con $\epsilon = h/2$ o incluso $\epsilon = h/4$.
 
-% FIGURA 7: Ramificación cuadrinomial para griegas
 \begin{figure}[H]
 \centering
 \makebox[\textwidth][c]{%
@@ -269,7 +266,6 @@ El uso de AMM reduce el Error Cuadrático Medio (RMSE) de:
 
 sin aumentar significativamente el tiempo de ejecución. Un AMM de 25 pasos es más preciso que un modelo trinomial estándar de 1000 pasos que tarda 500 veces más.
 
-% FIGURA 8a: Precisión en Delta
 \begin{figure}[H]
 \centering
 \makebox[\textwidth][c]{%
@@ -279,7 +275,6 @@ sin aumentar significativamente el tiempo de ejecución. Un AMM de 25 pasos es m
 \label{fig:delta_accuracy}
 \end{figure}
 
-% FIGURA 8b: Precisión en Gamma
 \begin{figure}[H]
 \centering
 \makebox[\textwidth][c]{%
