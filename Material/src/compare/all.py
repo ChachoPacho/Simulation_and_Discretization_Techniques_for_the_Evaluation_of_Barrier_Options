@@ -12,27 +12,27 @@ from bs.bs import black_scholes
 S0 = 100      # Precio inicial del activo
 K = 100       # Precio de ejercicio (strike)
 T = 1         # Tiempo hasta vencimiento (años)
-r = 0.05      # Tasa libre de riesgo
-d = 0.03         # Tasa de dividendos
-sigma = 0.15  # Volatilidad
+r = 0.10      # Tasa libre de riesgo
+d = 0.05         # Tasa de dividendos
+sigma = 0.25  # Volatilidad
 H = 120        # Nivel de la barrera
 
 # Parámetros para métodos numéricos
 amm_levels = 2      # Niveles de refinamiento AMM
-static_n = 24        # Número de opciones en replicación estática
+static_n = 6        # Número de opciones en replicación estática
 # ============================================================================
 
 # Definir los 8 casos de opciones barrera
 barrier_cases = [
     # (nombre, isCall, isDown, isIn)
-    # ("Down-and-Out Call", True, True, False),
-    # ("Down-and-In Call", True, True, True),
+    ("Down-and-Out Call", True, True, False),
+    ("Down-and-In Call", True, True, True),
     ("Up-and-Out Call", True, False, False),
-    # ("Up-and-In Call", True, False, True),
-    # ("Down-and-Out Put", False, True, False),
-    # ("Down-and-In Put", False, True, True),
-    # ("Up-and-Out Put", False, False, False),
-    # ("Up-and-In Put", False, False, True),
+    ("Up-and-In Call", True, False, True),
+    ("Down-and-Out Put", False, True, False),
+    ("Down-and-In Put", False, True, True),
+    ("Up-and-Out Put", False, False, False),
+    ("Up-and-In Put", False, False, True),
 ]
 
 print(f"\nParámetros: S0={S0}, K={K}, H={H}, T={T}, r={r}, d={d}, σ={sigma}")

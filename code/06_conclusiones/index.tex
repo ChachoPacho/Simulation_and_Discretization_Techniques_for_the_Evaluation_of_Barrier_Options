@@ -1,92 +1,43 @@
 \chapter{Conclusiones y Trabajo Futuro}
 \label{chapter:conclusiones}
 
-% OBJETIVO: Cerrar la tesis
-% MUY IMPORTANTE - tribunal lee esto primero junto con intro
-
 \section{Resumen de Resultados}
 \label{sec:resumen_resultados}
 
-% QUÉ ESCRIBIR AQUÍ (2-3 párrafos):
-% - Qué se logró en esta tesis
-% - Qué métodos se implementaron
-% - Principales hallazgos
+El presente trabajo de investigación evaluó y comparó sistemáticamente cuatro metodologías fundamentales para la valoración de opciones barrera, abarcando desde soluciones analíticas hasta técnicas numéricas avanzadas. Los resultados obtenidos demostraron que las ecuaciones de Reiner y Rubinstein proveen un valor teórico exacto bajo supuestos continuos, consolidándose como el estándar de oro para la validación algorítmica. Al trasladar el problema de tasación a redes discretas, se comprobó empíricamente que los árboles trinomiales estándar colapsan a nivel computacional cuando el precio del activo se encuentra críticamente cerca de la barrera. Sin embargo, la implementación del Modelo de Malla Adaptativa (AMM) superó este obstáculo con notable éxito, logrando aislar el error de no linealidad y alcanzando una precisión de hasta cuatro decimales en fracciones de segundo.
+
+Desde la perspectiva de la cobertura en el mercado, los experimentos con la técnica de Replicación Estática evidenciaron que la convergencia teórica tiene un correlato práctico directo: el aumento en la frecuencia de ajuste del portafolio replicante (utilizando opciones vanilla) reduce el costo y el riesgo del desajuste a niveles marginales, validando el método como una alternativa superior a la cobertura dinámica continua. Finalmente, para el entorno de las opciones de estilo americano, la simulación de Monte Carlo equipada con el algoritmo de Longstaff-Schwartz demostró ser robusta frente al desafío del ejercicio anticipado, aunque puso en evidencia que su flexibilidad estructural conlleva un alto costo computacional dictado por su lenta convergencia estocástica (un trade-off fundamental).
 
 \section{Conclusiones Principales}
 \label{sec:conclusiones_principales}
 
-% QUÉ ESCRIBIR AQUÍ:
-% Lista concreta de conclusiones
-
 \subsection{Sobre los Métodos para Opciones Europeas}
 
-% Concluir:
-% - Fórmulas de R&R: ...
-% - Árboles con Mallas: ...
-% - Portafolio Replicante: ...
-% - Cuándo usar cada uno
+El análisis del ``problema del límite'' y del error de discretización espacial arroja una conclusión clara para el desarrollo de software financiero: la fuerza bruta no es una solución viable. Incrementar masivamente el número de pasos en un árbol estándar para alinear los nodos con la barrera resulta computacionalmente ineficiente. El AMM demuestra que una distribución inteligente de los recursos de hardware, injertando mallas de alta resolución única y exclusivamente en las regiones críticas de la opción, es la estrategia numérica óptima para derivados dependientes de la trayectoria sobre un único activo. A su vez, los resultados de la Replicación Estática permiten concluir que el valor de una opción exótica no debe interpretarse únicamente como el resultado de una ecuación diferencial, sino como el costo real de ensamblar un rompecabezas de instrumentos estándar en el mercado, donde la granularidad temporal de los contratos determina el riesgo residual que asume el emisor.
 
 \subsection{Sobre Monte Carlo para Opciones Americanas}
 
-% Concluir:
-% - Desempeño del método
-% - Precisión lograda
-% - Tiempo computacional
+La implementación de la metodología de Longstaff-Schwartz permite concluir que la estimación del valor de continuación mediante una regresión de mínimos cuadrados de corte transversal (utilizando, por ejemplo, polinomios de Laguerre) resuelve de manera elegante y eficiente la paradoja de la inducción hacia atrás en trayectorias simuladas. No obstante, la naturaleza de su convergencia impone un límite práctico ineludible. Dado que el error decrece a una tasa proporcional a la raíz cuadrada del tamaño muestral, alcanzar los niveles de precisión extremos que los métodos de red logran instantáneamente requiere un esfuerzo computacional exponencial. Por consiguiente, se concluye que el método de Monte Carlo debe reservarse no como la primera línea de defensa, sino como la herramienta definitiva frente a problemas intratables por otros medios.
 
 \subsection{Comparación Global}
 
-% Concluir:
-% - Qué método es mejor en general
-% - Trade-offs observados
-% - Recomendaciones finales
-
-\section{Limitaciones del Trabajo}
-\label{sec:limitaciones}
-
-% QUÉ ESCRIBIR AQUÍ:
-% Ser honesto sobre qué no se hizo
-
-% Ejemplos:
-% - Solo volatilidad constante
-% - No se consideraron saltos
-% - Solo barreras simples (no dobles)
-% - Número limitado de casos de prueba
-% - No se optimizó código para máxima velocidad
+La conclusión fundamental que se desprende de esta investigación es que no existe una jerarquía absoluta entre los modelos de valoración estudiados; su supremacía está dictada enteramente por el contexto y las dimensiones del problema. Mientras que el AMM domina en eficiencia y precisión determinista para contratos unidimensionales, la simulación de Monte Carlo es la elección insustituible para evitar la maldición de la dimensionalidad en opciones complejas o de múltiples activos. La Replicación Estática, por su parte, actúa como el puente indispensable entre la teoría matemática y la práctica real de las mesas de dinero. En definitiva, la ingeniería financiera moderna exige una arquitectura algorítmica híbrida, requiriendo que el analista comprenda las mecánicas internas de cada método para seleccionar la herramienta que mejor equilibre el rigor matemático con la viabilidad operativa.
 
 \section{Trabajo Futuro}
 \label{sec:trabajo_futuro}
 
-% QUÉ ESCRIBIR AQUÍ:
-% Extensiones y direcciones futuras
+El análisis comparativo desarrollado en esta investigación establece una base sólida para la valoración de opciones barrera, pero al mismo tiempo abre múltiples vías para futuras expansiones, tanto desde la perspectiva teórica como en su aplicación algorítmica.
 
 \subsection{Extensiones del Modelo}
 
-% Proponer:
-% - Barreras dobles
-% - Barreras dependientes del tiempo
-% - Volatilidad estocástica (Heston)
-% - Modelos con saltos (Merton, Kou)
-% - Dividendos discretos
+La primera y más natural extensión de este trabajo consistiría en relajar los supuestos del modelo clásico de Black-Scholes. Dado que se ha comprobado que la volatilidad en los mercados reales no es constante, sino que exhibe sonrisas y asimetrías (smiles y skews), un paso fundamental sería adaptar las metodologías numéricas a modelos de volatilidad estocástica o modelos de difusión con saltos (como el propuesto por Merton \cite{MERTON1976125}). Mientras que la simulación de Monte Carlo puede acomodar estas dinámicas estocásticas con relativa facilidad modificando la ecuación diferencial de las trayectorias, adaptar el Modelo de Malla Adaptativa (AMM) a entornos donde la volatilidad cambia con el precio del activo sería un desafío matemático y de programación considerable, pero de gran valor académico.
 
 \subsection{Extensiones de los Métodos}
 
-% Proponer:
-% - Otros métodos numéricos (cuasi-Monte Carlo, etc.)
-% - Optimización de código (paralelización, GPU)
-% - Cálculo eficiente de griegas de alto orden
-% - Métodos híbridos
+A nivel algorítmico, existen mejoras puntuales que podrían incrementar la exactitud de los métodos estudiados. Para el enfoque de simulación de Monte Carlo, el principal problema detectado fue el sesgo de discretización al monitorear la barrera en pasos de tiempo finitos (por ejemplo, diariamente). Un trabajo futuro podría implementar la técnica de Puentes Brownianos (Brownian Bridges) dentro del algoritmo de Longstaff-Schwartz. Esta técnica probabilística permite calcular la probabilidad exacta de que el activo haya cruzado la barrera entre dos fechas de observación discretas, eliminando el sesgo de monitoreo sin necesidad de multiplicar el esfuerzo computacional generando pasos de tiempo diminutos.
 
-\subsection{Aplicaciones Prácticas}
+Por el lado del Modelo de Malla Adaptativa, si bien demostró ser inmensamente superior para opciones unidimensionales, un área de investigación abierta es el desarrollo de mallas adaptativas multidimensionales. Lograr injertar alta resolución tridimensional para evaluar opciones exóticas sobre cestas de activos correlacionados expandiría drásticamente la utilidad de los métodos de redes discretas frente al monopolio actual de Monte Carlo en esos escenarios.
 
-% Proponer:
-% - Implementar en sistema de trading real
-% - Calibración con datos de mercado
-% - Gestión de riesgo de portafolios
-% - Pricing de productos estructurados
+\subsection{Aplicaciones Prácticas y Validación Empírica}
 
-\subsection{Validación con Datos Reales}
-
-% Proponer:
-% - Comparar con precios de mercado
-% - Estudiar smile de volatilidad
-% - Backtesting de estrategias
+Finalmente, el salto definitivo de esta investigación sería llevar los algoritmos desde un entorno de simulación pura hacia una validación empírica con datos reales de mercado. En particular, la metodología de Replicación Estática ganaría enorme profundidad si se la pusiera a prueba utilizando superficies de volatilidad reales y spreads oferta-demanda extraídos de una bolsa de derivados (como Matba ROFEX o ByMA) o del mercado interbancario (como MAE). Construir el portafolio replicante midiendo los costos de transacción reales, la liquidez de los instrumentos estándar disponibles para el ajuste, y el riesgo de gap (saltos de precio nocturnos) permitiría evaluar empíricamente si la inmunización estática prometida por la teoría matemática sobrevive a la fricción física del mercado financiero.

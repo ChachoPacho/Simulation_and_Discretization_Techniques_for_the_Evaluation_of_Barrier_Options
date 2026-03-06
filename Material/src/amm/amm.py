@@ -24,7 +24,7 @@ def AMM_Barrier_Recursivo(S0, K, T, r, sigma, H, M, isCall=True, isDown=True, is
             # Knock-out ya desactivado = 0
             return 0.0
     
-    # Si llegamos aquí: down barrier válido con H < S0
+    # Si llegamos acá: down barrier válido con H < S0
     # 1. CALIBRACIÓN GLOBAL (Para la malla más profunda)
     dist_log = np.log(S0) - np.log(H)
     

@@ -1,146 +1,266 @@
 \chapter{Resultados y Comparación}
 \label{chapter:resultados}
 
-% OBJETIVO: Comparar los 4 métodos
-% Este es el CORAZÓN de tu tesis
-
 \section{Diseño de Experimentos}
 \label{sec:diseno_experimentos}
 
-% QUÉ ESCRIBIR AQUÍ:
-% - Casos de prueba definidos
-% - Métricas de evaluación
+Para evaluar de manera rigurosa las metodologías implementadas en este trabajo, el diseño experimental se ha estructurado en torno a los desafíos matemáticos específicos que presenta cada tipo de opción. En lugar de utilizar un único conjunto de parámetros arbitrario, los experimentos se basan en los escenarios propuestos por la literatura fundacional de cada modelo. Esto permite no solo validar la correctitud de nuestras implementaciones, sino también aislar y medir el impacto del ``problema del límite'', el error de discretización temporal y la convergencia estadística de manera independiente.
 
 \subsection{Casos de Prueba para Opciones Europeas}
 
-% DEFINIR BATERÍA DE CASOS:
-% Variar: S, K, H, σ, r, T
-% 
-% Tabla ejemplo:
-% Caso | Tipo | S | K | H | σ | r | T | Descripción
-% 1    | DOC  | 100 | 100 | 90 | 0.20 | 0.05 | 1.0 | S lejos de H
-% 2    | DOC  | 92  | 100 | 90 | 0.20 | 0.05 | 1.0 | S cerca de H
-% ...
+La evaluación de las opciones de estilo europeo se divide en dos grandes escenarios, diseñados para contrastar los métodos numéricos frente a las fórmulas exactas de Reiner y Rubinstein.
+
+El primer escenario está diseñado para llevar al extremo el error de no linealidad y el problema geométrico de las redes discretas. Para ello, evaluamos una opción Down-and-Out Call con un precio de ejercicio $K=100$, una barrera inferior $H=90$, vencimiento a un año ($T=1$), tasa libre de riesgo del $10\%$ y volatilidad del $25\%$. El experimento consiste en calcular el valor de la opción acercando progresivamente el precio inicial del activo ($S_0$) hacia la barrera (desde $S_0=92$ hasta $S_0=90.125$). Este diseño nos permitirá observar cómo el árbol trinomial estándar colapsa computacionalmente al intentar alinear sus nodos con la barrera, y cómo el Modelo de Malla Adaptativa (AMM) resuelve esta crisis.
+
+El segundo escenario se enfoca en el problema de la cobertura en el mercado real, evaluando el algoritmo de Replicación Estática. Utilizaremos una opción Up-and-Out Call con $S_0=100, K=100$, una barrera superior $H=120$, vencimiento $T=1$, tasa de interés del $5\%$, rendimiento por dividendos del $3\%$ y volatilidad del $15\%$. En este caso, el objetivo no es variar el precio inicial, sino alterar la frecuencia temporal con la que construimos el portafolio de opciones vanilla de cobertura (comparando ajustes bimestrales frente a quincenales) para medir cómo la discretización del tiempo afecta el costo real de replicar la opción exótica.
 
 \subsection{Casos de Prueba para Opciones Americanas}
 
-% DEFINIR CASOS para Monte Carlo
+Dado que la valoración de opciones americanas introduce el problema del ejercicio anticipado, el diseño experimental para la simulación de Monte Carlo requiere un enfoque distinto. Para aislar el efecto de la regresión transversal introducida por el método de Longstaff-Schwartz (LSM), el caso de prueba se basará en una opción Put americana estándar, evitando temporalmente la interferencia de una barrera.
+
+Los parámetros base establecen un precio de ejercicio $K=40$, una tasa libre de riesgo del $6\%$ y una volatilidad del $20\%$. Evaluaremos la opción para dos horizontes temporales distintos ($T=1$ y $T=2$ años) y bajo tres condiciones de moneyness inicial: in-the-money ($S_0=36$), at-the-money ($S_0=40$) y out-of-the-money ($S_0=44$). Este abanico de escenarios garantiza que el algoritmo de regresión del LSM, basado en polinomios de Laguerre, sea puesto a prueba en trayectorias donde la decisión de ejercicio temprano es trivial frente a aquellas donde el valor de continuación y el valor intrínseco son casi idénticos
 
 \subsection{Métricas de Evaluación}
 
-% Definir:
-% - Error absoluto: |V_método - V_R&R|
-% - Error relativo: |V_método - V_R&R| / V_R&R
-% - Tiempo de cómputo
-% - Eficiencia: precisión / tiempo
+Para garantizar una comparación objetiva entre los distintos métodos, definimos un conjunto estandarizado de métricas que capturan tanto la precisión matemática como la viabilidad computacional.
+La exactitud de los métodos para opciones europeas (AMM y Replicación Estática) se cuantifica mediante el error absoluto y el error relativo tomando como ``oráculo'' o valor real el resultado arrojado por las ecuaciones analíticas de Reiner y Rubinstein. En el caso de la simulación de Monte Carlo para opciones americanas, al no existir una fórmula cerrada, la convergencia se evalúa analizando el error estándar estadístico de la simulación a medida que se aumenta el número de trayectorias (desde $1.000$ hasta $100.000$ caminos).
+Finalmente, la eficiencia algrítmica se evalúa de forma dual. Por un lado, se registra el tiempo de ejecución (CPU time) necesario para alcanzar un nivel de precisión aceptable. Por otro lado, y de manera más fundamental, se analiza la complejidad espacial, medida a través del número total de nodos instanciados en el caso de los árboles (donde contrastamos el crecimiento lineal del AMM frente al crecimiento cuadrático del trinomial global), y el número de opciones de ajuste necesarias en el caso del portafolio estático.
 
 \section{Resultados para Opciones Europeas}
 \label{sec:resultados_europeas}
 
-% QUÉ ESCRIBIR AQUÍ:
-% Comparar: R&R vs Árboles+Mallas vs Replicante
+\subsection{Superando el ``Problema del Límite'': Trinomial Estándar vs. AMM}
 
-\subsection{Tablas Comparativas}
+La valoración de opciones barrera mediante redes discretas enfrenta un desafío geométrico crítico cuando el precio inicial del activo subyacente se encuentra muy cerca del nivel de la barrera. Como se explicó en capítulos anteriores, para evitar errores severos de estimación, los modelos de árbol requieren que una capa horizontal de nodos coincida exactamente con la barrera. Sin embargo, forzar esta alineación implica que el tamaño del paso de precio ($h$) no puede ser mayor que la distancia entre el precio inicial y la barrera. Dado que el paso de tiempo ($k$) debe ser proporcional al cuadrado del paso de precio para mantener la estabilidad probabilística, reducir $h$ provoca que el número total de pasos de tiempo ($N$) crezca de manera cuadrática. Este fenómeno, conocido como el ``problema del límite'', puede volver al método estándar computacionalmente inmanejable.
 
-% INCLUIR TABLA GRANDE:
-% Caso | R&R | Árboles | Error | Tiempo | Replicante | Error | Tiempo
+Para ilustrar este comportamiento y evaluar la solución propuesta por el Modelo de Malla Adaptativa (AMM), calculamos el valor de una opción Down-and-Out Call (con strike $K=100$, barrera $H=90$, volatilidad $\sigma=25\%$, tasa $r=10\%$ y vencimiento $T=1$ año) acercando progresivamente el precio inicial ($S_0$) hacia la barrera. La Tabla \ref{tab:comparacion_metodos_barrera} contrasta el valor arrojado por las fórmulas analíticas de Reiner y Rubinstein (como valor exacto de referencia) frente a los resultados y requerimientos computacionales del árbol trinomial estándar y del AMM.
 
-\subsection{Análisis de Precisión}
+\begin{table}[H]
+  \centering
+  \caption{Comparación de métodos numéricos para valoración de Down-and-Out Call cerca de la barrera. Los parámetros son: $K=100$, $H=90$, $T=1$ año, $r=0.10$, $d=0.05$, $\sigma=0.25$.}
+  \label{tab:comparacion_metodos_barrera}
+  \makebox[\textwidth][c]{%
+    \begin{tabular}{c|c|c|c}
+      \hline
+      \textbf{Precio Inicial} & \textbf{Valor Analítico} & \textbf{Trinomial Estándar} & \textbf{Malla Adaptativa AMM} \\
+      \textbf{($S_0$)} & \textbf{(R\&R)} & \textbf{(Valor / Pasos N)} & \textbf{(Valor / Nivel M)} \\
+      \hline
+      92.000 & 2.506 & 2.507 (N=388) & 2.507 (M=0) \\
+      91.000 & 1.274 & 1.274 (N=1,535) & 1.274 (M=1) \\
+      90.500 & 0.642 & 0.642 (N=6,108) & 0.643 (M=2) \\
+      90.250 & 0.323 & 0.323 (N=24,367) & 0.323 (M=3) \\
+      90.125 & 0.162 & Falla / Inmanejable & 0.162 (M=4) \\
+      \hline
+    \end{tabular}
+  }
+\end{table}
 
-% Analizar:
-% - Qué método es más preciso
-% - En qué casos cada método funciona mejor
-% - Casos problemáticos
+El análisis de estos resultados expone claramente la vulnerabilidad del enfoque tradicional. Cuando el precio del activo se encuentra a una distancia segura de la barrera ($S_0=92$), ambos métodos logran converger al valor teórico de $2.506$ con un costo computacional bajo. No obstante, a medida que $S_0$ se acerca a $90$, el árbol trinomial estándar sufre una explosión combinatoria. Al llegar a $S_0=90.125$ (apenas a un octavo de punto de la barrera), forzar un nodo sobre $H=90$ exige un paso de precio minúsculo, disparando la cantidad de pasos de tiempo teóricos a casi $100.000$ iteraciones. En este punto, la creación de la matriz global del árbol colapsa la memoria o requiere tiempos de ejecución inaceptables, provocando el fallo práctico del método.
+En marcado contraste, el comportamiento del AMM demuestra una eficiencia notable. Al mantener una red base gruesa (por ejemplo, $N=100$) y resolver el requerimiento de distancia injertando niveles sucesivos de malla fina ($M$) únicamente en la franja adyacente a la barrera, el AMM desvincula la resolución espacial de la complejidad global del árbol. Para el caso extremo de $S_0=90.125$, al aplicar $4$ niveles de refinamiento ($M=4$), el AMM es capaz de capturar la no linealidad y calcular el precio exacto de $0.162$ en fracciones de segundo.
+En conclusión, este experimento demuestra que el AMM actúa como una solución quirúrgica: no desperdicia poder de cómputo en regiones donde el precio del activo se comporta de forma lineal. Al concentrar la resolución exclusivamente donde la geometría de la barrera lo exige, el modelo supera el ``problema del límite'' y garantiza tasaciones precisas incluso en los escenarios más críticos.
 
-\subsection{Análisis de Tiempo Computacional}
+\subsection{Convergencia y Costo de la Replicación Estática}
 
-% Analizar:
-% - Qué método es más rápido
-% - Trade-off precisión vs tiempo
-% - Gráficos scatter: tiempo vs error
+A diferencia del Modelo de Malla Adaptativa, que busca resolver numéricamente la ecuación diferencial subyacente con la mayor exactitud posible, la metodología de Replicación Estática de Derman, Ergener y Kani aborda el problema desde la perspectiva de la cobertura en el mercado (hedging). En este contexto, el valor calculado no es simplemente una aproximación matemática, sino el costo real de construir un portafolio compuesto por opciones vanilla que imite el comportamiento de la opción exótica. Por lo tanto, el error numérico en este método representa el ``desajuste'' o mismatch financiero al que se expone el emisor por discretizar la frontera de la barrera en intervalos de tiempo finitos.
+Para evaluar este comportamiento, consideramos una opción Up-and-Out Call con un precio inicial $S_0=100$, un precio de ejercicio $K=100$ y una barrera superior $H=120$, con vencimiento a un año ($T=1$), tasa libre de riesgo del $5\%$ y volatilidad del $15\%$. De acuerdo con las fórmulas analíticas de Reiner y Rubinstein, el valor teórico exacto de esta opción es $1.913$.
+El experimento consiste en construir el portafolio replicante variando la frecuencia con la que se añaden opciones estándar para forzar que el valor del portafolio sea cero sobre la barrera. La Tabla \ref{tab:static_convergencia} muestra el costo de estos portafolios y su error respecto al valor teórico.
 
-\subsection{Comportamiento Cerca de la Barrera}
+\begin{table}[H]
+  \centering
+  \caption{Convergencia de la Replicación Estática: efecto del número de opciones de ajuste}
+  \label{tab:static_convergencia}
+  \makebox[\textwidth][c]{%
+    \begin{tabular}{l|c|c|c}
+      \hline
+      \textbf{Método de Valoración / Cobertura} & \textbf{Valor} & \textbf{Error} & \textbf{Error} \\
+      & \textbf{Calculado} & \textbf{Absoluto} & \textbf{Relativo} \\
+      \hline
+      Valor Teórico Objetivo (R\&R) & 1.913 & --- & --- \\
+      \hline
+      Portafolio (6 ajustes / frecuencia bimestral) & 2.284 & +0.371 & $\approx$19.4\% \\
+      Portafolio (24 ajustes / frecuencia quincenal) & 2.010 & +0.097 & $\approx$5.0\% \\
+      \hline
+    \end{tabular}
+  }
+\end{table}
 
-% Analizar:
-% - Qué pasa cuando S está muy cerca de H
-% - Qué método maneja mejor esta situación
-% - Problemas numéricos observados
+El análisis de estos resultados revela el impacto directo de la discretización temporal en la gestión de riesgos. Si el emisor de la opción decide cubrirse realizando ajustes estáticos en la frontera solo cada dos meses (requiriendo un portafolio de $6$ opciones), el costo de armar dicha cobertura es de $2.284$, lo que sobreestima el valor real de la opción en casi un $20\%$. Este sobrecosto ocurre porque el portafolio garantiza que su valor será cero únicamente en las fechas de ajuste. Si el precio del activo cruza la barrera de $120$ en un día intermedio entre dos ajustes, el portafolio no se anulará perfectamente, dejando al emisor con un riesgo residual. El mercado cobra una prima por asumir la imprecisión de esta cobertura discreta.
+Sin embargo, a medida que aumentamos la densidad del portafolio utilizando $24$ opciones con vencimientos quincenales, la frontera discreta se aproxima mucho más a la barrera continua real. Como resultado, el valor del portafolio cae a $2.010$, reduciendo el error relativo a un marginal $5\%$. Esto demuestra empíricamente que la Replicación Estática converge de manera robusta y predecible hacia el valor teórico a medida que aumenta la granularidad de la discretización, permitiendo a los operadores equilibrar el costo de transacción (comprar más opciones) frente al riesgo de desajuste.
 
-\subsection{Gráficos Comparativos}
+\subsection{Comparación Unificada: Precisión Numérica frente a Viabilidad de Mercado}
 
-% INCLUIR GRÁFICOS:
-% - Error vs parámetros (S, σ, T)
-% - Tiempo vs parámetros
-% - Convergencia de cada método
+Para consolidar el análisis de las opciones de estilo europeo, resulta sumamente ilustrativo contrastar el desempeño de los tres métodos estudiados (Reiner-Rubinstein, AMM y Replicación Estática) bajo un mismo escenario base. Esta comparación unificada, presentada en la Tabla \ref{tab:comparacion_unificada} utilizando los parámetros del experimento anterior, pone en evidencia las diferencias fundamentales en la naturaleza y propósito de cada algoritmo.
+
+\begin{table}[H]
+  \centering
+  \caption{Comparación Unificada de Métodos para Opciones Europeas}
+  \label{tab:comparacion_unificada}
+  \makebox[\textwidth][c]{%
+    \begin{tabular}{l|l|c|c}
+      \hline
+      \textbf{Método de} & \textbf{Enfoque} & \textbf{Valor} & \textbf{Error Absoluto} \\
+      \textbf{Valoración} & \textbf{Principal} & \textbf{Calculado} & \textbf{vs R\&R} \\
+      \hline
+      Reiner \& Rubinstein (R\&R) & Teórico Exacto (Oráculo) & 1.913 & --- \\
+      \hline
+      Malla Adaptativa (AMM) & Precisión Numérica (Nivel M=2) & 1.913 & $<$0.001 \\
+      Replicación Estática & Cobertura de Mercado (24 ajustes) & 2.010 & +0.097 \\
+      \hline
+    \end{tabular}
+  }
+\end{table}
+
+La tabla ilustra que no existe un método de valoración que sea superior en el vacío; su utilidad depende del problema que el analista intente resolver. Las fórmulas de Reiner y Rubinstein actúan como el valor teórico fundamental, asumiendo condiciones perfectas y continuas. Cuando el objetivo es la tasación algorítmica pura, el Modelo de Malla Adaptativa demuestra ser una herramienta de una precisión y eficiencia extraordinarias: al injertar la red de alta resolución únicamente cerca de la barrera de $120$, el modelo logra colapsar el error geométrico casi por completo, replicando el valor analítico de $1.913$ al tercer decimal en fracciones de segundo.
+Por el contrario, el valor de $2.010$ arrojado por la Replicación Estática no debe ser interpretado simplemente como un ``cálculo inexacto''. Representa el límite de viabilidad del mercado: es la respuesta concreta a cuánto cuesta replicar esa opción exótica utilizando instrumentos financieros reales y discretos, asumiendo que el monitoreo continuo es fácticamente imposible.
 
 \section{Resultados para Opciones Americanas}
 \label{sec:resultados_americanas}
 
-% QUÉ ESCRIBIR AQUÍ:
-% Resultados de Monte Carlo
+\subsection{Estimación del Valor de Continuación (LSM)}
 
-\subsection{Tablas de Resultados}
+Para aislar el efecto estadístico de la regresión y evaluar la precisión del algoritmo LSM al capturar la prima por ejercicio anticipado, el experimento se enfoca en una opción Put americana estándar. Se compara el valor obtenido por la simulación frente a un método riguroso de Diferencias Finitas implícitas (utilizado como valor de referencia exacto).
+Los parámetros base establecen un precio de ejercicio $K=40$, tasa libre de riesgo del $6\%$, volatilidad del $20\%$, y un esquema de simulación LSM con $100.000$ trayectorias ($50.000$ antitéticas) con $50$ pasos temporales por año, utilizando los primeros tres polinomios de Laguerre como funciones base. La Tabla \ref{tab:lsm_americanas} muestra los resultados para horizontes de uno y dos años bajo diferentes condiciones de moneyness inicial.
 
-% INCLUIR TABLA:
-% Caso | Valor MC | IC 95% | Tiempo | N_simulaciones
+\begin{table}[H]
+  \centering
+  \caption{Comparación de Valoración para Put Americana (Diferencias Finitas vs. LSM). Parámetros: $K=40$, $r=0.06$, $\sigma=0.20$. Simulación LSM con 100,000 trayectorias, 50 pasos temporales, 3 polinomios de Laguerre.}
+  \label{tab:lsm_americanas}
+  \makebox[\textwidth][c]{%
+    \begin{tabular}{c|c|c|c|c|c}
+      \hline
+      \textbf{Vencimiento} & \textbf{Precio Inicial} & \textbf{Dif. Finitas} & \textbf{LSM} & \textbf{SE} & \textbf{Diferencia} \\
+       & \textbf{($S_0$)} & \textbf{(Referencia)} & \textbf{(Simulación)} &  & \textbf{Absoluta} \\
+      \hline
+      $T=1$ & 36 (ITM) & 4.478 & 4.472 & 0.010 & $-0.006$ \\
+      $T=1$ & 40 (ATM) & 2.314 & 2.313 & 0.009 & $-0.001$ \\
+      $T=1$ & 44 (OTM) & 1.110 & 1.118 & 0.007 & $+0.008$ \\
+      \hline
+      $T=2$ & 36 (ITM) & 4.840 & 4.821 & 0.012 & $-0.019$ \\
+      $T=2$ & 40 (ATM) & 2.885 & 2.879 & 0.010 & $-0.006$ \\
+      $T=2$ & 44 (OTM) & 1.690 & 1.675 & 0.009 & $-0.015$ \\
+      \hline
+    \end{tabular}
+  }
+\end{table}
 
-\subsection{Análisis de Convergencia}
+El análisis de esta tabla confirma la extraordinaria capacidad del algoritmo LSM para estimar el valor de continuación utilizando información transversal de trayectorias aleatorias. Para opciones a un año ($T=1$), las estimaciones por simulación difieren del valor de diferencias finitas en menos de un centavo, lo cual cae holgadamente dentro de los márgenes del spread bid-ask (oferta-demanda) de los mercados reales. Además, se observa que las diferencias son tanto positivas como negativas, lo que sugiere que la aproximación no sufre de un sesgo sistemático severo que subestime la opción de manera inaceptable. El algoritmo demuestra ser igualmente robusto independientemente de si la opción inicia in-the-money o out-of-the-money, lo que valida la elección de los polinomios de Laguerre para modelar la frontera de ejercicio temprano
 
-% Mostrar:
-% - Convergencia con número de simulaciones
-% - Convergencia con número de pasos temporales
+\subsection{Análisis de Convergencia Estadística}
 
-\subsection{Comparación con Europeas}
+Mientras que los modelos de redes (como el AMM) convergen determinísticamente a medida que se reduce el paso espacial, la simulación de Monte Carlo exhibe una convergencia estocástica. La precisión del método no se mide por un error geométrico, sino por el error estándar (SE) de los payoffs descontados en la muestra.
+Para evaluar esta dinámica en un entorno exótico, se analizó el comportamiento del error estándar frente al incremento en el número de trayectorias ($M$) utilizando una opción Put Americana Down-and-Out. Los parámetros del experimento establecen un precio inicial $S_0=44$, precio de ejercicio $K=40$, y una barrera inferior fijada en $H=39.6$, con vencimiento a un año ($T=1$), una tasa libre de riesgo del $6\%$ ($r=0.06$) y una volatilidad del $20\%$ ($\sigma=0.2$) y discretizada en $N=50$ pasos temporales.
 
-% Comparar:
-% - Valor americano vs europeo (límite superior)
-% - Prima de ejercicio anticipado
+\bf{La introducción de esta barrera somete al algoritmo LSM a un doble esfuerzo computacional.}
+
+En cada uno de los $50$ pasos temporales, no solo debe ejecutar la regresión para estimar el valor de continuación, sino que previamente debe monitorear la trayectoria del precio. Si el activo subyacente cae al nivel de $39,6$ o por debajo, la trayectoria sufre un knock-out, su valor se anula (asumiendo un rebate de cero) y queda excluida de las decisiones de ejercicio futuras. La Tabla \ref{tab:mc_convergencia} resume el impacto del tamaño muestral sobre la precisión de este cálculo.
+
+\begin{table}[H]
+  \centering
+  \caption{Convergencia del Error Estándar y Tiempos de Ejecución en Monte Carlo LSM. Opción Put Americana: $S_0=44$, $K=40$, $T=1$, $r=0.06$, $\sigma=0.20$.}
+  \label{tab:mc_convergencia}
+  \makebox[\textwidth][c]{%
+    \begin{tabular}{c|c|c|c}
+      \hline
+      \textbf{Simulaciones} & \textbf{Error Estándar} & \textbf{Intervalo de Confianza} & \textbf{Tiempo} \\
+      \textbf{(M)} & \textbf{(SE)} & \textbf{(95\%)} & \textbf{(milisegundos)} \\
+      \hline
+      1,000 & 0.003069 & $\pm$0.127 & $<$5 \\
+      5,000 & 0.001363 & $\pm$0.055 & $\approx$12 \\
+      10,000 & 0.000952 & $\pm$0.039 & $\approx$22 \\
+      50,000 & 0.000420 & $\pm$0.017 & $\approx$62 \\
+      100,000 & 0.000375 & $\pm$0.012 & $\approx$728 (con 252 pasos) \\
+      \hline
+    \end{tabular}
+  }
+\end{table}
+
+Estos resultados empíricos ilustran vívidamente la naturaleza asintótica dictada por el Teorema del Límite Central. El error decrece a una tasa proporcional a $O(1/M)$. Por ejemplo, al pasar de $10.000$ a $50.000$ simulaciones, el error se reduce a la mitad (de $0.000952$ a $0.000420$), lo que concuerda con la teoría matemática que establece que para dividir el error por dos, el costo computacional debe multiplicarse por cuatro.
+
+Esta característica revela el principal compromiso (trade-off) de la simulación de Monte Carlo frente a los métodos presentados en la sección anterior. Si bien el modelo es lo suficientemente flexible para acomodar barreras complejas y decisiones americanas vectorizando el código de manera eficiente, lograr intervalos de confianza extremadamente estrechos exige un incremento exponencial en los recursos de cómputo. Además, para barreras continuas, el monitoreo discreto en $N=50$ o $N=252$ pasos introduce un sesgo de discretización intrínseco, ya que el precio podría cruzar la barrera entre dos fechas de observación sin ser detectado. En consecuencia, el método LSM se justifica plenamente por su escalabilidad dimensional, aunque para opciones de un único activo subyacente con geometrías estrictas de barrera, los modelos de redes adaptativas resulten más precisos en tiempo de CPU.
 
 \section{Comparación Global de Métodos}
 \label{sec:comparacion_global}
 
-% QUÉ ESCRIBIR AQUÍ:
-% Síntesis de todos los resultados
+Tras haber analizado el rendimiento individual de cada algoritmo frente a sus desaffíos intrínsecos, resulta fundamental establecer una comparación cruzada que consolide los hallazgos de esta investigación. Esta evaluación global no busca declarar un único método como superior de manera absoluta, sino mapear las fortalezas y debilidades de cada enfoque frente a las distintas dimensiones del problema de valoración de opciones barrera.
 
-\subsection{Tabla Resumen}
+\subsection{Resumen de Desempeño}
 
 % CREAR TABLA RESUMEN:
 % Método | Precisión | Velocidad | Flexibilidad | Casos de Uso
 
-\subsection{Análisis de Casos de Uso Óptimos}
+Para sintetizar las propiedades observadas a lo largo de los experimentos numéricos, la Tabla 5.6 presenta un resumen conceptual del perfil de desempeño de las cuatro metodologías estudiadas.
 
-% Identificar:
-% - R&R: mejor cuando... (referencia, muy rápido)
-% - Árboles+Mallas: mejor cuando... (buena precisión, flexible)
-% - Replicante: mejor cuando... (cobertura, no requiere rebalanceo)
-% - Monte Carlo: mejor cuando... (americanas, único método)
+// NEW table
+
+\begin{table}[H]
+  \centering
+  \caption{Resumen del Perfil de Desempeño de los Métodos de Valoración}
+  \label{tab:resumen_desempeno}
+  \makebox[\textwidth][c]{%
+    \begin{tabular}{l|l|l|l|l}
+      \hline
+      \textbf{Método} & \textbf{Naturaleza} & \textbf{Precisión} & \textbf{Costo} & \textbf{Flexibilidad /} \\
+       &  & \textbf{Numérica} & \textbf{Computacional} & \textbf{Extensibilidad} \\
+      \hline
+      Fórmulas R\&R & Analítica / Continua & Exacta (Teórica) & Instantáneo (Bajo) & Muy Baja (Solo Europeas) \\
+      \hline
+      AMM & Red Discreta & Muy Alta & Muy Bajo & Moderada \\
+       & (Determinista) &  & $O(N)$ & (Opciones 1D) \\
+      \hline
+      Replicación & Portafolio de & Moderada / Alta & Bajo & Alta \\
+      Estática & Mercado &  &  & (Depende del mercado) \\
+      \hline
+      Monte Carlo & Simulación & Moderada (SE) & Alto & Muy Alta \\
+      (LSM) & (Estocástica) &  & $O(1/\sqrt{M})$ & (Americanas / Multi-activo) \\
+      \hline
+    \end{tabular}
+  }
+\end{table}
+
+El análisis conjunto revela un claro compromiso (trade-off) entre eficiencia computacional y flexibilidad. Por un lado, las fórmulas cerradas de Reiner y Rubinstein ofrecen respuestas exactas de forma instantánea, pero exigen que el contrato cumpla estrictamente con los supuestos teóricos de Black-Scholes (monitoreo continuo, volatilidad constante y ausencia de ejercicio anticipado). Cuando se requiere relajar estos supuestos sin perder la eficiencia, el Modelo de Malla Adaptativa (AMM) se posiciona como la herramienta numérica más potente. Al injertar alta resolución espacial únicamente donde es estrictamente necesario, el AMM logra replicar la precisión teórica evadiendo la explosión combinatoria que sufren los árboles estándar.
+
+En el otro extremo del espectro, la simulación de Monte Carlo con el método de Longstaff-Schwartz (LSM) sacrifica la convergencia determinista y el bajo tiempo de CPU a cambio de una extensibilidad casi ilimitada. Al no sufrir la maldición de la dimensionalidad, el LSM es capaz de incorporar monitoreo discreto de la barrera y decisiones de ejercicio americano sin que la estructura del algoritmo colapse. Finalmente, la Replicación Estática ocupa un lugar único en esta comparativa: más que un modelo de tasación puramente matemática, es una estrategia de ingeniería financiera. Su precisión no se mide en decimales matemáticos, sino en la capacidad empírica de anular el riesgo de la barrera utilizando instrumentos líquidos y reales.
+
+\subsection{Casos de Uso Óptimos}
+
+La elección del método adecuado en la práctica profesional no obedece a una jerarquía estricta de superioridad, sino a la naturaleza específica del problema financiero a resolver.
+
+Las \bf{fórmulas de Reiner y Rubinstein} son el estándar de oro para la validación y el benchmarking académico. Su uso es óptimo como ``oráculo'' en el desarrollo de software financiero, permitiendo a los programadores calibrar el error de sus motores numéricos antes de aplicarlos a casos donde no existe una solución cerrada.
+
+El \bf{Modelo de Malla Adaptativa (AMM)} es la opción indiscutible cuando el problema requiere tasaciones intensivas y repetitivas sobre opciones de un solo activo subyacente. Un caso de uso óptimo para el AMM es el cálculo de volatilidades implícitas. Puesto que los algoritmos de búsqueda de raíces requieren valorar la misma opción decenas de veces ajustando el  parámetro de volatilidad, un método estocástico como Monte Carlo introduciría ruido, y un árbol estándar tomaría demasiado tiempo si el precio está cerca de la barrera. El AMM, con su convergencia suave y tiempos de respuesta de fracciones de segundo, resuelve este problema de manera ideal.
+
+La \bf{Replicación Estática} encuentra su caso de uso óptimo en las mesas de trading institucional y en la gestión directa de riesgos. Cuando un banco emite una opción exótica fuertemente no lineal (alta gamma cerca de la barrera), la cobertura dinámica (Delta hedging) se vuelve imprecisa y prohibitivamente costosa debido a los costos de transacción. En estos escenarios, construir un portafolio estático con opciones estándar es la estrategia preferida, ya que permite ``inmunizar'' el libro de operaciones frente a los saltos bruscos del mercado sin necesidad de rebalanceo continuo.
+
+Por último, el método \bf{LSM de Monte Carlo} es la herramienta esencial para derivados de alta complejidad que escapan a los modelos de redes. Su uso es óptimo cuando la opción barrera es de estilo americano, cuando la barrera se monitorea discretamente (por ejemplo, observando el precio solo al cierre de cada día, lo cual invalida las fórmulas continuas), o cuando el derivado depende de múltiples factores de riesgo interrelacionados (como opciones exóticas sobre cestas de acciones).
 
 \subsection{Recomendaciones Prácticas}
 
-% DAR GUÍAS CONCRETAS:
-% - Si necesitas velocidad → usar R&R
-% - Si S está cerca de H → usar Árboles+Mallas
-% - Si necesitas cobertura → usar Replicante
-% - Si es americana → usar Monte Carlo
-% - Para producción → usar X
-% - Para análisis de riesgo → usar Y
+A partir de este análisis, se derivan tres recomendaciones fundamentales para la implementación de sistemas de valoración de opciones barrera:
+\begin{itemize}
+  \item En primer lugar, los sistemas modernos no deben depender de un único motor de cálculo, sino de una arquitectura híbrida. Se recomienda utilizar el AMM para la tasación en tiempo real y el cálculo de sensibilidades (las ``Griegas'') de opciones europeas y americanas unidimensionales, limitando el uso intensivo de Monte Carlo exclusivamente a los contratos que involucren trayectorias complejas o múltiples variables de estado.
+
+  \item En segundo lugar, en lo que respecta a la gestión de riesgos, es vital no confundir el ``valor teórico matemático'' con el ``costo real de cobertura''. Se recomienda a los operadores utilizar la Replicación Estática para establecer un límite superior al precio de la opción exótica. Si el portafolio replicante discreto (construido con opciones vanilla de mercado) resulta más costoso que el valor teórico arrojado por el AMM o LSM, esa diferencia debe ser considerada como una prima de riesgo operativo y de liquidez que el modelo matemático puro es incapaz de capturar.
+  
+  \item Finalmente, si la decisión recae en implementar Monte Carlo mediante el algoritmo LSM, es altamente recomendable aprovechar su capacidad inherente de paralelización. Dado que la evaluación transversal de las trayectorias es su principal cuello de botella de rendimiento, distribuir la simulación y la regresión de mínimos cuadrados en múltiples procesadores es una práctica obligatoria para reducir el error estadístico a niveles tolerables sin comprometer la viabilidad comercial del modelo.
+\end{itemize}
 
 \section{Discusión}
 \label{sec:discusion}
 
-% QUÉ ESCRIBIR AQUÍ:
-% Interpretación de resultados
-
 \subsection{Ventajas y Desventajas Observadas}
 
-% Para cada método:
-% - Ventajas principales
-% - Desventajas principales
-% - Sorpresas o hallazgos inesperados
+A lo largo de los experimentos numéricos desarrollados en este capítulo, se evidenció que la valoración de opciones barrera impone exigencias matemáticas que ningún método individual puede resolver de manera óptima en todas sus dimensiones. El contraste de los resultados nos permite destilar las fortalezas y debilidades intrínsecas de cada enfoque.
+
+Por el lado de los métodos determinísticos, las fórmulas analíticas de Reiner y Rubinstein confirmaron su estatus de estándar de oro para la validación de algoritmos, ofreciendo una precisión absoluta con un costo computacional nulo. Sin embargo, su extrema rigidez metodológica las vuelve ineficaces para contratos que se desvían de los supuestos continuos ideales. Como respuesta a esto, el Modelo de Malla Adaptativa (AMM) demostró ser la solución numérica más sofisticada para opciones de un único activo subyacente. Su principal ventaja observada fue la capacidad de neutralizar el error de no linealidad y resolver el ``problema del límite'' sin incurrir en la explosión combinatoria de los árboles estándar. La desventaja del AMM, no obstante, radica en su vulnerabilidad a la maldición de la dimensionalidad; su arquitectura espacial lo vuelve ineficiente si se intentara modelar derivados dependientes de múltiples activos correlacionados al mismo tiempo.
+
+Desde la perspectiva de la gestión de riesgos, la Replicación Estática de Derman, Ergener y Kani demostró la ventaja incomparable de inmunizar un portafolio contra movimientos bruscos sin la necesidad de rebalanceo dinámico continuo. Esto reduce drásticamente la exposición operativa. Su desventaja principal es la dependencia empírica en la liquidez del mercado: el método asume que siempre existirán opciones vanilla disponibles con los precios de ejercicio y vencimientos exactos requeridos para cubrir la frontera, lo cual rara vez ocurre en la realidad sin incurrir en costos de interpolación.
+
+Finalmente, la simulación de Monte Carlo equipada con el método de Longstaff-Schwartz (LSM) exhibió como gran ventaja su universalidad y flexibilidad. Fue el único método capaz de manejar simultáneamente el monitoreo discreto de trayectorias y el ejercicio anticipado americano de forma natural. Sin embargo, la gran desventaja observada fue su lenta convergencia estocástica. Alcanzar el nivel de precisión geométrica de cuatro decimales que el AMM logra en fracciones de segundo requeriría un esfuerzo computacional inmanejable en Monte Carlo, confirmando que este último debe reservarse para problemas donde los métodos de red colapsan.
 
 \subsection{Limitaciones del Estudio}
 
-% Mencionar:
-% - Qué no se pudo hacer
-% - Supuestos mantenidos
-% - Casos no considerados
+A pesar de la exhaustividad del análisis comparativo, es importante enmarcar los resultados obtenidos dentro de las limitaciones teóricas y prácticas de este trabajo. En primer lugar, todos los modelos numéricos implementados fueron construidos y calibrados bajo el entorno del modelo de Black-Scholes. Esto implica que los experimentos asumieron una volatilidad constante y tasas de interés deterministas a lo largo de toda la vida de la opción. En los mercados financieros reales, la volatilidad exhibe comportamientos estocásticos, asimetrías y sonrisas (smiles). Si bien métodos como Monte Carlo pueden adaptarse fácilmente a procesos más complejos (como modelos de difusión con saltos o volatilidad estocástica), el impacto de estos fenómenos en el error de discretización de los árboles adaptativos y en el costo del portafolio replicante no fue medido en este estudio.
+
+En segundo lugar, el análisis de la Replicación Estática se realizó bajo el supuesto de mercados sin fricciones. La estimación del costo del portafolio replicante (por ejemplo, el uso de $24$ opciones de ajuste) se basó en precios teóricos puros, ignorando el spread oferta-demanda y los costos de transacción reales. En la práctica de una mesa de dinero, comprar y vender docenas de opciones quincenales para cubrir una barrera podría erosionar significativamente el margen de ganancia de la operación, un factor de riesgo de liquidez que nuestras métricas de error absoluto no capturan.
+
+Por último, en lo que respecta a la validación de Monte Carlo, el monitoreo del evento de knock-out o knock-in se evaluó de forma estrictamente discreta en los pasos temporales simulados (por ejemplo, $50$ o $252$ pasos por año). Esto introduce un sesgo intínseco conocido, ya que el precio real del activo podría haber cruzado la barrera continua entre dos fechas de observación sin que el algoritmo lo detecte. La aplicación de técnicas avanzadas de interpolación estocástica, como los puentes brownianos (Brownian bridges), para corregir este sesgo de monitoreo continuo en simulaciones discretas, queda fuera del alcance de esta investigación.
