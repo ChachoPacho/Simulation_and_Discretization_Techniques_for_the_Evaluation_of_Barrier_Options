@@ -58,7 +58,7 @@ Una vez seleccionados los instrumentos adecuados, los pesos (cantidad de opcione
   \item \textbf{Cálculo del Peso de Corrección:} Para eliminar esta discrepancia, se añade una nueva posición en una opción estándar que venza en $t_{exp}$ (o en el tiempo correspondiente a la frontera, dependiendo de la implementación exacta). El peso ($w$) de esta nueva opción se calcula para que su valor compense exactamente el error del portafolio en ese punto:
 
   \begin{equation}
-  w = - \frac{V_{portafolio}(B, t_{n-1}) - V_{objetivo}(B, t_{n-1})}{V_{nueva\_opcion}(B, t_{n-1})}
+  w = \frac{V_{portafolio}(B, t_{n-1}) - V_{objetivo}(B, t_{n-1})}{V_{nueva\_opcion}(B, t_{n-1})}
   \end{equation}
 
   Donde $V_{portafolio}$ es el valor acumulado de las opciones añadidas en pasos previos y $V_{nueva\_opcion}$ es el valor de la opción utilizada para el ajuste.

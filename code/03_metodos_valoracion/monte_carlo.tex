@@ -109,17 +109,17 @@ La intuición del método es:
 
 \subsubsection{Estimación del Valor de Continuación}
 
-En el tiempo $t_j$, para todas las trayectorias que están ``in-the-money'' (donde el ejercicio inmediato tiene valor positivo) se estima el valor de continuación mediante regresión de mínimos cuadrados:
+En el tiempo $t_j$, para todas las trayectorias que están ``in-the-money'' (donde el ejercicio inmediato tiene valor positivo) se estima el valor de continuación mediante regresión de mínimos cuadrados \textbf{sobre los flujos de caja reales obtenidos ex-post} (y no sobre el valor esperado de la opción, lo cual generaría un sesgo alcista):
 
 \begin{equation}
-\mathbb{E}[e^{-r\Delta t} V(S_{t_{j+1}}, t_{j+1}) | S_{t_j}] \approx \sum_{k=0}^{K} a_k L_k(S_{t_j})
+\mathbb{E}[\sum_{i=j+1}^{N}  e^{-r(t_i - t_j)} CF_i | S_{t_j}] \approx \sum_{k=0}^{K} a_k L_k(S_{t_j})
 \end{equation}
 
-donde $L_k$ son funciones base (típicamente polinomios de Laguerre) y $a_k$ son coeficientes determinados por regresión.
+donde $CF_i$ representa el flujo de caja real que ocurre en el tiempo $t_i$ a lo largo de la trayectoria condicionado a que la opción no se ejerció antes, $L_k$ son funciones base (típicamente polinomios de Laguerre) y $a_k$ son coeficientes determinados por regresión.
 
 \textbf{¿Por qué Polinomios de Laguerre?}
 
-Los polinomios de Laguerre ponderados $L_k(x) e^{-x/2}$ forman una base ortogonal en $[0, \infty)$, que es el dominio natural de los precios de activos. Los primeros polinomios son:
+Los polinomios de Laguerre ponderados $L_k(x) e^{-x/2}$ forman una base ortogonal en $[0, \infty)$, que es el dominio natural de los precios de activos. Por simplicidad se utilizan polinomios de Laguerre simples (no ponderados) ya que la elección exacta de las funciones base (ya sean ponderadas, no ponderadas, de Hermite, etc.) no afecta significativamente la convergencia del algoritmo siempre que se usen los términos suficientes. Los primeros polinomios son:
 
 \begin{align}
 L_0(x) &= 1 \\

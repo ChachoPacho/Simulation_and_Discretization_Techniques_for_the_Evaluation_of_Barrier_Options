@@ -34,8 +34,10 @@ El algoritmo incluye el manejo explícito del rebate $R$, un flujo de caja fijo 
 \subsubsection{Código Relevante}
 
 \begin{lstlisting}[language=Python, caption={Términos de RR}, label={lst:rr_example}]
-def calcular_terminos_rr(S, K, H, t, r_rate, d_rate, sigma, phi, eta, R=0):
-  r, d = exp(r_rate), exp(d_rate) # Asumimos tasas continuas estandar
+def calcular_terminos_rr(S, K, H, t, r_rate, d_rate, \
+                         sigma, phi, eta, R=0):
+  # Asumimos tasas continuas estandar
+  r, d = exp(r_rate), exp(d_rate)
   
   # Variables auxiliares
   mu = log(r/d) - 0.5 * sigma^2
@@ -56,14 +58,19 @@ def calcular_terminos_rr(S, K, H, t, r_rate, d_rate, sigma, phi, eta, R=0):
   R_r_t = R * (r^(-t))
   H_S = H / S
   
-  term1 = phi * S_d_t * N(phi * x) - phi * K_r_t * N(phi * x - phi * denom)    
-  term2 = phi * S_d_t * N(phi * x1) - phi * K_r_t * N(phi * x1 - phi * denom)
+  term1 = phi * S_d_t * N(phi * x) \
+          - phi * K_r_t * N(phi * x - phi * denom)
+  term2 = phi * S_d_t * N(phi * x1) \
+          - phi * K_r_t * N(phi * x1 - phi * denom)
   term3 = phi * S_d_t * (H_S^(2 * lambda_)) * N(eta * y) \
-          - phi * K_r_t * (H_S^(2 * lambda_ - 2)) * N(eta * y - eta * denom)
+          - phi * K_r_t * (H_S^(2 * lambda_ - 2)) \
+          * N(eta * y - eta * denom)
   term4 = phi * S_d_t * (H_S^(2 * lambda_)) * N(eta * y1) \
-          - phi * K_r_t * (H_S^(2 * lambda_ - 2)) * N(eta * y1 - eta * denom)
+          - phi * K_r_t * (H_S^(2 * lambda_ - 2)) \
+          * N(eta * y1 - eta * denom)
   term5 = R_r_t * (N(eta * x1 - eta * denom) \
-          - (H_S^(2 * lambda_ - 2)) * N(eta * y1 - eta * denom))
+          - (H_S^(2 * lambda_ - 2)) \
+          * N(eta * y1 - eta * denom))
   term6 = R * ((H_S^(a + b)) * N(eta * z) \
           + (H_S^(a - b)) * N(eta * z - 2 * eta * b * denom))
           

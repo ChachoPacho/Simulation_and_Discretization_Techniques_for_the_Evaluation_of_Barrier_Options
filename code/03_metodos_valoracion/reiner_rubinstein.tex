@@ -38,10 +38,10 @@ La valoración de opciones barrera bajo el marco de Reiner y Rubinstein requiere
 
     \item $g(u)$: en contraste a la primera, incorpora información crucial sobre la trayectoria mediante el principio de reflexión de la teoría de procesos estocásticos. Esta densidad especial captura únicamente aquellas trayectorias que cruzaron la barrera $H$ en algún momento durante la vida de la opción, pero que terminaron en un nivel de precio específico al vencimiento.
     \begin{equation*}
-        g(u)=e^{2\eta \alpha \lambda \sigma^{-2}} (1/\sigma \sqrt{2\pi t}) e^{-1/2v^2}
+        g(u)=e^{2\eta \alpha \mu \sigma^{-2}} (1/\sigma \sqrt{2\pi t}) e^{-1/2v^2}
     \end{equation*}
     Donde $v=(u - 2\eta\alpha - \eta\mu t)/\sigma \sqrt{t}$ y $\alpha=\log{(H/S)}$.
-    El factor exponencial $e^{2\eta \alpha \lambda \sigma^{-2}}$ es precisamente la manifestación matemática del principio de reflexión, cada trayectoria que cruza la barrera tiene una trayectoria ``reflejada'' correspondiente y la densidad $g(u)$ pondera estas trayectorias reflejadas de manera apropiada. 
+    El factor exponencial $e^{2\eta \alpha \mu \sigma^{-2}}$ es precisamente la manifestación matemática del principio de reflexión, cada trayectoria que cruza la barrera tiene una trayectoria ``reflejada'' correspondiente y la densidad $g(u)$ pondera estas trayectorias reflejadas de manera apropiada. 
     Utilizada cuando consideramos que se cruzó la barrera.
     
     \item $h(\tau)$: es de naturaleza temporal en lugar de espacial, representa la distribución del tiempo de primer pasaje, es decir, la probabilidad de que la barrera sea tocada por primera vez en un instante específico $\tau$ dentro del intervalo $[0,t]$. Esta densidad es fundamental para valorar opciones knock-out donde el rebate se paga en el momento exacto (aleatorio) del cruce, no al vencimiento.
@@ -56,7 +56,7 @@ La valoración de opciones barrera bajo el marco de Reiner y Rubinstein requiere
     \item $\lambda = 1+(\mu/\sigma^2)$
     \item $z=[\log{(H/S)}/\sigma \sqrt{t}] + b\sigma \sqrt{t}$
     
-    donde $b=[\sqrt{\mu^+2(\log{r})\sigma^2}]/\sigma^2$
+    donde $b=[\sqrt{\mu^2+2(\log{r})\sigma^2}]/\sigma^2$ y $a=\mu/\sigma^2$
 \end{itemize}
 
 \subsection{Términos de Valoración}
