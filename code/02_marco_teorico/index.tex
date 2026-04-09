@@ -1,11 +1,11 @@
 \chapter{Marco Teórico}
 \label{chapter:marco_teorico}
 
-Este capítulo presenta los fundamentos teóricos necesarios para comprender la valoración de opciones barrera. Se introducen los conceptos básicos de mercados de derivados, los diferentes tipos de opciones, y el modelo de Black-Scholes que constituye la base teórica para los métodos de valoración que se desarrollarán en capítulos posteriores.
+Este capítulo presenta los fundamentos teóricos necesarios para comprender la valoración de opciones barrera. Se introducen los conceptos básicos de mercados de derivados, los diferentes tipos de opciones y el modelo de Black-Scholes que constituye la base teórica para los métodos de valoración que se desarrollarán en capítulos posteriores.
 
 \section{Mercados de Derivados}
 
-Los derivados financieros son instrumentos cuyo valor depende (se deriva) del valor de otro activo, llamado activo subyacente. Los subyacentes más comunes incluyen acciones, índices bursátiles, divisas, tasas de interés, y commodities.
+Los derivados financieros son instrumentos cuyo valor depende (se deriva) del valor de otro activo, llamado activo subyacente. Los subyacentes más comunes incluyen acciones, índices bursátiles, divisas, tasas de interés y commodities.
 
 \subsection{Características de los Mercados de Derivados}
 
@@ -172,7 +172,7 @@ El modelo se basa en los siguientes supuestos:
     \begin{equation}
     dS_t = \mu S_t dt + \sigma S_t dW_t
     \end{equation}
-    donde $\mu$ es la tasa de retorno esperada, $\sigma$ es la volatilidad, y $W_t$ es un proceso de Wiener.
+    donde $\mu$ es la tasa de retorno esperada, $\sigma$ es la volatilidad y $W_t$ es un proceso de Wiener.
     
     \item Los mercados son completos y no hay fricciones:
     \begin{itemize}
@@ -281,7 +281,7 @@ A pesar de su elegancia matemática y utilidad práctica, el modelo de Black-Sch
     
     \item \textbf{Saltos}: El modelo no captura movimientos discontinuos en el precio del subyacente.
     
-    \item \textbf{Fricciones de mercado}: En la práctica existen costos de transacción, restricciones a las ventas en corto, y activos no perfectamente divisibles.
+    \item \textbf{Fricciones de mercado}: En la práctica existen costos de transacción, restricciones a las ventas en corto y activos no perfectamente divisibles.
     
     \item \textbf{Tasa de interés constante}: Las tasas de interés varían en el tiempo, especialmente para opciones de largo plazo.
 \end{itemize}
