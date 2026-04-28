@@ -155,12 +155,12 @@ El algoritmo comienza resolviendo completamente la malla base, ignorando tempora
   
   \item Se ejecuta la inducción hacia atrás (\textit{backward induction}) estándar hasta $t=0$, aplicando la condición de barrera en cada paso: si un nodo $A_{i,j}$ cae por debajo de la barrera (en el caso de down-and-out), su valor se fuerza a $0$ (o al valor del Rebate). 
   
-  \item Resultado: Al finalizar esta fase, tenemos una matriz de valores $V(A_{i,j})$ que servirá como fuente de datos ("oráculo") para los niveles inferiores. 
+  \item Resultado: Al finalizar esta fase, tenemos una matriz de valores $V(A_{i,j})$ que servirá como fuente de datos (``oráculo'') para los niveles inferiores. 
 \end{enumerate}
 
 \paragraph{Fase 2: Inyección de Valores en la Frontera Fina} 
 
-Antes de resolver la malla fina, debemos poblar sus bordes utilizando los datos de la Fase 1. El código debe iterar sobre cada paso de tiempo grueso $j$ y calcular los valores de los nodos de interfaz $B_{2,*}$ (el "techo" de la malla fina).
+Antes de resolver la malla fina, debemos poblar sus bordes utilizando los datos de la Fase 1. El código debe iterar sobre cada paso de tiempo grueso $j$ y calcular los valores de los nodos de interfaz $B_{2,*}$ (el ``techo'' de la malla fina).
 
 El bucle debe manejar la interpolación temporal descrita en la sección anterior: 
 \begin{itemize} 
@@ -183,7 +183,7 @@ Con las condiciones de frontera superior ($B_{2,j}$ calculados en Fase 2) e infe
 
 \paragraph{Generalización Recursiva (Para $M>1$)} 
 
-Si el modelo utiliza múltiples niveles de refinamiento ($M>1$), este proceso se vuelve recursivo. La propiedad de isomorfismo del AMM permite que, una vez resuelta la malla de Nivel 1 (Nodos $B$), esta actúe como la "Malla Gruesa" para el Nivel 2 (Nodos $C$).
+Si el modelo utiliza múltiples niveles de refinamiento ($M>1$), este proceso se vuelve recursivo. La propiedad de isomorfismo del AMM permite que, una vez resuelta la malla de Nivel 1 (Nodos $B$), esta actúe como la ``Malla Gruesa'' para el Nivel 2 (Nodos $C$).
 Un código preliminar es:
 
 \begin{verbatim}
