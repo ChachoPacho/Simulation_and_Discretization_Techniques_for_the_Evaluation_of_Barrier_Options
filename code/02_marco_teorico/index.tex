@@ -23,7 +23,9 @@ Los mercados de derivados cumplen varias funciones económicas importantes:
 
 \subsection{Tipos de Derivados}
 
-Los principales tipos de derivados son:
+Como su nombre lo indica, un contrato derivado no tiene un valor propio independiente, sino que su precio ''deriva'' (es decir, depende matemáticamente) del comportamiento de un elemento de referencia llamado \textbf{activo subyacente}. Este subyacente puede ser un activo financiero tradicional (como acciones de una empresa, bonos o divisas), un activo físico (materias primas como petróleo, cobre o soja), o incluso variables más abstractas (como tasas de interés).
+
+Dependiendo de la mecánica exacta de cómo se vinculan al activo subyacente, los principales tipos de derivados son:
 
 \begin{itemize}
     \item \textbf{Forwards}: Contratos a medida entre dos partes para comprar o vender un activo en una fecha futura a un precio acordado hoy.
@@ -39,13 +41,25 @@ Los principales tipos de derivados son:
 
 Una opción es un contrato que otorga a su tenedor el derecho, pero no la obligación, de comprar (opción call) o vender (opción put) un activo subyacente a un precio predeterminado (precio de ejercicio o strike) en o antes de una fecha específica (fecha de vencimiento).
 
+Para ilustrar este concepto con un \textbf{ejemplo práctico}: supongamos que las acciones de una empresa tecnológica cotizan hoy en el mercado a \$100. Usted adquiere una opción de compra (\textit{Call}) que le otorga el derecho a comprar una acción a un precio fijo (\textit{strike}) de \$105 dentro de exactamente un mes. Por acceder a este contrato, usted le paga al vendedor un costo inicial o \textbf{prima} de \$2.
+\begin{itemize}
+    \item Si al cumplirse el mes la acción tuvo mucho éxito y subió a \$120, usted decide \textbf{ejercer} su derecho: le compra la acción al vendedor a \$105 (el precio acordado) y puede venderla inmediatamente en el mercado a \$120. Obtiene así un beneficio bruto de \$15 (y una ganancia neta de \$13 al descontar la prima original).
+    \item Si, por el contrario, la acción cae a \$90, usted simplemente decide \textbf{no ejercer} la opción. Carece de sentido matemático obligarse a comprar a \$105 algo que en el mercado cuesta \$90. En este caso, el contrato expira sin valor y su pérdida está estrictamente limitada a los \$2 que pagó inicialmente por la prima.
+\end{itemize}
+Este comportamiento asimétrico (ganancias potenciales grandes frente a pérdidas acotadas a la prima) es la propiedad matemática que diferencia a las opciones de otros derivados como los futuros.
+
 \subsection{Opciones Call y Put}
 
-\textbf{Opción Call}: Otorga el derecho de comprar el activo subyacente al precio de ejercicio $K$. El payoff al vencimiento es:
+En la jerga financiera, se utiliza el término anglosajón \textbf{payoff} para describir la función matemática que determina exactamente cuánto dinero bruto recibe el tenedor de la opción en el instante final en que expira el contrato. En otras palabras, es una función que evalúa el valor intrínseco del contrato en el momento de su resolución, basándose únicamente en el precio final del activo y el \textit{strike}, sin tener en cuenta lo que costó inicialmente la prima.
+
+Formalmente, podemos definir estas funciones de \textit{payoff} para cada tipo de opción:
+
+\textbf{Opción Call}: Otorga el derecho de comprar el activo subyacente al precio de ejercicio $K$. El \textit{payoff} al vencimiento es:
 \begin{equation}
 \text{Payoff}_{\text{Call}} = \max(S_T - K, 0)
 \end{equation}
-donde $S_T$ es el precio del subyacente al vencimiento.
+donde $S_T$ es el precio del subyacente al vencimiento (En el ejemplo anterior $S_T = 120$, $K = 105$, entonces $\text{Payoff}_{\text{Call}} = \max(120 - 105, 0) = 15$).
+Si $S_T = 90$, entonces $\text{Payoff}_{\text{Call}} = \max(90 - 105, 0) = 0$.
 
 \textbf{Opción Put}: Otorga el derecho de vender el activo subyacente al precio de ejercicio $K$. El payoff al vencimiento es:
 \begin{equation}
@@ -63,18 +77,27 @@ donde $S_T$ es el precio del subyacente al vencimiento.
 Las opciones exóticas son aquellas cuyas características difieren de las opciones vanilla (europeas o americanas estándar). Incluyen:
 
 \begin{itemize}
-    \item \textbf{Opciones Barrera}: Su existencia depende de si el precio del subyacente cruza un nivel predeterminado.
+    \item \textbf{Opciones Barrera}: Su existencia depende de si el precio del subyacente cruza un nivel predeterminado durante la validez de la opción.
     
-    \item \textbf{Opciones Asiáticas}: Su payoff depende del precio promedio del subyacente durante cierto período.
+    \item \textbf{Opciones Asiáticas}: Su payoff depende de algún tipo de promedio del precio del subyacente durante todo o algún período.
     
-    \item \textbf{Opciones Lookback}: Permiten al tenedor 'mirar hacia atrás' y ejercer al precio más favorable observado.
+    \item \textbf{Opciones Lookback}: Su payoff depende del máximo o mínimo valor que haya tomado el subyacente.
     
     \item \textbf{Opciones Digitales}: Pagan una cantidad fija si se cumple cierta condición.
 \end{itemize}
 
 \section{Opciones Barrera}
 
-Las opciones barrera son el foco principal de este trabajo. Su característica distintiva es que su existencia depende de si el precio del activo subyacente alcanza o no un nivel de precio predeterminado (la barrera $H$) durante la vida de la opción.
+Las opciones barrera son el foco principal de este trabajo. Su característica distintiva es que, a diferencia de las opciones tradicionales, su existencia depende de si el precio del activo subyacente alcanza o cruza un nivel de precio predeterminado (la barrera $H$) en algún instante durante la vida de la opción.
+
+Para asimilar esto más despacio, retomemos el \textbf{ejemplo práctico} de la sección anterior. Usted compraba el derecho a adquirir una acción a un \textit{strike} de \$105 (sabiendo que hoy vale \$100). Ahora imaginemos que, para pagar una prima más barata, usted adquiere una \textbf{Opción Barrera tipo Call}.
+El contrato mantiene el \textit{strike} de \$105, pero le agregamos una condición extra: una barrera en \$90. Acuerdan que si el precio de la acción toca o cae por debajo de \$90 en \textit{cualquier momento} durante ese mes, la opción se \textbf{cancela automáticamente} (se desactiva).
+\begin{itemize}
+    \item Si la acción sube progresivamente a \$120 sin tocar nunca el límite de \$90, usted ejerce la opción al final del mes y obtiene su beneficio normalmente.
+    \item Pero si a mitad de mes hay una caída repentina y la acción toca los \$89, su opción se esfuma en ese exacto instante. Si luego la acción se recupera milagrosamente y termina el mes a \$120, usted ya no puede ejercerla, porque el contrato dejó de existir en el momento en que se cruzó la barrera.
+\end{itemize}
+
+Desde una perspectiva matemática y de programación algorítmica, esto significa que el \textit{payoff} ya no es una función simple del precio final $S_T$, sino que es necesario monitorear y registrar la función del precio $S_t$ en todo momento temporal $t$ para verificar si la condición $S_t \leq 90$ se cumple. Esto es lo que se conoce como un instrumento ``dependiente de la trayectoria'' (\textit{path-dependent}).
 
 \subsection{Clasificación de Opciones Barrera}
 
@@ -122,15 +145,21 @@ donde $\mathbb{I}_A$ es la función indicadora que vale 1 si se cumple la condic
 
 \subsection{Relaciones de Paridad}
 
-Existe una relación fundamental entre opciones knock-in y knock-out del mismo tipo:
+Existe una relación fundamental entre las primas de las opciones knock-in y knock-out del mismo tipo:
 \begin{equation}
-\text{Opción Vanilla} = \text{Opción Knock-In} + \text{Opción Knock-Out}
+\text{Prima Opción Vanilla} = \text{Prima Opción Knock-In} + \text{Prima Opción Knock-Out}
 \end{equation}
 
-Por ejemplo:
+Por ejemplo, utilizando la notación estándar donde la letra $C$ representa el precio o prima de una opción de compra (\textit{Call}):
 \begin{equation}
 C_{\text{europea}} = C_{\text{DI}} + C_{\text{DO}}
 \end{equation}
+donde cada término significa lo siguiente:
+\begin{itemize}
+    \item $C_{\text{europea}}$ es el costo de una opción Call estándar europea (sin barrera).
+    \item $C_{\text{DI}}$ es el costo de una opción \textit{Down-and-In Call} (que solo se activa si toca la barrera baja).
+    \item $C_{\text{DO}}$ es el costo de una opción \textit{Down-and-Out Call} (que se anula si toca la barrera baja).
+\end{itemize}
 
 Esta relación es útil para validar implementaciones y para valorar opciones knock-in a partir de opciones knock-out (o viceversa).
 
@@ -165,30 +194,40 @@ El modelo de Black-Scholes, desarrollado por Fischer Black, Myron Scholes y Robe
 
 \subsection{Supuestos del Modelo}
 
-El modelo se basa en los siguientes supuestos:
+El modelo de Black-Scholes se construye sobre una base matemática rigurosa que requiere definir varios conceptos y supuestos clave sobre el comportamiento del mercado:
 
 \begin{enumerate}
-    \item El precio del activo subyacente $S_t$ sigue un Movimiento Browniano Geométrico:
+    \item \textbf{Dinámica del precio (Movimiento Browniano Geométrico):}\\
+    Se asume que el precio del activo subyacente $S_t$ evoluciona siguiendo un Movimiento Browniano Geométrico (MBG). En cálculo estocástico, esto se describe mediante la siguiente Ecuación Diferencial Estocástica:
     \begin{equation}
     dS_t = \mu S_t dt + \sigma S_t dW_t
     \end{equation}
-    donde $\mu$ es la tasa de retorno esperada, $\sigma$ es la volatilidad y $W_t$ es un proceso de Wiener.
-    
-    \item Los mercados son completos y no hay fricciones:
+    Para comprender esta ecuación, podemos separar el cambio infinitesimal del precio ($dS_t$) durante un instante temporal ($dt$) en dos componentes:
     \begin{itemize}
-        \item No hay costos de transacción
-        \item Es posible tomar posiciones cortas sin restricciones
-        \item Los activos son perfectamente divisibles
-        \item No hay oportunidades de arbitraje
+        \item \textbf{Componente determinista ($\mu S_t dt$)}: Representa la tendencia (o \textit{drift}) del activo. $\mu$ es la \textbf{tasa de retorno esperada}. Si el mercado fuera totalmente predecible, el precio crecería a esta tasa constantemente.
+        \item \textbf{Componente aleatorio ($\sigma S_t dW_t$)}: Modela los \textit{shocks} impredecibles del mercado. $dW_t$ es un incremento de un \textbf{Proceso de Wiener} (una variable aleatoria normal que representa ruido blanco), y $\sigma$ es la \textbf{volatilidad}, la cual cuantifica la intensidad de dicha aleatoriedad (qué tan bruscos son los movimientos).
     \end{itemize}
     
-    \item La tasa de interés libre de riesgo $r$ es constante y conocida.
+    \item \textbf{Ausencia de Arbitraje y Mercados Completos:}\\
+    El modelo asume que no hay oportunidades de \textbf{arbitraje} (la posibilidad matemática de obtener ganancias sin riesgo y sin inversión inicial). Imponer la ausencia de arbitraje es lo que permite hallar un único precio justo para la opción. A su vez, se asume un \textbf{mercado completo}, lo que significa que es posible crear un portafolio de inversión que replique y cubra perfectamente cualquier riesgo utilizando únicamente el activo subyacente y bonos libres de riesgo.
     
-    \item La volatilidad $\sigma$ es constante y conocida.
+    \item \textbf{Tasa Libre de Riesgo ($r$) constante:}\\
+    Se asume la existencia de una tasa de interés libre de riesgo $r$, que es constante a lo largo del tiempo. A esta tasa, cualquier participante puede pedir prestado o prestar dinero asumiendo un riesgo de impago nulo (usualmente se asimila al rendimiento de los bonos del gobierno).
     
-    \item El activo subyacente no paga dividendos (o se puede extender para incluir una tasa de dividendos constante $\delta$).
+    \item \textbf{Volatilidad ($\sigma$) constante:}\\
+    Se asume que la volatilidad $\sigma$ del subyacente es conocida y permanece inmutable durante toda la vida de la opción. En la práctica real, la volatilidad suele cambiar, constituyendo una de las mayores limitaciones de este modelo.
     
-    \item Las transacciones ocurren de manera continua en el tiempo.
+    \item \textbf{Ausencia de Dividendos:}\\
+    El activo subyacente no paga dividendos durante la vida de la opción (aunque las matemáticas se pueden extender fácilmente agregando una tasa de dividendos continua).
+    
+    \item \textbf{Mercados sin Fricciones en Tiempo Continuo:}\\
+    Para que la ecuación diferencial parcial se pueda resolver exactamente, se idealizan las condiciones operativas:
+    \begin{itemize}
+        \item No existen costos de transacción, comisiones financieras ni impuestos.
+        \item Se permite tomar posiciones cortas (\textit{short selling}) de forma ilimitada.
+        \item Los activos son perfectamente divisibles (se pueden operar fracciones infinitesimales).
+        \item No hay oportunidades de arbitraje.
+    \end{itemize}
 \end{enumerate}
 
 \subsection{Ecuación Diferencial de Black-Scholes}
@@ -206,9 +245,9 @@ Esta ecuación se resuelve sujeta a condiciones de borde apropiadas que dependen
 Un concepto fundamental del modelo es la \textbf{medida neutral al riesgo}. Bajo esta medida de probabilidad:
 
 \begin{itemize}
-    \item El precio descontado de cualquier activo es una martingala
-    \item El retorno esperado de todos los activos es la tasa libre de riesgo $r$
-    \item El precio de un derivado es el valor esperado descontado de su payoff
+    \item El \textbf{precio descontado} de cualquier activo es una \textbf{martingala}. El ``precio descontado'' es simplemente el dinero del futuro expresado en su valor del presente (multiplicándolo matemáticamente por el factor de descuento continuo $e^{-rt}$). Decir que es una \textit{martingala} significa que es un proceso aleatorio sin tendencia, es decir, el valor esperado futuro descontado es exactamente igual al valor presente de hoy.
+    \item El retorno esperado de todos los activos se iguala matemáticamente a la tasa libre de riesgo $r$. En este universo teórico (bajo la medida $\mathbb{Q}$), se actúa como si los inversores fueran completamente indiferentes al riesgo, por lo que no exigen ganar más por comprar una acción volátil que por comprar un bono seguro.
+    \item Como corolario de lo anterior, el precio justo de un derivado hoy se calcula simplemente sacando el valor promedio esperado de su \textit{payoff} futuro, y descontando (retrotrayendo) ese dinero al día de hoy usando la tasa $r$.
 \end{itemize}
 
 Bajo la medida neutral al riesgo, el proceso del precio del subyacente se convierte en:
@@ -220,7 +259,7 @@ donde $W_t^{\mathbb{Q}}$ es un proceso de Wiener bajo la medida neutral al riesg
 
 \subsection{Fórmula de Black-Scholes para Opciones Vanilla}
 
-Para una opción call europea con precio de ejercicio $K$ y vencimiento $T$, la fórmula de Black-Scholes es:
+Para una opción call europea con precio de ejercicio $K$ y vencimiento $T$, la fórmula de Black-Scholes para la prima es:
 
 \begin{equation}
 C(S,t) = S N(d_1) - K e^{-r(T-t)} N(d_2)
@@ -272,21 +311,15 @@ Las \textbf{griegas} son las derivadas parciales del precio de la opción respec
 
 \subsection{Limitaciones del Modelo}
 
-A pesar de su elegancia matemática y utilidad práctica, el modelo de Black-Scholes tiene limitaciones importantes:
+A pesar de su indudable elegancia matemática y su inmensa utilidad práctica como estándar de la industria, el modelo de Black-Scholes presenta importantes limitaciones teóricas cuando se lo contrasta con el mundo real. Al haber transformado la dinámica del mercado en un sistema idealizado de ecuaciones diferenciales, el modelo se vio obligado a realizar simplificaciones que no siempre se cumplen.
 
-\begin{itemize}
-    \item \textbf{Volatilidad constante}: En la realidad, la volatilidad varía con el tiempo y con el nivel del precio del subyacente (volatility smile/skew).
-    
-    \item \textbf{Distribución lognormal}: Los retornos reales exhiben colas más pesadas que la distribución normal (fat tails).
-    
-    \item \textbf{Saltos}: El modelo no captura movimientos discontinuos en el precio del subyacente.
-    
-    \item \textbf{Fricciones de mercado}: En la práctica existen costos de transacción, restricciones a las ventas en corto y activos no perfectamente divisibles.
-    
-    \item \textbf{Tasa de interés constante}: Las tasas de interés varían en el tiempo, especialmente para opciones de largo plazo.
-\end{itemize}
+La crítica más fuerte proviene de su tratamiento de la estadística de los precios. El modelo asume que la volatilidad es una constante inmutable y que los retornos se distribuyen de forma estrictamente normal. Sin embargo, la evidencia empírica demuestra que los mercados financieros tienen ``colas pesadas'' (\textit{fat tails}), es decir, los eventos extremos y las crisis ocurren con mucha mayor frecuencia de lo que predeciría una campana de Gauss. Además, la volatilidad real no es constante, ya que varía dinámicamente y depende del precio de ejercicio, un fenómeno empírico conocido como la ``sonrisa de volatilidad'' (\textit{volatility smile}).
 
-A pesar de estas limitaciones, el modelo de Black-Scholes sigue siendo la base conceptual para la valoración de opciones y proporciona un marco de referencia contra el cual se comparan otros modelos más sofisticados.
+Otra limitación inherente a la utilización del Movimiento Browniano Geométrico es que asume una trayectoria continua para los precios. Matemáticamente, esto significa que el precio fluye sin interrupciones. En la realidad, los precios sufren saltos abruptos o discontinuidades (por ejemplo, cuando el mercado abre con un precio muy distinto al cierre del día anterior debido a una noticia nocturna importante). El modelo clásico de Black-Scholes es completamente ciego ante estas brechas en la trayectoria.
+
+Finalmente, el modelo ignora la fricción real de operar en el mercado. La premisa de que un algoritmo o inversor puede ajustar sus posiciones de forma continua e ininterrumpida sin pagar costos de transacción es computacional y financieramente imposible. A esto se le suma la idealización de una tasa de interés constante, lo cual resulta ser una aproximación aceptable para opciones que vencen en pocas semanas, pero genera errores sistemáticos considerables al valorar derivados a largo plazo donde el valor del dinero en el tiempo fluctúa.
+
+A pesar de todas estas falencias, el modelo de Black-Scholes sigue siendo el pilar conceptual fundamental de las finanzas cuantitativas. Más que como un oráculo perfecto, se utiliza hoy en día como el punto de referencia base sobre el cual se construyen e iteran modelos matemáticos y algoritmos más sofisticados.
 
 \section{Extensiones del Modelo Black-Scholes}
 

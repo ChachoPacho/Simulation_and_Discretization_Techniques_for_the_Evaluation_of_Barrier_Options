@@ -1,11 +1,47 @@
 \chapter{Introducción}
 \label{chapter:intro}
 
-Las opciones barrera son instrumentos derivados ampliamente utilizados en los mercados financieros modernos. Su popularidad se debe principalmente a dos factores: son significativamente más baratas que las opciones vanilla equivalentes y permiten a los inversores y empresas cubrir riesgos específicos de manera más eficiente.
+\section{¿Qué es una Opción Financiera?}
 
-A diferencia de las opciones europeas estándar, cuyo valor depende únicamente del precio del activo subyacente al vencimiento, las opciones barrera tienen una característica adicional: su existencia depende de si el precio del activo cruza o no un nivel predeterminado (la barrera) durante la vida del contrato. Esta dependencia de la trayectoria completa del precio, y no solo de su valor final, introduce complejidades significativas en su valoración.
+Antes de profundizar en las opciones barrera, que son el foco principal de este trabajo, es fundamental establecer qué es una opción financiera básica (a menudo denominada opción \textit{vanilla}). En el ámbito de las finanzas, una opción es un contrato derivado, lo que significa que su valor depende o se deriva del precio de otro activo, conocido como \textbf{activo subyacente}.
 
-\section{Motivación}
+En términos simples, una opción otorga a su comprador el derecho, pero no la obligación, de comprar o vender el activo subyacente a un precio fijo en o antes de una fecha determinada. A cambio de adquirir este derecho, el comprador paga un monto inicial al vendedor (o emisor) de la opción. El vendedor, por su parte, recibe este dinero y asume la obligación de cumplir con el contrato si el comprador decide hacer valer (ejercer) su derecho.
+
+\subsection{Componentes de una Opción}
+
+Todo contrato de opción estándar está definido por los siguientes elementos esenciales:
+
+\begin{itemize}
+    \item \textbf{Activo Subyacente (Underlying Asset)}: El activo de referencia (como acciones, divisas, índices bursátiles, materias primas o tasas de interés) sobre el cual se basa el contrato.
+    \item \textbf{Precio de Ejercicio (Strike Price)}: El precio predeterminado al cual se podrá comprar o vender el activo subyacente si la opción es ejercida.
+    \item \textbf{Fecha de Vencimiento (Maturity Date)}: La fecha límite en la cual la opción puede ser ejercida. Pasada esta fecha, la opción expira y pierde su validez.
+    \item \textbf{Prima (Premium)}: El precio o costo que paga el comprador al vendedor por adquirir los derechos que otorga el contrato.
+    \item \textbf{Tipo de Opción}:
+    \begin{itemize}
+        \item \textbf{Opción de Compra (Call)}: Otorga al comprador el derecho de \textit{comprar} el activo subyacente al precio de ejercicio.
+        \item \textbf{Opción de Venta (Put)}: Otorga al comprador el derecho de \textit{vender} el activo subyacente al precio de ejercicio.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Motivación y Usos Prácticos de las Opciones}
+
+Las opciones son herramientas muy versátiles en el mundo financiero, y su utilización suele estar motivada por tres razones principales:
+
+\begin{enumerate}
+    \item \textbf{Cobertura (Hedging)}: Las opciones se utilizan frecuentemente como un seguro financiero para mitigar riesgos. Por ejemplo, una empresa agrícola podría comprar opciones put sobre el trigo para asegurarse un precio mínimo de venta para su cosecha, protegiéndose de posibles caídas en el mercado. De manera similar, un inversor puede proteger su portafolio de acciones comprando opciones de venta frente a una eventual recesión.
+    
+    \item \textbf{Especulación}: Los participantes del mercado pueden usar opciones para intentar beneficiarse de los movimientos direccionales esperados en los precios de los activos. Si un inversor cree que las acciones de una compañía van a subir, puede comprar una opción call en lugar de comprar las acciones directamente, limitando su riesgo máximo a la prima pagada.
+    
+    \item \textbf{Apalancamiento (Leverage)}: Las opciones permiten a los inversores controlar una gran cantidad de activos subyacentes con una inversión inicial relativamente pequeña (la prima). Esto proporciona apalancamiento, lo que significa que un pequeño cambio en el precio del activo subyacente puede resultar en un cambio porcentual mucho mayor en el valor de la opción, amplificando tanto las ganancias como las posibles pérdidas sobre la inversión inicial.
+\end{enumerate}
+
+\section{Opciones Barrera}
+
+Habiendo establecido el funcionamiento de las opciones estándar, podemos introducir el objeto principal de este trabajo. Las opciones barrera son instrumentos derivados más complejos (clasificadas como opciones exóticas) y son ampliamente utilizados en los mercados financieros modernos. Su popularidad se debe principalmente a dos factores, el hecho de que son significativamente más baratas que las opciones vanilla equivalentes y el que permiten a los inversores y empresas cubrir riesgos específicos de manera más eficiente.
+
+A diferencia de las opciones europeas estándar, cuyo valor depende únicamente del precio del activo subyacente al vencimiento, las opciones barrera tienen una característica adicional, su existencia depende de si el precio del activo cruza o no un nivel predeterminado (la \textbf{barrera}) durante la vida del contrato. Esta dependencia de la trayectoria completa del precio a lo largo del tiempo, y no solo de su valor final, introduce complejidades significativas en su valoración.
+
+\subsection{Motivación de las Opciones Barrera}
 
 Las opciones barrera se utilizan en diversos contextos financieros:
 
@@ -20,6 +56,20 @@ Las opciones barrera se utilizan en diversos contextos financieros:
 \end{itemize}
 
 \section{El Problema de Valoración}
+
+\subsection{¿Qué significa ''Valorar'' una Opción?}
+
+En finanzas cuantitativas, ''valorar'' (del inglés \textit{pricing}) una opción significa determinar su precio teórico justo en el mercado actual, es decir, calcular matemáticamente de cuánto debería ser la \textbf{prima} que el comprador le paga al vendedor el día de hoy.
+
+Dado que el beneficio económico que la opción generará en el futuro depende de cómo fluctúe el precio del activo subyacente (el cual se asume que se comporta de manera aleatoria o estocástica), la valoración consiste en calcular el \textbf{valor esperado} de esos beneficios futuros, descontados al valor del dinero de hoy.
+
+Desde la perspectiva de la matemática y la computación, valorar una opción se traduce en resolver un problema riguroso:
+\begin{itemize}
+    \item \textbf{Matemáticamente}, implica calcular una esperanza matemática sobre un proceso estocástico, lo que frecuentemente equivale a resolver una Ecuación Diferencial Parcial (PDE, por sus siglas en inglés) que modela cómo evoluciona el precio de la opción en relación con el paso del tiempo y el movimiento del activo subyacente.
+    \item \textbf{Computacionalmente}, cuando las ecuaciones no tienen una solución analítica exacta, valorar requiere diseñar e implementar algoritmos numéricos eficientes. Esto puede implicar simular millones de posibles caminos aleatorios que el precio podría tomar (simulaciones de Monte Carlo) o discretizar el espacio y el tiempo en mallas de diferencias finitas.
+\end{itemize}
+
+En el caso de las opciones barrera, este problema es significativamente más demandante desde el punto de vista algorítmico. Como el contrato puede desaparecer o activarse si el precio del activo toca la barrera en \textit{cualquier momento} antes de su vencimiento, la computadora no puede limitarse a evaluar el precio al final del período; requiere simular, rastrear y procesar la \textbf{trayectoria completa} temporal de los precios.
 
 \subsection{Fórmulas Analíticas y sus Limitaciones}
 

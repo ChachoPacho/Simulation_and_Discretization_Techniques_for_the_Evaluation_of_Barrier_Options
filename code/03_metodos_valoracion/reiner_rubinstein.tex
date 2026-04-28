@@ -9,8 +9,8 @@ Siguiendo la notación exacta de Reiner y Rubinstein \cite{reiner1991breaking}, 
 \textbf{Variables Críticas}
 
 \begin{itemize}
-    \item $r$: Tasa de interés (expresada como $1+\text{tasa}$)
-    \item $d$: Tasa de pago del activo (expresada como $1+\text{tasa de pago}$)
+    \item $r$: Tasa de interés libre de riesgo (expresada matemáticamente como un factor, e.g., $1+\text{tasa}$)
+    \item $d$: Tasa de pago del activo (expresada como factor $1+\text{tasa de pago}$). Para entenderlo intuitivamente, representa el flujo de dinero que ``gotea'' del activo hacia el inversor durante el contrato, típicamente son los \textbf{dividendos} (en el caso de acciones) o la tasa de interés extranjera (si el activo es una divisa). Dado que la empresa pierde valor al repartir dividendos, matemáticamente esta tasa $d$ actúa reduciendo el crecimiento esperado del precio del subyacente.
     \item $\sigma$: Volatilidad del activo subyacente
     \item $t$: Tiempo hasta el vencimiento
     \item $\phi$: Variable binaria ($1$ para calls, $-1$ para puts)
@@ -31,14 +31,14 @@ La valoración de opciones barrera bajo el marco de Reiner y Rubinstein requiere
 \begin{itemize}
     \item $f(u)$: densidad tradicional al estilo Black-Scholes del logaritmo natural del retorno del activo subyacente bajo la medida neutral al riesgo. Esta densidad representa la distribución de probabilidad de dónde termina el precio al vencimiento, sin considerar en absoluto la trayectoria seguida para llegar allí. Es la visión ``amnésica'' del modelo, sólo importa el destino final, no el camino.
     \begin{equation*}
-        f(u)=(1/\sigma \sqrt{2\pi t}) e^{-1/2v^2}
+        f(u)=(1/\sigma \sqrt{2\pi t}) e^{-v^2/2}
     \end{equation*}
     Donde $v=(u-\mu t)/\sigma \sqrt{t}$ y $\mu=\log{(r/d)}-\frac 1 2\sigma^2$.
     Utilizada cuando consideramos que no se cruzó la barrera.
 
     \item $g(u)$: en contraste a la primera, incorpora información crucial sobre la trayectoria mediante el principio de reflexión de la teoría de procesos estocásticos. Esta densidad especial captura únicamente aquellas trayectorias que cruzaron la barrera $H$ en algún momento durante la vida de la opción, pero que terminaron en un nivel de precio específico al vencimiento.
     \begin{equation*}
-        g(u)=e^{2\eta \alpha \mu \sigma^{-2}} (1/\sigma \sqrt{2\pi t}) e^{-1/2v^2}
+        g(u)=e^{2\eta \alpha \mu \sigma^{-2}} (1/\sigma \sqrt{2\pi t}) e^{-v^2/2}
     \end{equation*}
     Donde $v=(u - 2\eta\alpha - \eta\mu t)/\sigma \sqrt{t}$ y $\alpha=\log{(H/S)}$.
     El factor exponencial $e^{2\eta \alpha \mu \sigma^{-2}}$ es precisamente la manifestación matemática del principio de reflexión, cada trayectoria que cruza la barrera tiene una trayectoria ``reflejada'' correspondiente y la densidad $g(u)$ pondera estas trayectorias reflejadas de manera apropiada. 
