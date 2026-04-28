@@ -3,8 +3,20 @@
 
 El trabajo seminal de Reiner y Rubinstein \cite{reiner1991breaking} proporciona una metodología sistemática para obtener fórmulas cerradas para los ocho tipos básicos de opciones barrera europeas bajo el modelo de Black-Scholes.
 
+\subsection{Intuición Matemática del Método}
+
+Antes de sumergirnos en las ecuaciones y densidades de probabilidad, es crucial entender la estrategia teórica subyacente que utilizaron Reiner y Rubinstein para resolver el problema matemáticamente. Su genialidad radicó en dos pilares fundamentales:
+
+\textbf{1. Estrategia de ``Divide y Vencerás''}\\
+Calcular analíticamente una opción dependiente de la trayectoria desde cero es una tarea ardua. Los autores resolvieron esto demostrando que cualquier opción barrera se puede descomponer matemáticamente en una suma o resta de piezas más simples y conocidas. En concreto, utilizaron ``bloques de construcción'' como las opciones estándar (\textit{vanilla}) y pagos fijos condicionales. Al calcular el valor de estos bloques simples y combinarlos linealmente, lograron ensamblar el precio exacto de opciones barreras complejas.
+
+\textbf{2. El Principio de Reflexión}\\
+El mayor desafío algorítmico era estimar la probabilidad de que la trayectoria aleatoria del precio tocara la barrera en \textit{algún momento} durante la vida del contrato. Para evitar integrales estocásticas complejas, se basaron en una propiedad fascinante del Movimiento Browniano con logaritmo, el \textbf{Principio de Reflexión}. Este principio geométrico-estadístico establece una simetría perfecta, por cada posible trayectoria del mercado que toca la barrera y termina en un precio final determinado, existe una trayectoria ``espejo'' matemáticamente idéntica que terminó en un precio simétricamente opuesto más allá de la barrera (\textit{lognormal random walk}). Contar y ponderar estas trayectorias reflejadas permite calcular probabilidades de cruce utilizando únicamente funciones de distribución normal clásicas.
+
+Comprender estos dos conceptos es la clave para darle sentido al ecosistema de variables y funciones de densidad que se define a continuación.
+
 \subsection{Marco Metodológico de Valoración}
-Siguiendo la notación exacta de Reiner y Rubinstein \cite{reiner1991breaking}, se definen:
+Siguiendo la notación original propuesta por Reiner y Rubinstein \cite{reiner1991breaking}, el modelo define los siguientes parámetros y distribuciones:
 
 \textbf{Variables Críticas}
 
@@ -60,6 +72,10 @@ La valoración de opciones barrera bajo el marco de Reiner y Rubinstein requiere
 \end{itemize}
 
 \subsection{Términos de Valoración}
+
+A continuación se presentan los seis ``bloques de construcción'' matemáticos (etiquetados del [1] al [6]) que los autores derivaron para poder ensamblar el precio de cualquier opción barrera. 
+
+\textbf{Nota para el lector:} No se preocupe si estas integrales y ecuaciones parecen intimidantes a primera vista. En la subsección inmediatamente posterior (\textit{Interpretación de los Términos de Valoración}) desglosaremos conceptualmente qué significa cada uno de estos bloques y cómo se relacionan con las probabilidades y trayectorias del precio.
 
 \begin{align}
 [1] &= r^{-t}\int \phi(Se^u-K)f(u)du \nonumber \\ 
