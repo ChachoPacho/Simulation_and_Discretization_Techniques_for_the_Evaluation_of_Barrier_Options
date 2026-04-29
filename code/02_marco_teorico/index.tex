@@ -41,10 +41,10 @@ Dependiendo de la mecánica exacta de cómo se vinculan al activo subyacente, lo
 
 Una opción es un contrato que otorga a su tenedor el derecho, pero no la obligación, de comprar (opción call) o vender (opción put) un activo subyacente a un precio predeterminado (precio de ejercicio o strike) en o antes de una fecha específica (fecha de vencimiento).
 
-Para ilustrar este concepto con un \textbf{ejemplo práctico}: supongamos que las acciones de una empresa tecnológica cotizan hoy en el mercado a \$100. Usted adquiere una opción de compra (\textit{Call}) que le otorga el derecho a comprar una acción a un precio fijo (\textit{strike}) de \$105 dentro de exactamente un mes. Por acceder a este contrato, usted le paga al vendedor un costo inicial o \textbf{prima} de \$2.
+Para ilustrar este concepto con un \textbf{ejemplo práctico}: supongamos que las acciones de una empresa tecnológica cotizan hoy en el mercado a \$100. Un inversor cualquiera adquiere una opción de compra (\textit{Call}) que le otorga el derecho a comprar una acción a un precio fijo (\textit{strike}) de \$105 dentro de exactamente un mes. Por acceder a este contrato, el inversor le paga al vendedor un costo inicial o \textbf{prima} de \$2.
 \begin{itemize}
-    \item Si al cumplirse el mes la acción tuvo mucho éxito y subió a \$120, usted decide \textbf{ejercer} su derecho: le compra la acción al vendedor a \$105 (el precio acordado) y puede venderla inmediatamente en el mercado a \$120. Obtiene así un beneficio bruto de \$15 (y una ganancia neta de \$13 al descontar la prima original).
-    \item Si, por el contrario, la acción cae a \$90, usted simplemente decide \textbf{no ejercer} la opción. Carece de sentido matemático obligarse a comprar a \$105 algo que en el mercado cuesta \$90. En este caso, el contrato expira sin valor y su pérdida está estrictamente limitada a los \$2 que pagó inicialmente por la prima.
+    \item Si al cumplirse el mes la acción tuvo mucho éxito y subió a \$120, el inversor decide \textbf{ejercer} su derecho: le compra la acción al vendedor a \$105 (el precio acordado) y puede venderla inmediatamente en el mercado a \$120. Obtiene así un beneficio bruto de \$15 (y una ganancia neta de \$13 al descontar la prima original).
+    \item Si, por el contrario, la acción cae a \$90, el inversor simplemente decide \textbf{no ejercer} la opción. Carece de sentido matemático obligarse a comprar a \$105 algo que en el mercado cuesta \$90. En este caso, el contrato expira sin valor y su pérdida está estrictamente limitada a los \$2 que pagó inicialmente por la prima.
 \end{itemize}
 Este comportamiento asimétrico (ganancias potenciales grandes frente a pérdidas acotadas a la prima) es la propiedad matemática que diferencia a las opciones de otros derivados como los futuros.
 
@@ -68,6 +68,8 @@ Si $S_T = 90$, entonces $\text{Payoff}_{\text{Call}} = \max(90 - 105, 0) = 0$.
 
 \subsection{Opciones Europeas vs Americanas}
 
+Según el momento en que puede ejercerse la opción, se clasifican en europeas y americanas:
+
 \textbf{Opciones Europeas}: Solo pueden ejercerse en la fecha de vencimiento. Son más simples de valorar analíticamente.
 
 \textbf{Opciones Americanas}: Pueden ejercerse en cualquier momento hasta el vencimiento. Esta flexibilidad adicional las hace más valiosas que sus contrapartes europeas, pero también más difíciles de valorar.
@@ -90,11 +92,11 @@ Las opciones exóticas son aquellas cuyas características difieren de las opcio
 
 Las opciones barrera son el foco principal de este trabajo. Su característica distintiva es que, a diferencia de las opciones tradicionales, su existencia depende de si el precio del activo subyacente alcanza o cruza un nivel de precio predeterminado (la barrera $H$) en algún instante durante la vida de la opción.
 
-Para asimilar esto más despacio, retomemos el \textbf{ejemplo práctico} de la sección anterior. Usted compraba el derecho a adquirir una acción a un \textit{strike} de \$105 (sabiendo que hoy vale \$100). Ahora imaginemos que, para pagar una prima más barata, usted adquiere una \textbf{Opción Barrera tipo Call}.
+Para asimilar esto más despacio, retomemos el \textbf{ejemplo práctico} de la sección anterior. El inversor compraba el derecho a adquirir una acción a un \textit{strike} de \$105 (sabiendo que hoy vale \$100). Ahora imaginemos que, para pagar una prima más barata, el inversor adquiere una \textbf{Opción Barrera tipo Call}.
 El contrato mantiene el \textit{strike} de \$105, pero le agregamos una condición extra: una barrera en \$90. Acuerdan que si el precio de la acción toca o cae por debajo de \$90 en \textit{cualquier momento} durante ese mes, la opción se \textbf{cancela automáticamente} (se desactiva).
 \begin{itemize}
-    \item Si la acción sube progresivamente a \$120 sin tocar nunca el límite de \$90, usted ejerce la opción al final del mes y obtiene su beneficio normalmente.
-    \item Pero si a mitad de mes hay una caída repentina y la acción toca los \$89, su opción se esfuma en ese exacto instante. Si luego la acción se recupera milagrosamente y termina el mes a \$120, usted ya no puede ejercerla, porque el contrato dejó de existir en el momento en que se cruzó la barrera.
+    \item Si la acción sube progresivamente a \$120 sin tocar nunca el límite de \$90, el inversor ejerce la opción al final del mes y obtiene su beneficio normalmente.
+    \item Pero si a mitad de mes hay una caída repentina y la acción toca los \$89, su opción deja de existir. Si luego la acción se recupera milagrosamente y termina el mes a \$120, el inversor ya no puede ejercerla, porque el contrato dejó de existir en el momento en que se cruzó la barrera.
 \end{itemize}
 
 Desde una perspectiva matemática y de programación algorítmica, esto significa que el \textit{payoff} ya no es una función simple del precio final $S_T$, sino que es necesario monitorear y registrar la función del precio $S_t$ en todo momento temporal $t$ para verificar si la condición $S_t \leq 90$ se cumple. Esto es lo que se conoce como un instrumento ``dependiente de la trayectoria'' (\textit{path-dependent}).
@@ -105,8 +107,8 @@ Las opciones barrera se clasifican según dos criterios:
 
 \textbf{1. Según el efecto de tocar la barrera:}
 \begin{itemize}
-    \item \textbf{Knock-In}: La opción comienza a existir (se activa) solo si se toca la barrera.
-    \item \textbf{Knock-Out}: La opción deja de existir (se extingue) si se toca la barrera.
+    \item \textbf{Knock-In}: La opción comienza a existir (se activa) solo si se toca o cruza la barrera.
+    \item \textbf{Knock-Out}: La opción deja de existir (se extingue) si se toca o cruza la barrera.
 \end{itemize}
 
 \textbf{2. Según la posición de la barrera:}
@@ -115,7 +117,7 @@ Las opciones barrera se clasifican según dos criterios:
     \item \textbf{Down}: La barrera $H$ está por debajo del precio inicial del subyacente ($H < S_0$).
 \end{itemize}
 
-Combinando estos criterios obtenemos ocho tipos básicos de opciones barrera:
+Combinando estos criterios para calls y puts obtenemos ocho tipos básicos de opciones barrera:
 \begin{itemize}
     \item Down-and-In Call (DIC)
     \item Down-and-Out Call (DOC)
@@ -126,6 +128,8 @@ Combinando estos criterios obtenemos ocho tipos básicos de opciones barrera:
     \item Up-and-In Put (UIP)
     \item Up-and-Out Put (UOP)
 \end{itemize}
+
+A modo de ejemplo, consideremos una \textbf{Down-and-In Call (DIC)} con precio inicial del subyacente en \$100, precio de ejercicio (\textit{strike}) de \$105 y barrera en \$90. Esta opción nace inactiva. Solo si el precio de la acción cae en algún momento hasta tocar los \$90, la opción ``cobra vida'' (se activa). A partir de ese instante, se comporta como una opción de compra tradicional, y el inversor podrá ejercerla si al vencimiento el precio supera los \$105. Si, por el contrario, el precio nunca desciende hasta \$90 durante la vida del contrato, la opción expira sin valor alguno.
 
 \subsection{Payoffs de Opciones Barrera}
 
@@ -142,6 +146,8 @@ Para una \textbf{Down-and-In Call}:
 \end{equation}
 
 donde $\mathbb{I}_A$ es la función indicadora que vale 1 si se cumple la condición $A$ y 0 en caso contrario.
+
+Es importante notar que, desde una perspectiva matemática, el \textit{payoff} de la opción es una \textbf{variable aleatoria}. Su valor final es incierto en el tiempo $t=0$ y depende enteramente de la trayectoria estocástica que desarrolle el precio del activo subyacente $S_t$ a lo largo del tiempo. Por lo tanto, el desafío de la valoración financiera consistirá en calcular el valor esperado de esta variable aleatoria y descontarlo al valor presente.
 
 \subsection{Relaciones de Paridad}
 
@@ -160,6 +166,8 @@ donde cada término significa lo siguiente:
     \item $C_{\text{DI}}$ es el costo de una opción \textit{Down-and-In Call} (que solo se activa si toca la barrera baja).
     \item $C_{\text{DO}}$ es el costo de una opción \textit{Down-and-Out Call} (que se anula si toca la barrera baja).
 \end{itemize}
+
+La lógica detrás de esta igualdad es muy intuitiva si imaginamos adquirir ambas opciones simultáneamente. Dado un mismo subyacente, \textit{strike} y vencimiento, si compramos tanto la opción \textit{Knock-In} como la \textit{Knock-Out}, estamos cubriendo todos los escenarios posibles de forma mutuamente excluyente. Si el precio del subyacente toca la barrera en algún momento, la opción \textit{Knock-Out} deja de existir pero la \textit{Knock-In} se activa automáticamente. Si, por el contrario, el precio nunca toca la barrera, la \textit{Knock-In} nunca cobra vida, pero la \textit{Knock-Out} sobrevive intacta hasta el final. En cualquier escenario, al vencimiento terminaremos poseyendo exactamente una opción activa, lo cual equivale a tener en cartera una opción \textit{Vanilla} tradicional sin restricciones de barrera.
 
 Esta relación es útil para validar implementaciones y para valorar opciones knock-in a partir de opciones knock-out (o viceversa).
 
