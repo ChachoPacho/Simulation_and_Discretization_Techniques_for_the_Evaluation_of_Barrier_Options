@@ -49,9 +49,9 @@ Este \textit{payoff} es una variable aleatoria y el valor esperado se calcula ut
     con $\mu=r - q - \frac{1}{2}\sigma^2$.
     \item $g(u)$: densidad especial que incorpora información sobre la trayectoria mediante el principio de reflexión. Pondera exclusivamente aquellas trayectorias que \textbf{sí cruzaron} la barrera en algún momento pero que terminaron en un nivel particular. Matemáticamente:
     \begin{equation*}
-        g(u)=e^{2\alpha \mu \sigma^{-2}} \frac{1}{\sigma \sqrt{2\pi (T-t)}} e^{-v_g^2/2} \quad \text{donde} \quad v_g=\frac{u - 2\alpha - \mu (T-t)}{\sigma \sqrt{T-t}}
+        g(u)=e^{2\eta\alpha \mu \sigma^{-2}} \frac{1}{\sigma \sqrt{2\pi (T-t)}} e^{-v_g^2/2} \quad \text{donde} \quad v_g=\frac{u - 2\eta\alpha - \mu (T-t)}{\sigma \sqrt{T-t}}
     \end{equation*}
-    con $\alpha=\ln(H/S)$.
+    con $\alpha=\ln(H/S)$ y donde $\eta$ es un parámetro direccional que toma el valor $1$ si la barrera está por debajo del precio inicial (\textit{Down}) y $-1$ si está por encima (\textit{Up}).
     \item $h(\tau)$: densidad del tiempo de primer pasaje. Se utiliza para modelar la probabilidad de que la barrera sea tocada exactamente en el instante $\tau$, siendo útil para pagar rebates en el momento del toque/cruce de la barrera.
 \end{itemize}
 
@@ -200,8 +200,8 @@ De una manera análoga, combinando adecuadamente las densidades $f(u)$, $g(u)$ y
     \item Si $K < H$:
     \begin{align*}
     C_{UI} &= S e^{-q(T-t)} N(x_1) - K e^{-r(T-t)} N(x_1 - \sigma\sqrt{T-t}) \\
-    &\quad - S e^{-q(T-t)} \left(\frac{H}{S}\right)^{2\lambda} N(y) + K e^{-r(T-t)}\left(\frac{H}{S}\right)^{2\lambda - 2} N(y - \sigma\sqrt{T-t}) \\
-    &\quad + S e^{-q(T-t)} \left(\frac{H}{S}\right)^{2\lambda} N(y_1) - K e^{-r(T-t)}\left(\frac{H}{S}\right)^{2\lambda - 2} N(y_1 - \sigma\sqrt{T-t}) \\
+    &\quad - S e^{-q(T-t)} \left(\frac{H}{S}\right)^{2\lambda} N(-y) + K e^{-r(T-t)}\left(\frac{H}{S}\right)^{2\lambda - 2} N(-y + \sigma\sqrt{T-t}) \\
+    &\quad + S e^{-q(T-t)} \left(\frac{H}{S}\right)^{2\lambda} N(-y_1) - K e^{-r(T-t)}\left(\frac{H}{S}\right)^{2\lambda - 2} N(-y_1 + \sigma\sqrt{T-t}) \\
     &\quad + R e^{-r(T-t)} \left[ N(-x_1 + \sigma \sqrt{T-t}) - \left(\frac{H}{S}\right)^{2\lambda - 2} N(-y_1 + \sigma\sqrt{T-t}) \right]
     \end{align*}
 \end{itemize}
@@ -216,8 +216,8 @@ De una manera análoga, combinando adecuadamente las densidades $f(u)$, $g(u)$ y
     \begin{align*}
     C_{UO} &= S e^{-q(T-t)} N(x) - K e^{-r(T-t)} N(x - \sigma\sqrt{T-t}) \\
     &\quad - S e^{-q(T-t)} N(x_1) + K e^{-r(T-t)} N(x_1 - \sigma\sqrt{T-t}) \\
-    &\quad + S e^{-q(T-t)} \left(\frac{H}{S}\right)^{2\lambda} N(y) - K e^{-r(T-t)} \left(\frac{H}{S}\right)^{2\lambda - 2} N(y - \sigma\sqrt{T-t}) \\
-    &\quad - S e^{-q(T-t)} \left(\frac{H}{S}\right)^{2\lambda} N(y_1) + K e^{-r(T-t)} \left(\frac{H}{S}\right)^{2\lambda - 2} N(y_1 - \sigma\sqrt{T-t}) \\
+    &\quad + S e^{-q(T-t)} \left(\frac{H}{S}\right)^{2\lambda} N(-y) - K e^{-r(T-t)} \left(\frac{H}{S}\right)^{2\lambda - 2} N(-y + \sigma\sqrt{T-t}) \\
+    &\quad - S e^{-q(T-t)} \left(\frac{H}{S}\right)^{2\lambda} N(-y_1) + K e^{-r(T-t)} \left(\frac{H}{S}\right)^{2\lambda - 2} N(-y_1 + \sigma\sqrt{T-t}) \\
     &\quad + R \left[ \left(\frac{H}{S}\right)^{a+b} N(-z) + \left(\frac{H}{S}\right)^{a-b} N(-z + 2b\sigma\sqrt{T-t}) \right]
     \end{align*}
 \end{itemize}
