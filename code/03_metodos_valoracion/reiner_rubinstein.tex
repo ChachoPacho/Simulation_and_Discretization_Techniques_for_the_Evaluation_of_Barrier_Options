@@ -1,9 +1,9 @@
-\section{Método 1: Fórmulas Analíticas de Reiner y Rubinstein}
+\chapter{Método 1: Fórmulas Analíticas de Reiner y Rubinstein}
 \label{sec:metodo_rr}
 
 El trabajo seminal de Reiner y Rubinstein \cite{reiner1991breaking} proporciona una metodología sistemática para obtener fórmulas cerradas para los ocho tipos básicos de opciones barrera europeas bajo el modelo de Black-Scholes.
 
-\subsection{Intuición Matemática del Método}
+\section{Intuición Matemática del Método}
 
 Antes de sumergirnos en las ecuaciones y densidades de probabilidad, es crucial entender la estrategia teórica subyacente que utilizaron Reiner y Rubinstein para resolver el problema matemáticamente. Su genialidad radicó en dos pilares fundamentales:
 
@@ -15,7 +15,7 @@ El mayor desafío algorítmico era estimar la probabilidad de que la trayectoria
 
 Comprender estos dos conceptos es la clave para darle sentido al ecosistema de variables y funciones de densidad que se define a continuación.
 
-\subsection{Marco Metodológico de Valoración}
+\section{Marco Metodológico de Valoración}
 Siguiendo la notación original propuesta por Reiner y Rubinstein \cite{reiner1991breaking}, el modelo define los siguientes parámetros y distribuciones:
 
 \textbf{Variables Críticas}
@@ -71,7 +71,7 @@ La valoración de opciones barrera bajo el marco de Reiner y Rubinstein requiere
     donde $b=[\sqrt{\mu^2+2(\log{r})\sigma^2}]/\sigma^2$ y $a=\mu/\sigma^2$
 \end{itemize}
 
-\subsection{Términos de Valoración}
+\section{Términos de Valoración}
 
 A continuación se presentan los seis ``bloques de construcción'' matemáticos (etiquetados del [1] al [6]) que los autores derivaron para poder ensamblar el precio de cualquier opción barrera. 
 
@@ -92,7 +92,7 @@ A continuación se presentan los seis ``bloques de construcción'' matemáticos 
 &= R\left[(H/S)^{a+b} N(\eta z) + (H/S)^{a - b} N(\eta z - 2\eta b \sigma\sqrt{t})\right] 
 \end{align}
 
-\subsection{Interpretación de los Términos de Valoración}
+\section{Interpretación de los Términos de Valoración}
 
 La comprensión de estos términos requiere analizar tanto las regiones de integración como las funciones de densidad utilizadas.
 
@@ -144,7 +144,7 @@ En la fórmula [6], la región de integración es temporal, no de precio:
 
 La combinación apropiada de estos términos permite construir las fórmulas para los ocho tipos de opciones barrera (Down-and-Out/In, Up-and-Out/In, para Calls y Puts).
 
-\subsection{Fórmulas Exactas: Construcción mediante Términos de Valoración}
+\section{Fórmulas Exactas: Construcción mediante Términos de Valoración}
 
 Las fórmulas de Reiner y Rubinstein se construyen combinando los términos de valoración [1] a [6] según el tipo de opción, la posición relativa del precio inicial respecto a la barrera y la relación entre el precio de ejercicio $K$ y la barrera $H$.
 

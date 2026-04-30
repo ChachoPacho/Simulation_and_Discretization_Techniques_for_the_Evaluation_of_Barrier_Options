@@ -1,12 +1,12 @@
 
-\section{Método 4: Monte Carlo para Opciones Americanas}
+\chapter{Método 4: Monte Carlo para Opciones Americanas}
 \label{sec:metodo_montecarlo}
 
 La simulación de Monte Carlo es una técnica fundamental en finanzas computacionales que permite valorar derivados complejos mediante la generación de trayectorias aleatorias del precio del activo subyacente. Aunque es naturalmente adecuada para opciones europeas, su aplicación a opciones americanas presenta desafíos significativos debido a la posibilidad de ejercicio anticipado.
 
-\subsection{Desafío de las Opciones Americanas}
+\section{Desafío de las Opciones Americanas}
 
-\subsubsection{El Problema del Ejercicio Óptimo}
+\subsection{El Problema del Ejercicio Óptimo}
 
 Las opciones americanas otorgan a su tenedor el derecho de ejercer en cualquier momento hasta el vencimiento $T$. Esta flexibilidad adicional implica que el valor de la opción en cualquier instante $t$ es:
 
@@ -22,9 +22,9 @@ La decisión óptima de ejercicio requiere comparar en cada instante:
     \item \textbf{Valor de continuación}: El valor esperado descontado de mantener la opción
 \end{itemize}
 
-\subsection{Simulación de Monte Carlo}
+\section{Simulación de Monte Carlo}
 
-\subsubsection{Generación de Trayectorias}
+\subsection{Generación de Trayectorias}
 
 Bajo el modelo de Black-Scholes, el precio del activo subyacente bajo la medida neutral al riesgo sigue:
 
@@ -42,7 +42,7 @@ S_{t+\Delta t} = S_t \exp\left[\left(r - \delta - \frac{\sigma^2}{2}\right)\Delt
 
 donde $Z \sim N(0,1)$ es una variable aleatoria normal estándar.
 
-\subsubsection{Algoritmo Básico para Opciones Europeas}
+\subsection{Algoritmo Básico para Opciones Europeas}
 
 Para una opción europea, el algoritmo de Monte Carlo es directo:
 
@@ -57,7 +57,7 @@ Para una opción europea, el algoritmo de Monte Carlo es directo:
 
 El error estándar de esta estimación decrece como $O(1/\sqrt{M})$, independientemente de la dimensionalidad del problema.
 
-\subsubsection{Monitoreo de Barreras}
+\subsection{Monitoreo de Barreras}
 
 Para opciones con barreras, es necesario monitorear si el precio cruza el nivel $H$ durante la vida de la opción. Esto requiere discretizar cada trayectoria en $N$ pasos temporales:
 
@@ -75,7 +75,7 @@ En cada paso se verifica si $S_{t_j}$ ha cruzado la barrera $H$:
 
 \textbf{Sesgo de Discretización}: El monitoreo discreto puede no detectar cruces que ocurren entre puntos de observación. Este sesgo se reduce aumentando $N$, pero a costa de mayor tiempo computacional.
 
-\subsubsection{El Problema Fundamental: ¿Cuándo Ejercer?}
+\subsection{El Problema Fundamental: ¿Cuándo Ejercer?}
 
 Para opciones americanas, el desafío es determinar la estrategia de ejercicio óptima. En cada punto de decisión $t_j$, necesitamos saber si es óptimo ejercer o continuar.
 
@@ -89,13 +89,13 @@ El problema es que en Monte Carlo avanzamos hacia adelante en el tiempo, pero la
 
 Este problema circular requiere un enfoque sofisticado.
 
-\subsection{Método de Longstaff-Schwartz (LSM)}
+\chapter{Método de Longstaff-Schwartz (LSM)}
 
 La simulación de Monte Carlo enfrenta una paradoja fundamental cuando se aplica a opciones americanas, derivada de la tensión entre la dirección temporal de la simulación y la naturaleza de la decisión de ejercicio óptimo. En Monte Carlo, generamos trayectorias aleatorias del precio del activo avanzando hacia adelante en el tiempo, desde $t=0$ hasta el vencimiento $T$. Sin embargo, para decidir si es óptimo ejercer la opción en un punto intermedio $t_j$, necesitamos comparar el valor de ejercicio inmediato (conocido) con el valor de continuación, que es el valor esperado de mantener la opción viva. Este valor de continuación depende de todas las decisiones de ejercicio futuras, que a su vez dependen de valores de continuación aún más futuros, creando una dependencia circular que no puede resolverse avanzando hacia adelante. El método de Longstaff-Schwartz resuelve esta paradoja mediante un truco estadístico elegante basado en regresión de mínimos cuadrados. La idea es generar primero todas las trayectorias completas hasta el vencimiento y luego trabajar hacia atrás en el tiempo (como en los árboles). En cada punto de decisión $t_j$, el método utiliza regresión para aproximar el valor de continuación como una función del precio actual del activo, típicamente usando polinomios de Laguerre como funciones base. Específicamente, para todas las trayectorias que están in-the-money en $t_j$, se realiza una regresión donde la variable independiente es el precio $S_{t_j}$ y la variable dependiente es el valor descontado que esas trayectorias alcanzaron en $t_{j+1}$ (conocido porque ya trabajamos hacia atrás desde el final). Los coeficientes de regresión resultantes proporcionan una estimación del valor de continuación condicional al precio actual, permitiendo compararlo con el valor de ejercicio inmediato y tomar la decisión óptima. Este enfoque convierte un problema de optimización dinámica intratable en una secuencia de problemas de regresión estándar, cada uno resoluble eficientemente mediante mínimos cuadrados ordinarios.
 
 El método de Longstaff-Schwartz \cite{longstaff2001valuing}, también conocido como Least Squares Monte Carlo (LSM), resuelve el problema del ejercicio óptimo mediante regresión para estimar el valor de continuación.
 
-\subsubsection{Idea Central}
+\subsection{Idea Central}
 
 La intuición del método es:
 
@@ -107,7 +107,7 @@ La intuición del método es:
     \item Ejercer si el valor inmediato excede el valor de continuación
 \end{enumerate}
 
-\subsubsection{Estimación del Valor de Continuación}
+\subsection{Estimación del Valor de Continuación}
 
 En el tiempo $t_j$, para todas las trayectorias que están ``in-the-money'' (donde el ejercicio inmediato tiene valor positivo) se estima el valor de continuación mediante regresión de mínimos cuadrados \textbf{sobre los flujos de caja reales obtenidos ex-post} (y no sobre el valor esperado de la opción, lo cual generaría un sesgo alcista):
 
@@ -130,7 +130,7 @@ L_3(x) &= 1 - 3x + \frac{3x^2}{2} - \frac{x^3}{6}
 
 En la práctica, se usan típicamente los primeros 3-5 polinomios.
 
-\subsubsection{Algoritmo de Longstaff-Schwartz}
+\subsection{Algoritmo de Longstaff-Schwartz}
 
 El algoritmo LSM procede en cuatro pasos principales:
 
@@ -163,7 +163,7 @@ Este es el núcleo del algoritmo. Para cada tiempo $t_j$ desde $t_{N-1}$ hasta $
 
 El valor de la opción es el promedio descontado de los payoffs en los tiempos de ejercicio óptimos determinados en el paso anterior.
 
-\subsubsection{Extensión a Opciones Barrera Americanas}
+\subsection{Extensión a Opciones Barrera Americanas}
 
 Para opciones americanas con barreras, el algoritmo LSM se modifica para incorporar el monitoreo de la barrera:
 
@@ -173,7 +173,7 @@ Para opciones americanas con barreras, el algoritmo LSM se modifica para incorpo
     \item \textbf{Knock-in}: La trayectoria solo puede ejercerse después de que se haya cruzado la barrera. Antes del cruce, solo se considera el valor de continuación.
 \end{itemize}
 
-\subsection{Ventajas y Limitaciones del Método LSM}
+\section{Ventajas y Limitaciones del Método LSM}
 
 \textbf{Ventajas:}
 \begin{itemize}
@@ -191,7 +191,7 @@ Para opciones americanas con barreras, el algoritmo LSM se modifica para incorpo
     \item \textbf{Costo computacional}: Para alta precisión, puede ser más lento que métodos de árbol para problemas de baja dimensionalidad
 \end{itemize}
 
-\subsection{Comparación con Otros Métodos}
+\section{Comparación con Otros Métodos}
 
 El método LSM es particularmente valioso cuando:
 \begin{itemize}

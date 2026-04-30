@@ -1,11 +1,11 @@
-\section{Método 3: Replicación Estática}
+\chapter{Método 3: Replicación Estática}
 \label{sec:metodo_replicacion}
 
 La replicación estática es un método desarrollado para cubrir o replicar el valor de una opción objetivo (frecuentemente una opción exótica) mediante la construcción de un portafolio compuesto por otras opciones, generalmente opciones estándar o ``vanilla''. A diferencia de la cobertura dinámica, que requiere ajustes continuos en la posición del activo subyacente, este enfoque busca establecer un portafolio de cobertura con pesos fijos que no requiera ajustes posteriores durante la vida de la opción o dentro de un rango específico de precios y tiempos.
 
 Esta técnica se fundamenta en los supuestos estándar de la teoría de valoración de opciones (como el modelo Black-Scholes), permitiendo descomponer teóricamente una opción exótica en un portafolio de opciones estándar, cuyos precios de mercado y bid-ask spreads suelen ser más transparentes y líquidos. Aunque una replicación perfecta teórica podría requerir un número infinito de opciones estándar, en la práctica es posible lograr una aproximación adecuada utilizando un número limitado de instrumentos.
 
-\subsection{Concepto de Replicación Estática}
+\section{Concepto de Replicación Estática}
 
 El concepto central de la replicación estática radica en igualar los flujos de caja y los valores de frontera de la opción objetivo utilizando un portafolio de instrumentos más simples.
 
@@ -31,11 +31,11 @@ La principal ventaja de este método es que elimina la necesidad de rebalanceo c
 
 La replicación estática utiliza pesos fijos determinados al inicio, evitando estos costos y dificultades operativas. Además, es particularmente útil para opciones exóticas con alta ``gamma'' (como las opciones barrera cerca de su nivel de activación/desactivación), donde la cobertura dinámica se vuelve costosa e imprecisa debido a la necesidad de realizar grandes ajustes ante pequeños movimientos del mercado.
 
-\subsection{Metodología de Derman-Ergener-Kani}
+\section{Metodología de Derman-Ergener-Kani}
 
 La metodología propuesta por Derman, Ergener y Kani \cite{derman1994static} se basa en la construcción sistemática de un portafolio de cobertura que iguala el valor de la opción objetivo en una serie de puntos discretos sobre su frontera (espacio y tiempo). El enfoque fundamental es recursivo: comienza igualando el pago al vencimiento y retrocede en el tiempo para ajustar los valores en la barrera, aprovechando que el valor de la opción exótica es conocido en dichas fronteras (por ejemplo, cero en una opción knock-out o un valor de reembolso específico).
 
-\subsubsection{Construcción del Portafolio y Selección de Strikes}
+\subsection{Construcción del Portafolio y Selección de Strikes}
 
 La construcción del portafolio replicante se realiza paso a paso, asegurando que la adición de nuevas opciones para corregir el valor en un punto de la frontera no altere la replicación ya lograda en puntos anteriores o regiones interiores. Para lograr esto, la selección de los precios de ejercicio (strikes) es crítica y sigue reglas estrictas dependiendo de la ubicación de la frontera respecto al precio actual del activo:
 
@@ -46,7 +46,7 @@ La construcción del portafolio replicante se realiza paso a paso, asegurando qu
   \item \textbf{Fronteras Inferiores (por debajo del precio actual):} De manera análoga, para ajustar el valor en una barrera inferior, se deben utilizar opciones de venta (\textit{puts}) con strikes iguales o inferiores al nivel de la barrera ($K \leq B$). Al igual que en el caso anterior, estas opciones no tendrán valor al vencimiento si el precio se mantiene por encima de la frontera inferior, preservando la integridad de la replicación interior.
 \end{itemize}
 
-\subsubsection{Cálculo de Pesos y Procedimiento Recursivo}
+\subsection{Cálculo de Pesos y Procedimiento Recursivo}
 
 Una vez seleccionados los instrumentos adecuados, los pesos (cantidad de opciones a comprar o vender) se calculan mediante un proceso iterativo hacia atrás en el tiempo. Si dividimos el tiempo hasta el vencimiento en intervalos discretos $t_1,t_2,…,t_{exp}$, el procedimiento es el siguiente:
 
@@ -68,11 +68,11 @@ Una vez seleccionados los instrumentos adecuados, los pesos (cantidad de opcione
 
 Teóricamente, si se utilizara un número infinito de opciones para cubrir todos los puntos de la frontera, la replicación sería exacta. En la práctica, se utiliza un número finito de opciones para igualar el valor en puntos discretos, lo que proporciona una aproximación robusta cuyo error disminuye al aumentar la cantidad de instrumentos de cobertura
 
-\subsection{Construcción del Portafolio}
+\section{Construcción del Portafolio}
 
 La construcción práctica del portafolio replicante sigue un proceso sistemático que transforma la frontera continua de la opción exótica en un conjunto discreto de puntos de control. Este proceso requiere una selección cuidadosa de los instrumentos vanilla para garantizar que la corrección del valor en un punto de la frontera no introduzca flujos de caja no deseados en regiones ya cubiertas.
 
-\subsubsection{Selección de Opciones Vanilla}
+\subsection{Selección de Opciones Vanilla}
 
 La regla fundamental para elegir los instrumentos de cobertura es asegurar que estos no tengan valor intrínseco dentro de la región válida de la opción objetivo (es decir, antes de que se toque la barrera). Según Derman, Ergener y Kani, la selección se realiza en función de la ubicación de la frontera respecto al precio actual del activo:
 
@@ -84,7 +84,7 @@ La regla fundamental para elegir los instrumentos de cobertura es asegurar que e
   \item \textbf{Fronteras Inferiores ($S < S_{actual}$):} De manera análoga, para replicar condiciones en una frontera inferior (como en una opción *down-and-out*), se deben emplear opciones de venta (\textbf{puts}) con precios de ejercicio iguales o inferiores al nivel de la barrera ($K \leq B$). Estas opciones no generarán flujos de caja si el precio del activo se mantiene por encima de la frontera inferior.
 \end{itemize}
 
-\subsubsection{Determinación de los Pesos}
+\subsection{Determinación de los Pesos}
 
 Una vez seleccionados los instrumentos, los pesos (cantidad de opciones a comprar o vender) se determinan mediante un proceso recursivo hacia atrás en el tiempo. El objetivo es ``anular'' la discrepancia entre el valor del portafolio acumulado y el valor de la opción objetivo en puntos discretos de la frontera.
 El cálculo matemático para el peso $\alpha_i$ de una nueva opción que se añade en el paso i para corregir el valor en el tiempo $t_i$ y precio $B_i$ se define formalmente como:
@@ -104,7 +104,7 @@ Donde:
 
 En términos prácticos, si el portafolio actual tiene un valor positivo en una barrera donde la opción objetivo vale cero, el peso $\alpha_i$ será negativo, indicando que se debe tomar una posición short en la nueva opción para cancelar dicho valor.
 
-\subsubsection{Aproximación de la Barrera}
+\subsection{Aproximación de la Barrera}
 
 Dado que en el mundo real los precios de las acciones son continuos, una replicación estática perfecta requeriría un número infinito de opciones estándar para cubrir cada punto posible de la frontera. Sin embargo, la metodología permite una aproximación robusta mediante la discretización de la frontera:
 
