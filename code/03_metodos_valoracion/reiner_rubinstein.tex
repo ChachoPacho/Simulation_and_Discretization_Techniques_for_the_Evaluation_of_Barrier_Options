@@ -1,7 +1,7 @@
 \chapter{Método 1: Fórmulas Analíticas de Reiner y Rubinstein}
 \label{sec:metodo_rr}
 
-El trabajo seminal de Reiner y Rubinstein \cite{reiner1991breaking} proporciona una metodología sistemática para obtener fórmulas cerradas para los ocho tipos básicos de opciones barrera europeas bajo el modelo de Black-Scholes.
+El trabajo seminal de \cite{reiner1991breaking} proporciona una metodología sistemática para obtener fórmulas cerradas para los ocho tipos básicos de opciones barrera europeas bajo el modelo de Black-Scholes.
 
 \section{Intuición Matemática del Método}
 
@@ -16,199 +16,349 @@ El mayor desafío algorítmico era estimar la probabilidad de que la trayectoria
 Comprender estos dos conceptos es la clave para darle sentido al ecosistema de variables y funciones de densidad que se define a continuación.
 
 \section{Marco Metodológico de Valoración}
-Siguiendo la notación original propuesta por Reiner y Rubinstein \cite{reiner1991breaking}, el modelo define los siguientes parámetros y distribuciones:
 
-\textbf{Variables Críticas}
+Reiner y Rubinstein desarrollaron el siguiente método para obtener fórmulas analíticas de valoración de opciones barrera. Para ello, consideraron las diferentes trayectorias del activo: aquellas en que el activo nunca alcanza la barrera y aquellas en las que el activo toca o cruza la barrera.
 
+Consideraremos opciones barrera sobre un activo con precio $S(t)$ en el tiempo $t$ y vencimiento en el tiempo $T$. Denotaremos como antes:
 \begin{itemize}
-    \item $r$: Tasa de interés libre de riesgo (expresada matemáticamente como un factor, e.g., $1+\text{tasa}$)
-    \item $d$: Tasa de pago del activo (expresada como factor $1+\text{tasa de pago}$). Para entenderlo intuitivamente, representa el flujo de dinero que ``gotea'' del activo hacia el inversor durante el contrato, típicamente son los \textbf{dividendos} (en el caso de acciones) o la tasa de interés extranjera (si el activo es una divisa). Dado que la empresa pierde valor al repartir dividendos, matemáticamente esta tasa $d$ actúa reduciendo el crecimiento esperado del precio del subyacente.
-    \item $\sigma$: Volatilidad del activo subyacente
-    \item $t$: Tiempo hasta el vencimiento
-    \item $\phi$: Variable binaria ($1$ para calls, $-1$ para puts)
-    \item $\eta$: Variable binaria ($1$ si el precio inicia por encima de la barrera, $-1$ si inicia por debajo)
+    \item $r$: la tasa libre de riesgo continua
+    \item $q$: la tasa de dividendos continua del activo
+    \item $e^{-r(T-t)}$: el factor de descuento para el período restante
+    \item $\sigma$: la volatilidad del subyacente
 \end{itemize}
 
-\textbf{Constantes:}
-
+Para la opción en sí misma, denotaremos:
 \begin{itemize}
-    \item $H$: Nivel de la barrera preestablecido
-    \item $K$: Precio de ejercicio preestablecido
-    \item $R$: Monto del rebate preestablecido
+    \item $H$: el nivel de barrera
+    \item $K$: el precio de ejercicio (\textit{strike})
+    \item $R$: el monto del rebate
 \end{itemize}
 
-\textbf{Funciones de Densidad de Probabilidad}
-La valoración de opciones barrera bajo el marco de Reiner y Rubinstein requiere comprender tres funciones de densidad de probabilidad fundamentales, cada una capturando un aspecto distinto del comportamiento estocástico del precio del activo:
+Recordemos que la prima de cualquier opción se calcula como el valor esperado del \textit{payoff} descontado desde el tiempo de vencimiento $T$ hasta el presente $t$:
+\begin{equation}
+\text{Prima} = e^{-r(T-t)} \mathbb{E}[\text{Payoff}]
+\end{equation}
+
+Este \textit{payoff} es una variable aleatoria y el valor esperado se calcula utilizando la función de densidad de la variable subyacente (el logaritmo del retorno) al momento del ejercicio. Para calcular este valor esperado considerando los diferentes tipos de trayectorias (con y sin cruce de barrera), Reiner y Rubinstein proponen tres densidades fundamentales:
 
 \begin{itemize}
-    \item $f(u)$: densidad tradicional al estilo Black-Scholes del logaritmo natural del retorno del activo subyacente bajo la medida neutral al riesgo. Esta densidad representa la distribución de probabilidad de dónde termina el precio al vencimiento, sin considerar en absoluto la trayectoria seguida para llegar allí. Es la visión ``amnésica'' del modelo, sólo importa el destino final, no el camino.
+    \item $f(u)$: densidad tradicional del logaritmo natural del activo al vencimiento, sin considerar la trayectoria. Se utiliza para modelar las trayectorias donde \textbf{no se cruza} la barrera. Matemáticamente:
     \begin{equation*}
-        f(u)=(1/\sigma \sqrt{2\pi t}) e^{-v^2/2}
+        f(u)=\frac{1}{\sigma \sqrt{2\pi (T-t)}} e^{-v^2/2} \quad \text{donde} \quad v=\frac{u-\mu (T-t)}{\sigma \sqrt{T-t}}
     \end{equation*}
-    Donde $v=(u-\mu t)/\sigma \sqrt{t}$ y $\mu=\log{(r/d)}-\frac 1 2\sigma^2$.
-    Utilizada cuando consideramos que no se cruzó la barrera.
-
-    \item $g(u)$: en contraste a la primera, incorpora información crucial sobre la trayectoria mediante el principio de reflexión de la teoría de procesos estocásticos. Esta densidad especial captura únicamente aquellas trayectorias que cruzaron la barrera $H$ en algún momento durante la vida de la opción, pero que terminaron en un nivel de precio específico al vencimiento.
+    con $\mu=r - q - \frac{1}{2}\sigma^2$.
+    \item $g(u)$: densidad especial que incorpora información sobre la trayectoria mediante el principio de reflexión. Pondera exclusivamente aquellas trayectorias que \textbf{sí cruzaron} la barrera en algún momento pero que terminaron en un nivel particular. Matemáticamente:
     \begin{equation*}
-        g(u)=e^{2\eta \alpha \mu \sigma^{-2}} (1/\sigma \sqrt{2\pi t}) e^{-v^2/2}
+        g(u)=e^{2\alpha \mu \sigma^{-2}} \frac{1}{\sigma \sqrt{2\pi (T-t)}} e^{-v_g^2/2} \quad \text{donde} \quad v_g=\frac{u - 2\alpha - \mu (T-t)}{\sigma \sqrt{T-t}}
     \end{equation*}
-    Donde $v=(u - 2\eta\alpha - \eta\mu t)/\sigma \sqrt{t}$ y $\alpha=\log{(H/S)}$.
-    El factor exponencial $e^{2\eta \alpha \mu \sigma^{-2}}$ es precisamente la manifestación matemática del principio de reflexión, cada trayectoria que cruza la barrera tiene una trayectoria ``reflejada'' correspondiente y la densidad $g(u)$ pondera estas trayectorias reflejadas de manera apropiada. 
-    Utilizada cuando consideramos que se cruzó la barrera.
-    
-    \item $h(\tau)$: es de naturaleza temporal en lugar de espacial, representa la distribución del tiempo de primer pasaje, es decir, la probabilidad de que la barrera sea tocada por primera vez en un instante específico $\tau$ dentro del intervalo $[0,t]$. Esta densidad es fundamental para valorar opciones knock-out donde el rebate se paga en el momento exacto (aleatorio) del cruce, no al vencimiento.
+    con $\alpha=\ln(H/S)$.
+    \item $h(\tau)$: densidad del tiempo de primer pasaje. Se utiliza para modelar la probabilidad de que la barrera sea tocada exactamente en el instante $\tau$, siendo útil para pagar rebates en el momento del toque/cruce de la barrera.
 \end{itemize}
 
-\textbf{Variables auxiliares}
-\begin{itemize}
-    \item $x=[\log{(S/K)}/\sigma \sqrt{t}]+ \lambda\sigma \sqrt{t}$
-    \item $x_1=[\log{(S/H)}/\sigma \sqrt{t}]+ \lambda\sigma \sqrt{t}$
-    \item $y=[\log{(H^2/SK)}/\sigma \sqrt{t}]+ \lambda\sigma \sqrt{t}$
-    \item $y_1=[\log{(H/S)}/\sigma \sqrt{t}]+ \lambda\sigma \sqrt{t}$
-    \item $\lambda = 1+(\mu/\sigma^2)$
-    \item $z=[\log{(H/S)}/\sigma \sqrt{t}] + b\sigma \sqrt{t}$
-    
-    donde $b=[\sqrt{\mu^2+2(\log{r})\sigma^2}]/\sigma^2$ y $a=\mu/\sigma^2$
-\end{itemize}
+\section{Desarrollo para una Opción Call Down-and-In}
 
-\section{Términos de Valoración}
+A fin de simplificar la notación y hacer más comprensible el desarrollo matemático, presentaremos los cálculos explícitos tomando como ejemplo una opción barrera del tipo \textbf{Call Down-and-In} (asumiendo por lo tanto que el precio inicial se encuentra por encima de la barrera, $S > H$). 
 
-A continuación se presentan los seis ``bloques de construcción'' matemáticos (etiquetados del [1] al [6]) que los autores derivaron para poder ensamblar el precio de cualquier opción barrera. 
+Para calcular el valor esperado descontado del \textit{payoff}, se deben considerar los diferentes tipos de trayectorias y utilizar en cada caso la densidad adecuada.
 
-\textbf{Nota para el lector:} No se preocupe si estas integrales y ecuaciones parecen intimidantes a primera vista. En la subsección inmediatamente posterior (\textit{Interpretación de los Términos de Valoración}) desglosaremos conceptualmente qué significa cada uno de estos bloques y cómo se relacionan con las probabilidades y trayectorias del precio.
+\subsection{Trayectorias sin cruce de barrera}
+
+En primer lugar, veamos cómo se calcula la prima para el subconjunto de trayectorias donde el precio final del activo termina por encima del strike $K$ (condición para ejercer una opción Call), asumiendo que no hay restricciones de barrera. Para esto se integra el \textit{payoff} de una Call, $(S(T) - K)$, utilizando la densidad tradicional $f(u)$. El resultado de esta integral es equivalente al de una opción \textit{vanilla}:
 
 \begin{align}
-[1] &= r^{-t}\int \phi(Se^u-K)f(u)du \nonumber \\ 
-&= \phi Sd^{-t} N(\phi x) - \phi Kr^{-t} N(\phi x - \phi\sigma\sqrt{t}) \\[1em]
-[2] &= r^{-t}\int \phi(Se^u-K)f(u)du \nonumber \\ 
-&= \phi Sd^{-t} N(\phi x_1) - \phi Kr^{-t} N(\phi x_1 - \phi\sigma\sqrt{t}) \\[1em]
-[3] &= r^{-t}\int \phi(Se^u-K)g(u)du \nonumber \\ 
-&= \phi Sd^{-t} (H/S)^{2\lambda} N(\eta y) - \phi Kr^{-t}(H/S)^{2\lambda - 2} N(\eta y - \eta\sigma\sqrt{t}) \\[1em]
-[4] &= r^{-t}\int \phi(Se^u-K)g(u)du \nonumber \\ 
-&= \phi Sd^{-t} (H/S)^{2\lambda} N(\eta y_1) - \phi Kr^{-t}(H/S)^{2\lambda - 2} N(\eta y_1 - \eta\sigma\sqrt{t}) \\[1em]
-[5] &= Rr^{-t}\int [f(u) - g(u)] du \nonumber \\ 
-&= Rr^{-t}\left[N(\eta x_1 - \eta\sigma \sqrt{t}) - (H/S)^{2\lambda - 2} N(\eta y_1 - \eta\sigma\sqrt{t})\right] \\[1em]
-[6] &= R\int r^{-\tau} h(\tau) d\tau \nonumber \\ 
-&= R\left[(H/S)^{a+b} N(\eta z) + (H/S)^{a - b} N(\eta z - 2\eta b \sigma\sqrt{t})\right] 
+\label{eq:termino_1}
+term_1 &= e^{-r(T-t)} \int_{\ln(K/S)}^{\infty} (S e^u - K) f(u) du \nonumber \\
+&= S e^{-q(T-t)} N(x) - K e^{-r(T-t)} N(x - \sigma\sqrt{T-t})
+\end{align}
+donde:
+\begin{align*}
+x &= \frac{\ln(S/K)}{\sigma \sqrt{T-t}} + \lambda\sigma \sqrt{T-t} \\
+\lambda &= \frac{r - q + \sigma^2/2}{\sigma^2}
+\end{align*}
+
+\subsection{Términos de Valoración Adicionales para la Call Down-and-In}
+
+Al igual que derivamos el $term_1$ integrando sobre la región sin restricciones, necesitamos calcular otras integrales fundamentales limitando los dominios a los valores que superan la barrera $H$ o el strike $K$ y alternando el uso de las densidades $f(u)$ y $g(u)$ para discriminar correctamente las trayectorias reflejadas.
+
+\textbf{Término 2: Valor esperado incondicional por encima de la barrera}\\
+Integramos el \textit{payoff} de una Call utilizando la densidad tradicional $f(u)$, limitando la región de integración a los precios finales que terminan por encima de la barrera $H$, sin importar si cruzaron o no durante su trayectoria.
+\begin{align}
+term_2 &= e^{-r(T-t)} \int_{\ln(H/S)}^{\infty} (S e^u - K) f(u) du \nonumber \\
+       &= S e^{-q(T-t)} N(x_1) - K e^{-r(T-t)} N(x_1 - \sigma\sqrt{T-t})
 \end{align}
 
-\section{Interpretación de los Términos de Valoración}
+\textbf{Término 3: Trayectorias con cruce por encima del strike}\\
+Aquí utilizamos la densidad de cruce $g(u)$ para calcular el valor esperado considerando únicamente aquellas trayectorias que sí tocaron la barrera y cuyo precio final es superior al strike $K$.
+\begin{align}
+term_3 &= e^{-r(T-t)} \int_{\ln(K/S)}^{\infty} (S e^u - K) g(u) du \nonumber \\
+       &= S e^{-q(T-t)} \left(\frac{H}{S}\right)^{2\lambda} N(y) - K e^{-r(T-t)}\left(\frac{H}{S}\right)^{2\lambda - 2} N(y - \sigma\sqrt{T-t})
+\end{align}
 
-La comprensión de estos términos requiere analizar tanto las regiones de integración como las funciones de densidad utilizadas.
+\textbf{Término 4: Trayectorias con cruce por encima de la barrera}\\
+Análogo al término anterior, pero integrando sobre todos los precios finales que terminan por encima de la barrera $H$, habiéndola cruzado previamente.
+\begin{align}
+term_4 &= e^{-r(T-t)} \int_{\ln(H/S)}^{\infty} (S e^u - K) g(u) du \nonumber \\
+       &= S e^{-q(T-t)} \left(\frac{H}{S}\right)^{2\lambda} N(y_1) - K e^{-r(T-t)}\left(\frac{H}{S}\right)^{2\lambda - 2} N(y_1 - \sigma\sqrt{T-t})
+\end{align}
 
-\textbf{1. Regiones de Integración en el Espacio de Precios}
+\textbf{Término 5: Valor del Rebate al vencimiento}\\
+Si la barrera nunca se toca, el tenedor podría recibir un reembolso $R$ al vencimiento. El valor presente de este reembolso requiere calcular la probabilidad de que el precio termine por encima de $H$ sin haber cruzado nunca la barrera, lo cual se logra integrando la diferencia de densidades $[f(u) - g(u)]$.
+\begin{align}
+term_5 &= R e^{-r(T-t)} \int_{\ln(H/S)}^{\infty} [f(u) - g(u)] du \nonumber \\
+       &= R e^{-r(T-t)} \left[ N(x_1 - \sigma \sqrt{T-t}) - \left(\frac{H}{S}\right)^{2\lambda - 2} N(y_1 - \sigma\sqrt{T-t}) \right]
+\end{align}
 
-En las fórmulas [1] a [5], la variable de integración es $u$, definida como el logaritmo natural del rendimiento del activo: $u = \ln(S_t/S)$.
+\subsection{Ensamblando la Opción Call Down-and-In}
 
+Entonces, de acuerdo a la relación entre el valor de la barrera $H$ y el precio de ejercicio $K$, la prima de una opción barrera Call Down-and-In resulta de componer estos términos:
+
+\textbf{Si $K > H$:}
+\begin{align}
+C_{DI} &= term_3 + term_5 \nonumber \\
+       &= S e^{-q(T-t)} \left(\frac{H}{S}\right)^{2\lambda} N(y) - K e^{-r(T-t)} \left(\frac{H}{S}\right)^{2\lambda - 2} N(y - \sigma\sqrt{T-t}) \nonumber \\
+&\quad + R e^{-r(T-t)} \left[ N(x_1 - \sigma \sqrt{T-t}) - \left(\frac{H}{S}\right)^{2\lambda - 2} N(y_1 - \sigma\sqrt{T-t}) \right]
+\end{align}
+
+\textbf{Si $K < H$:}
+\begin{align}
+C_{DI} &= term_1 - term_2 + term_4 + term_5 \nonumber \\
+       &= S e^{-q(T-t)} N(x) - K e^{-r(T-t)} N(x - \sigma\sqrt{T-t}) \nonumber \\
+&\quad - S e^{-q(T-t)} N(x_1) + K e^{-r(T-t)} N(x_1 - \sigma\sqrt{T-t}) \nonumber \\
+&\quad + S e^{-q(T-t)} \left(\frac{H}{S}\right)^{2\lambda} N(y_1) - K e^{-r(T-t)}\left(\frac{H}{S}\right)^{2\lambda - 2} N(y_1 - \sigma\sqrt{T-t}) \nonumber \\
+&\quad + R e^{-r(T-t)} \left[ N(x_1 - \sigma \sqrt{T-t}) - \left(\frac{H}{S}\right)^{2\lambda - 2} N(y_1 - \sigma\sqrt{T-t}) \right]
+\end{align}
+
+donde definimos las siguientes variables de estandarización:
+\begin{align}
+x_1 &= \frac{\ln(S/H)}{\sigma \sqrt{T-t}} + \lambda\sigma \sqrt{T-t} \\
+y &= \frac{\ln(H^2/(SK))}{\sigma \sqrt{T-t}} + \lambda\sigma \sqrt{T-t} \\
+y_1 &= \frac{\ln(H/S)}{\sigma \sqrt{T-t}} + \lambda\sigma \sqrt{T-t}
+\end{align}
+
+\subsection{El Término Temporal: Rebate al momento de cruce}
+
+Para completar el marco de valoración general, en especial para las opciones de salida (\textit{out-options}) donde el contrato se cancela inmediatamente al tocar la barrera, el reembolso $R$ suele pagarse en el instante exacto en el que se produce el cruce. Para valorar este pago, en lugar de integrar sobre el precio al vencimiento, se integra sobre el tiempo de primer pasaje $\tau$ utilizando la densidad $h(\tau)$. 
+
+\textbf{Término 6: Valor presente del Rebate instantáneo}\\
+La fórmula para este componente integra la densidad temporal de cruce:
+\begin{align}
+term_6 &= R \int_{0}^{T-t} e^{-r\tau} h(\tau) d\tau \nonumber \\
+       &= R \left[ \left(\frac{H}{S}\right)^{a+b} N(z) + \left(\frac{H}{S}\right)^{a-b} N(z - 2b\sigma\sqrt{T-t}) \right]
+\end{align}
+donde las constantes temporales se definen como:
+\begin{align}
+a &= \frac{r-q}{\sigma^2} - \frac{1}{2} \\
+b &= \frac{\sqrt{(r-q-\sigma^2/2)^2 + 2r\sigma^2}}{\sigma^2} \\
+z &= \frac{\ln(H/S)}{\sigma \sqrt{T-t}} + b\sigma \sqrt{T-t}
+\end{align}
+
+\section{Catálogo de Fórmulas Exactas}
+
+De una manera análoga, combinando adecuadamente las densidades $f(u)$, $g(u)$ y $h(\tau)$, se desarrollan los términos necesarios para las Call Up-and-Out, Put Down-and-In, etc. A continuación, se detallan las ecuaciones finales explícitas para las primas de las 8 opciones barrera básicas.
+
+\subsection{Opciones Call}
+
+\textbf{1. Down-and-In Call ($S > H$)}
 \begin{itemize}
-    \item \textbf{Región de $\log(K/S)$ a $\phi\infty$}: Representa todos los precios finales del activo que terminan 'in the money' (por encima de $K$ para un call o por debajo de $K$ para un put). El término $\phi$ actúa como un interruptor: si es $1$ (call), la región va hacia el infinito positivo; si es $-1$ (put), hacia el infinito negativo.
-    
-    \item \textbf{Región de $\log(H/S)$ a $\phi\infty$ (o $\eta\infty$)}: Define los precios finales que terminan en el lado 'activo' de la barrera. Por ejemplo, en una opción down-and-in, esta región abarca los precios finales que están por encima de la barrera $H$, permitiendo distinguir entre los activos que terminaron 'a salvo' y los que no.
+    \item Si $K > H$:
+    \begin{align*}
+    C_{DI} &= S e^{-q(T-t)} \left(\frac{H}{S}\right)^{2\lambda} N(y) - K e^{-r(T-t)} \left(\frac{H}{S}\right)^{2\lambda - 2} N(y - \sigma\sqrt{T-t}) \\
+    &\quad + R e^{-r(T-t)} \left[ N(x_1 - \sigma \sqrt{T-t}) - \left(\frac{H}{S}\right)^{2\lambda - 2} N(y_1 - \sigma\sqrt{T-t}) \right]
+    \end{align*}
+    \item Si $K < H$:
+    \begin{align*}
+    C_{DI} &= S e^{-q(T-t)} N(x) - K e^{-r(T-t)} N(x - \sigma\sqrt{T-t}) \\
+    &\quad - S e^{-q(T-t)} N(x_1) + K e^{-r(T-t)} N(x_1 - \sigma\sqrt{T-t}) \\
+    &\quad + S e^{-q(T-t)} \left(\frac{H}{S}\right)^{2\lambda} N(y_1) - K e^{-r(T-t)}\left(\frac{H}{S}\right)^{2\lambda - 2} N(y_1 - \sigma\sqrt{T-t}) \\
+    &\quad + R e^{-r(T-t)} \left[ N(x_1 - \sigma \sqrt{T-t}) - \left(\frac{H}{S}\right)^{2\lambda - 2} N(y_1 - \sigma\sqrt{T-t}) \right]
+    \end{align*}
 \end{itemize}
 
-\textbf{2. Significado según la Función de Densidad}
-
-El significado de la región cambia drásticamente dependiendo de qué densidad se esté integrando:
-
+\textbf{2. Down-and-Out Call ($S > H$)}
 \begin{itemize}
-    \item \textbf{Con $f(u)$ (Densidad Estándar)}: La región representa simplemente dónde termina el precio al vencimiento, sin importar lo que pasó en el camino. Es la visión 'estilo Black-Scholes' clásica.
-    
-    \item \textbf{Con $g(u)$ (Densidad de Cruce)}: Cuando integramos sobre una región usando $g(u)$, estamos capturando únicamente las trayectorias que cruzaron la barrera $H$ en algún momento, pero que terminaron en la región especificada ($K$ o $H$) al vencimiento. Esta densidad incorpora el principio de reflexión.
-    
-    \item \textbf{Con $[f(u) - g(u)]$ (Región de Reembolso)}: En la fórmula [5], integrar sobre esta diferencia en la región de $\log(H/S)$ a $\eta\infty$ representa la probabilidad de que el activo termine en el lado correcto de la barrera sin haberla tocado nunca durante la vida de la opción.
+    \item Si $K > H$:
+    \begin{align*}
+    C_{DO} &= S e^{-q(T-t)} N(x) - K e^{-r(T-t)} N(x - \sigma\sqrt{T-t}) \\
+    &\quad - S e^{-q(T-t)} \left(\frac{H}{S}\right)^{2\lambda} N(y) + K e^{-r(T-t)} \left(\frac{H}{S}\right)^{2\lambda - 2} N(y - \sigma\sqrt{T-t}) \\
+    &\quad + R \left[ \left(\frac{H}{S}\right)^{a+b} N(z) + \left(\frac{H}{S}\right)^{a-b} N(z - 2b\sigma\sqrt{T-t}) \right]
+    \end{align*}
+    \item Si $K < H$:
+    \begin{align*}
+    C_{DO} &= S e^{-q(T-t)} N(x_1) - K e^{-r(T-t)} N(x_1 - \sigma\sqrt{T-t}) \\
+    &\quad - S e^{-q(T-t)} \left(\frac{H}{S}\right)^{2\lambda} N(y_1) + K e^{-r(T-t)} \left(\frac{H}{S}\right)^{2\lambda - 2} N(y_1 - \sigma\sqrt{T-t}) \\
+    &\quad + R \left[ \left(\frac{H}{S}\right)^{a+b} N(z) + \left(\frac{H}{S}\right)^{a-b} N(z - 2b\sigma\sqrt{T-t}) \right]
+    \end{align*}
 \end{itemize}
 
-\textbf{3. Región Temporal (Término [6])}
-
-En la fórmula [6], la región de integración es temporal, no de precio:
-
+\textbf{3. Up-and-In Call ($S < H$)}
 \begin{itemize}
-    \item \textbf{De $0$ a $t$}: Esta región abarca toda la vida del contrato, desde el momento inicial hasta el vencimiento. Significa que el modelo está sumando las probabilidades de que el activo toque la barrera en cualquier instante $\tau$ dentro de ese periodo. Esto es fundamental para las opciones de 'salida' (out-options), donde el pago (reembolso) ocurre en el momento exacto del impacto, el cual es aleatorio.
+    \item Si $K > H$:
+    \begin{align*}
+    C_{UI} &= S e^{-q(T-t)} N(x) - K e^{-r(T-t)} N(x - \sigma\sqrt{T-t}) \\
+    &\quad + R e^{-r(T-t)} \left[ N(-x_1 + \sigma \sqrt{T-t}) - \left(\frac{H}{S}\right)^{2\lambda - 2} N(-y_1 + \sigma\sqrt{T-t}) \right]
+    \end{align*}
+    \item Si $K < H$:
+    \begin{align*}
+    C_{UI} &= S e^{-q(T-t)} N(x_1) - K e^{-r(T-t)} N(x_1 - \sigma\sqrt{T-t}) \\
+    &\quad - S e^{-q(T-t)} \left(\frac{H}{S}\right)^{2\lambda} N(y) + K e^{-r(T-t)}\left(\frac{H}{S}\right)^{2\lambda - 2} N(y - \sigma\sqrt{T-t}) \\
+    &\quad + S e^{-q(T-t)} \left(\frac{H}{S}\right)^{2\lambda} N(y_1) - K e^{-r(T-t)}\left(\frac{H}{S}\right)^{2\lambda - 2} N(y_1 - \sigma\sqrt{T-t}) \\
+    &\quad + R e^{-r(T-t)} \left[ N(-x_1 + \sigma \sqrt{T-t}) - \left(\frac{H}{S}\right)^{2\lambda - 2} N(-y_1 + \sigma\sqrt{T-t}) \right]
+    \end{align*}
 \end{itemize}
 
-\textbf{Resumen de los Términos}
-
+\textbf{4. Up-and-Out Call ($S < H$)}
 \begin{itemize}
-    \item \textbf{Término [1]}: Valor esperado descontado usando $f(u)$, integrando sobre precios finales por encima de $K$ (calls) o por debajo de $K$ (puts). Representa el valor de la opción vanilla sin considerar la barrera.
-    
-    \item \textbf{Término [2]}: Similar a [1], pero integrando sobre precios finales en el lado activo de la barrera $H$.
-    
-    \item \textbf{Término [3]}: Valor esperado descontado usando $g(u)$, considerando solo trayectorias que cruzaron la barrera y terminaron por encima de $K$ (calls) o por debajo de $K$ (puts).
-    
-    \item \textbf{Término [4]}: Similar a [3], pero integrando sobre precios finales en el lado activo de la barrera $H$.
-    
-    \item \textbf{Término [5]}: Valor presente del rebate $R$ pagado al vencimiento si la barrera no fue tocada durante la vida de la opción. Usa la diferencia $[f(u) - g(u)]$ para capturar solo trayectorias que nunca cruzaron.
-    
-    \item \textbf{Término [6]}: Valor presente del rebate $R$ pagado en el momento exacto (aleatorio) en que se toca la barrera. Integra sobre el tiempo de primer pasaje $\tau \in [0,t]$ usando la densidad $h(\tau)$.
+    \item Si $K > H$:
+    \begin{align*}
+    C_{UO} &= R \left[ \left(\frac{H}{S}\right)^{a+b} N(-z) + \left(\frac{H}{S}\right)^{a-b} N(-z + 2b\sigma\sqrt{T-t}) \right]
+    \end{align*}
+    \item Si $K < H$:
+    \begin{align*}
+    C_{UO} &= S e^{-q(T-t)} N(x) - K e^{-r(T-t)} N(x - \sigma\sqrt{T-t}) \\
+    &\quad - S e^{-q(T-t)} N(x_1) + K e^{-r(T-t)} N(x_1 - \sigma\sqrt{T-t}) \\
+    &\quad + S e^{-q(T-t)} \left(\frac{H}{S}\right)^{2\lambda} N(y) - K e^{-r(T-t)} \left(\frac{H}{S}\right)^{2\lambda - 2} N(y - \sigma\sqrt{T-t}) \\
+    &\quad - S e^{-q(T-t)} \left(\frac{H}{S}\right)^{2\lambda} N(y_1) + K e^{-r(T-t)} \left(\frac{H}{S}\right)^{2\lambda - 2} N(y_1 - \sigma\sqrt{T-t}) \\
+    &\quad + R \left[ \left(\frac{H}{S}\right)^{a+b} N(-z) + \left(\frac{H}{S}\right)^{a-b} N(-z + 2b\sigma\sqrt{T-t}) \right]
+    \end{align*}
 \end{itemize}
 
-La combinación apropiada de estos términos permite construir las fórmulas para los ocho tipos de opciones barrera (Down-and-Out/In, Up-and-Out/In, para Calls y Puts).
+\subsection{Opciones Put}
 
-\section{Fórmulas Exactas: Construcción mediante Términos de Valoración}
+Las fórmulas de las opciones Put se derivan de manera idéntica, alternando las regiones de integración para reflejar precios finales inferiores al strike $K$. En estas ecuaciones, evaluamos la distribución normal estándar $N(\cdot)$ en los valores negativos de $x, y, x_1, y_1$.
 
-Las fórmulas de Reiner y Rubinstein se construyen combinando los términos de valoración [1] a [6] según el tipo de opción, la posición relativa del precio inicial respecto a la barrera y la relación entre el precio de ejercicio $K$ y la barrera $H$.
+\textbf{5. Down-and-In Put ($S > H$)}
+\begin{itemize}
+    \item Si $K > H$:
+    \begin{align*}
+    P_{DI} &= -S e^{-q(T-t)} N(-x_1) + K e^{-r(T-t)} N(-x_1 + \sigma\sqrt{T-t}) \\
+    &\quad + S e^{-q(T-t)} \left(\frac{H}{S}\right)^{2\lambda} N(y) - K e^{-r(T-t)}\left(\frac{H}{S}\right)^{2\lambda - 2} N(y - \sigma\sqrt{T-t}) \\
+    &\quad - S e^{-q(T-t)} \left(\frac{H}{S}\right)^{2\lambda} N(y_1) + K e^{-r(T-t)}\left(\frac{H}{S}\right)^{2\lambda - 2} N(y_1 - \sigma\sqrt{T-t}) \\
+    &\quad + R e^{-r(T-t)} \left[ N(x_1 - \sigma \sqrt{T-t}) - \left(\frac{H}{S}\right)^{2\lambda - 2} N(y_1 - \sigma\sqrt{T-t}) \right]
+    \end{align*}
+    \item Si $K < H$:
+    \begin{align*}
+    P_{DI} &= -S e^{-q(T-t)} N(-x) + K e^{-r(T-t)} N(-x + \sigma\sqrt{T-t}) \\
+    &\quad + R e^{-r(T-t)} \left[ N(x_1 - \sigma \sqrt{T-t}) - \left(\frac{H}{S}\right)^{2\lambda - 2} N(y_1 - \sigma\sqrt{T-t}) \right]
+    \end{align*}
+\end{itemize}
 
-\textbf{Opciones de Entrada (In-options)}
+\textbf{6. Down-and-Out Put ($S > H$)}
+\begin{itemize}
+    \item Si $K > H$:
+    \begin{align*}
+    P_{DO} &= -S e^{-q(T-t)} N(-x) + K e^{-r(T-t)} N(-x + \sigma\sqrt{T-t}) \\
+    &\quad + S e^{-q(T-t)} N(-x_1) - K e^{-r(T-t)} N(-x_1 + \sigma\sqrt{T-t}) \\
+    &\quad - S e^{-q(T-t)} \left(\frac{H}{S}\right)^{2\lambda} N(y) + K e^{-r(T-t)} \left(\frac{H}{S}\right)^{2\lambda - 2} N(y - \sigma\sqrt{T-t}) \\
+    &\quad + S e^{-q(T-t)} \left(\frac{H}{S}\right)^{2\lambda} N(y_1) - K e^{-r(T-t)} \left(\frac{H}{S}\right)^{2\lambda - 2} N(y_1 - \sigma\sqrt{T-t}) \\
+    &\quad + R \left[ \left(\frac{H}{S}\right)^{a+b} N(z) + \left(\frac{H}{S}\right)^{a-b} N(z - 2b\sigma\sqrt{T-t}) \right]
+    \end{align*}
+    \item Si $K < H$:
+    \begin{align*}
+    P_{DO} &= R \left[ \left(\frac{H}{S}\right)^{a+b} N(z) + \left(\frac{H}{S}\right)^{a-b} N(z - 2b\sigma\sqrt{T-t}) \right]
+    \end{align*}
+\end{itemize}
 
-Estas opciones solo comienzan a existir (se activan o hacen 'knock-in') si el precio del activo toca la barrera $H$ antes del vencimiento. Si no se toca la barrera, el tenedor recibe un reembolso $R$ al vencimiento.
+\textbf{7. Up-and-In Put ($S < H$)}
+\begin{itemize}
+    \item Si $K > H$:
+    \begin{align*}
+    P_{UI} &= -S e^{-q(T-t)} N(-x) + K e^{-r(T-t)} N(-x + \sigma\sqrt{T-t}) \\
+    &\quad + S e^{-q(T-t)} N(-x_1) - K e^{-r(T-t)} N(-x_1 + \sigma\sqrt{T-t}) \\
+    &\quad - S e^{-q(T-t)} \left(\frac{H}{S}\right)^{2\lambda} N(-y_1) + K e^{-r(T-t)}\left(\frac{H}{S}\right)^{2\lambda - 2} N(-y_1 + \sigma\sqrt{T-t}) \\
+    &\quad + R e^{-r(T-t)} \left[ N(-x_1 + \sigma \sqrt{T-t}) - \left(\frac{H}{S}\right)^{2\lambda - 2} N(-y_1 + \sigma\sqrt{T-t}) \right]
+    \end{align*}
+    \item Si $K < H$:
+    \begin{align*}
+    P_{UI} &= -S e^{-q(T-t)} \left(\frac{H}{S}\right)^{2\lambda} N(-y) + K e^{-r(T-t)} \left(\frac{H}{S}\right)^{2\lambda - 2} N(-y + \sigma\sqrt{T-t}) \\
+    &\quad + R e^{-r(T-t)} \left[ N(-x_1 + \sigma \sqrt{T-t}) - \left(\frac{H}{S}\right)^{2\lambda - 2} N(-y_1 + \sigma\sqrt{T-t}) \right]
+    \end{align*}
+\end{itemize}
 
-\begin{enumerate}
-    \item \textbf{Down-and-In Call} ($S > H$): El activo comienza por encima de la barrera. Se activa si el precio baja hasta tocar $H$.
-    \begin{itemize}
-        \item Si $K > H$: [3] + [5] con $\eta = 1$, $\phi = 1$
-        \item Si $K < H$: [1] - [2] + [4] + [5] con $\eta = 1$, $\phi = 1$
-    \end{itemize}
-    
-    \item \textbf{Up-and-In Call} ($S < H$): El activo comienza por debajo de la barrera. Se activa si el precio sube hasta tocar $H$.
-    \begin{itemize}
-        \item Si $K > H$: [1] + [5] con $\eta = -1$, $\phi = 1$
-        \item Si $K < H$: [2] - [3] + [4] + [5] con $\eta = -1$, $\phi = 1$
-    \end{itemize}
-    
-    \item \textbf{Down-and-In Put} ($S > H$): Comienza arriba de la barrera y se activa al bajar hasta $H$.
-    \begin{itemize}
-        \item Si $K > H$: [2] - [3] + [4] + [5] con $\eta = 1$, $\phi = -1$
-        \item Si $K < H$: [1] + [5] con $\eta = 1$, $\phi = -1$
-    \end{itemize}
-    
-    \item \textbf{Up-and-In Put} ($S < H$): Comienza abajo de la barrera y se activa al subir hasta $H$.
-    \begin{itemize}
-        \item Si $K > H$: [1] - [2] + [4] + [5] con $\eta = -1$, $\phi = -1$
-        \item Si $K < H$: [3] + [5] con $\eta = -1$, $\phi = -1$
-    \end{itemize}
-\end{enumerate}
+\textbf{8. Up-and-Out Put ($S < H$)}
+\begin{itemize}
+    \item Si $K > H$:
+    \begin{align*}
+    P_{UO} &= -S e^{-q(T-t)} N(-x_1) + K e^{-r(T-t)} N(-x_1 + \sigma\sqrt{T-t}) \\
+    &\quad + S e^{-q(T-t)} \left(\frac{H}{S}\right)^{2\lambda} N(-y_1) - K e^{-r(T-t)} \left(\frac{H}{S}\right)^{2\lambda - 2} N(-y_1 + \sigma\sqrt{T-t}) \\
+    &\quad + R \left[ \left(\frac{H}{S}\right)^{a+b} N(-z) + \left(\frac{H}{S}\right)^{a-b} N(-z + 2b\sigma\sqrt{T-t}) \right]
+    \end{align*}
+    \item Si $K < H$:
+    \begin{align*}
+    P_{UO} &= -S e^{-q(T-t)} N(-x) + K e^{-r(T-t)} N(-x + \sigma\sqrt{T-t}) \\
+    &\quad + S e^{-q(T-t)} \left(\frac{H}{S}\right)^{2\lambda} N(-y) - K e^{-r(T-t)} \left(\frac{H}{S}\right)^{2\lambda - 2} N(-y + \sigma\sqrt{T-t}) \\
+    &\quad + R \left[ \left(\frac{H}{S}\right)^{a+b} N(-z) + \left(\frac{H}{S}\right)^{a-b} N(-z + 2b\sigma\sqrt{T-t}) \right]
+    \end{align*}
+\end{itemize}
 
-\textbf{Opciones de Salida (Out-options)}
 
-Estas opciones dejan de existir (se extinguen o hacen 'knock-out') si el precio del activo toca la barrera $H$. Si se toca la barrera, el reembolso $R$ se paga usualmente en ese mismo momento.
+\section{Generalización del Modelo}
 
-\begin{enumerate}
-    \setcounter{enumi}{4}
-    \item \textbf{Down-and-Out Call} ($S > H$): La opción es válida mientras el precio se mantenga por encima de $H$.
-    \begin{itemize}
-        \item Si $K > H$: [1] - [3] + [6] con $\eta = 1$, $\phi = 1$
-        \item Si $K < H$: [2] - [4] + [6] con $\eta = 1$, $\phi = 1$
-    \end{itemize}
-    
-    \item \textbf{Up-and-Out Call} ($S < H$): Se extingue si el precio sube hasta tocar $H$.
-    \begin{itemize}
-        \item Si $K > H$: [6] con $\eta = -1$, $\phi = 1$. 
-        
-        \textit{Nota}: Para que el precio termine arriba de $K$, necesariamente debe cruzar $H$ primero, por lo que la opción solo vale por su reembolso.
-        \item Si $K < H$: [1] - [2] + [3] - [4] + [6] con $\eta = -1$, $\phi = 1$
-    \end{itemize}
-    
-    \item \textbf{Down-and-Out Put} ($S > H$): Se extingue si el precio baja hasta tocar $H$.
-    \begin{itemize}
-        \item Si $K > H$: [1] - [2] + [3] - [4] + [6] con $\eta = 1$, $\phi = -1$
-        \item Si $K < H$: [6] con $\eta = 1$, $\phi = -1$. 
-        
-        \textit{Nota}: Si el precio baja de $K$, ya habrá cruzado $H$ y la opción se habrá extinguido.
-    \end{itemize}
-    
-    \item \textbf{Up-and-Out Put} ($S < H$): Se mantiene vigente mientras el precio esté debajo de $H$.
-    \begin{itemize}
-        \item Si $K > H$: [2] - [4] + [6] con $\eta = -1$, $\phi = -1$
-        \item Si $K < H$: [1] - [3] + [6] con $\eta = -1$, $\phi = -1$
-    \end{itemize}
-\end{enumerate}
+Para compactar matemáticamente las 8 opciones y demostrar la elegancia de la formulación original de Reiner y Rubinstein, se pueden introducir dos variables indicadoras binarias:
+\begin{itemize}
+    \item $\phi$: toma el valor $1$ para opciones Call y $-1$ para opciones Put.
+    \item $\eta$: toma el valor $1$ para opciones donde la barrera está por debajo del precio inicial (\textit{Down}), y $-1$ para opciones donde la barrera está por encima (\textit{Up}).
+\end{itemize}
+
+\subsection{Términos Generalizados}
+Utilizando estas variables, los seis términos fundamentales presentados anteriormente se pueden reescribir de manera universal para cualquier tipo de opción barrera:
+
+\begin{align}
+term_1 &= \phi S e^{-q(T-t)} N(\phi x) - \phi K e^{-r(T-t)} N(\phi x - \phi\sigma\sqrt{T-t}) \\
+term_2 &= \phi S e^{-q(T-t)} N(\phi x_1) - \phi K e^{-r(T-t)} N(\phi x_1 - \phi\sigma\sqrt{T-t}) \\
+term_3 &= \phi S e^{-q(T-t)} \left(\frac{H}{S}\right)^{2\lambda} N(\eta y) - \phi K e^{-r(T-t)}\left(\frac{H}{S}\right)^{2\lambda - 2} N(\eta y - \eta\sigma\sqrt{T-t}) \\
+term_4 &= \phi S e^{-q(T-t)} \left(\frac{H}{S}\right)^{2\lambda} N(\eta y_1) - \phi K e^{-r(T-t)}\left(\frac{H}{S}\right)^{2\lambda - 2} N(\eta y_1 - \eta\sigma\sqrt{T-t}) \\
+term_5 &= R e^{-r(T-t)} \left[ N(\eta x_1 - \eta\sigma \sqrt{T-t}) - \left(\frac{H}{S}\right)^{2\lambda - 2} N(\eta y_1 - \eta\sigma\sqrt{T-t}) \right] \\
+term_6 &= R \left[ \left(\frac{H}{S}\right)^{a+b} N(\eta z) + \left(\frac{H}{S}\right)^{a-b} N(\eta z - 2\eta b\sigma\sqrt{T-t}) \right]
+\end{align}
+
+\subsection{Catálogo Simplificado}
+Finalmente, la prima de cualquiera de las 8 opciones barrera básicas se puede ensamblar directamente sumando y restando estos términos generales, dependiendo de la relación entre el precio de ejercicio $K$ y la barrera $H$:
+
+\textbf{1. Down-and-In Call ($S > H$)} $\quad [\phi = 1, \eta = 1]$
+\begin{itemize}
+    \item Si $K > H$: $C_{DI} = term_3 + term_5$
+    \item Si $K < H$: $C_{DI} = term_1 - term_2 + term_4 + term_5$
+\end{itemize}
+
+\textbf{2. Down-and-Out Call ($S > H$)} $\quad [\phi = 1, \eta = 1]$
+\begin{itemize}
+    \item Si $K > H$: $C_{DO} = term_1 - term_3 + term_6$
+    \item Si $K < H$: $C_{DO} = term_2 - term_4 + term_6$
+\end{itemize}
+
+\textbf{3. Up-and-In Call ($S < H$)} $\quad [\phi = 1, \eta = -1]$
+\begin{itemize}
+    \item Si $K > H$: $C_{UI} = term_1 + term_5$
+    \item Si $K < H$: $C_{UI} = term_2 - term_3 + term_4 + term_5$
+\end{itemize}
+
+\textbf{4. Up-and-Out Call ($S < H$)} $\quad [\phi = 1, \eta = -1]$
+\begin{itemize}
+    \item Si $K > H$: $C_{UO} = term_6$
+    \item Si $K < H$: $C_{UO} = term_1 - term_2 + term_3 - term_4 + term_6$
+\end{itemize}
+
+\textbf{5. Down-and-In Put ($S > H$)} $\quad [\phi = -1, \eta = 1]$
+\begin{itemize}
+    \item Si $K > H$: $P_{DI} = term_2 - term_3 + term_4 + term_5$
+    \item Si $K < H$: $P_{DI} = term_1 + term_5$
+\end{itemize}
+
+\textbf{6. Down-and-Out Put ($S > H$)} $\quad [\phi = -1, \eta = 1]$
+\begin{itemize}
+    \item Si $K > H$: $P_{DO} = term_1 - term_2 + term_3 - term_4 + term_6$
+    \item Si $K < H$: $P_{DO} = term_6$
+\end{itemize}
+
+\textbf{7. Up-and-In Put ($S < H$)} $\quad [\phi = -1, \eta = -1]$
+\begin{itemize}
+    \item Si $K > H$: $P_{UI} = term_1 - term_2 + term_4 + term_5$
+    \item Si $K < H$: $P_{UI} = term_3 + term_5$
+\end{itemize}
+
+\textbf{8. Up-and-Out Put ($S < H$)} $\quad [\phi = -1, \eta = -1]$
+\begin{itemize}
+    \item Si $K > H$: $P_{UO} = term_2 - term_4 + term_6$
+    \item Si $K < H$: $P_{UO} = term_1 - term_3 + term_6$
+\end{itemize}
+
