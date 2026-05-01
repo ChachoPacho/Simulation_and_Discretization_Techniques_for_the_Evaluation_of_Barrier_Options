@@ -164,7 +164,7 @@ Antes de resolver la malla fina, debemos poblar sus bordes utilizando los datos 
 
 El bucle debe manejar la interpolación temporal descrita en la sección anterior: 
 \begin{itemize} 
-  \item Para los nodos $B$ que coinciden con tiempos $A$ ($t,t+k,\dots$), se copia el valor directamente o se usa interpolación espacial si los precios no alinean perfectamente (aunque la calibración de la Ec. \ref{eq:amm_h_calib} busca evitar esto). 
+  \item Para los nodos $B$ que coinciden con tiempos $A$ ($t,t+k,\dots$), se copia el valor directamente desde la malla gruesa. La calibración de la Ec. \ref{eq:amm_h_calib} garantiza que los nodos espaciales estén perfectamente alineados, por lo que no se requiere ningún tipo de interpolación espacial. 
   
   \item Para los nodos intermedios ($t+k/4,t+2k/4,\dots$), se ejecuta la función de proyección usando la Ecuación \ref{eq:amm_interface_val}. 
 \end{itemize}
