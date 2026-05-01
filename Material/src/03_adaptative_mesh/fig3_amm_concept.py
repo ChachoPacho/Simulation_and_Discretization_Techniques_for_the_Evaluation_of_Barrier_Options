@@ -146,7 +146,7 @@ ax.text(critical_time_start - 0.5, price_to_y(critical_price_center + 0.25),
 
 # Configuración de ejes
 ax.set_xlabel('Tiempo (pasos)', fontsize=13, fontweight='bold')
-ax.set_ylabel('Nivel de Precio', fontsize=13, fontweight='bold')
+ax.set_ylabel('Nivel de Log-Precio', fontsize=13, fontweight='bold')
 ax.set_title('Concepto del Modelo de Malla Adaptativa (AMM)\nÁrbol Trinomial + Malla Fina', 
             fontsize=15, fontweight='bold', pad=15)
 
@@ -174,7 +174,7 @@ ax.text(0.98, 0.98, textstr, transform=ax.transAxes, fontsize=10,
         verticalalignment='top', horizontalalignment='right', bbox=props)
 
 plt.tight_layout()
-plt.savefig('../../../code/03_metodos_valoracion/figures/amm_concept.png', 
+plt.savefig('../../code/03_metodos_valoracion/figures/amm_concept.png', 
             dpi=300, bbox_inches='tight', facecolor='white')
 print("Figura 3 guardada: amm_concept.png")
 plt.close()

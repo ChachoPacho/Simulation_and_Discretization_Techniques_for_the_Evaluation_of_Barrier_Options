@@ -130,7 +130,7 @@ ax.text(time_steps, H + 2.25, '[H-2h,H+2h]', fontsize=10,
 
 # Configuración de ejes
 ax.set_xlabel('Tiempo (pasos)', fontsize=13, fontweight='bold')
-ax.set_ylabel('Nivel de Precio', fontsize=13, fontweight='bold')
+ax.set_ylabel('Nivel', fontsize=13, fontweight='bold')
 ax.set_title('AMM para Opciones Barrera: Árbol Trinomial con Banda de Refinamiento', 
             fontsize=14, fontweight='bold', pad=15)
 

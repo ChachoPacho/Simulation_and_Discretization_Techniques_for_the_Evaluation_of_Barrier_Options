@@ -96,11 +96,11 @@ Figlewski y Gao identifican dos fuentes principales de error en los métodos de 
 
 \subsection{Error de Distribución}
 
-Surge porque el modelo intenta aproximar una distribución lognormal continua con una distribución discreta (trinomial). Aunque coincidan en media y varianza, persiste una discrepancia fundamental. Este error disminuye suavemente a medida que aumenta el número de pasos.
+Surge porque el modelo intenta aproximar una distribución lognormal continua con una distribución discreta (trinomial). La calibración del árbol iguala la media y la varianza del proceso continuo, pero los momentos de orden superior (asimetría, curtosis, etc.) quedan aproximados de forma imperfecta. Esta discrepancia se reduce suavemente a medida que aumenta el número de pasos, ya que el resultado acumulado de muchos pasos trinomiales converge a la distribución lognormal correcta (por el Teorema Central del Límite).
 
 \subsection{Error de No Linealidad}
 
-Este es el error más crítico y ocurre cuando el valor de la opción es altamente no lineal respecto al precio del activo subyacente (es decir, en áreas de alta Gamma). En estas regiones, una malla estándar es insuficiente. El AMM se enfoca específicamente en minimizar este error, el cual podemos separar en tres categorías principales, ordenadas por su relevancia para este trabajo:
+Este es el error más crítico y ocurre cuando el valor de la opción es altamente no lineal respecto al precio del activo subyacente (es decir, donde la curvatura de $V(S)$ es pronunciada). En estas regiones, una malla estándar es insuficiente. El AMM se enfoca específicamente en minimizar este error, el cual podemos separar en tres categorías principales, ordenadas por su relevancia para este trabajo:
 
 \subsubsection{1. Problemas cerca de la barrera en cualquier momento del tiempo}
 Para las opciones barrera, la no linealidad ocurre durante toda la vida de la opción siempre que el precio se acerca a la barrera $H$. La probabilidad de tocar la barrera salta discretamente dependiendo de la disposición de los nodos, causando una convergencia ``dentada''. Además, cuando $S_0$ está extremadamente cerca de $H$, el modelo sufre del ``problema del límite'', requiriendo un número intratable de pasos temporales para alinear la red.
@@ -123,7 +123,7 @@ Al estimar las griegas como Delta ($\Delta$) y Gamma ($\Gamma$), se requieren pe
 \section{Principio del Modelo de Malla Adaptativa}
 \label{sec:amm_principio}
 
-El principio fundamental que sustenta el Modelo de Malla Adaptativa es una observación simple pero poderosa sobre la naturaleza del error numérico en la valoración de opciones: no todas las regiones del espacio precio-tiempo contribuyen igualmente al error total. En un árbol trinomial estándar, se utiliza una resolución uniforme en todo el dominio computacional, dedicando el mismo esfuerzo de cálculo a regiones donde el valor de la opción varía suavemente que a regiones donde presenta alta no linealidad. Este enfoque es ineficiente, desperdiciando poder computacional en áreas donde una red gruesa sería suficiente mientras que proporciona resolución insuficiente en las zonas críticas. El AMM actúa como una técnica de refinamiento selectivo: mantiene una red gruesa con pasos de precio $h$ y pasos de tiempo $k$ para la mayor parte del árbol, pero injerta una red fina con pasos reducidos (típicamente $h/2$ para el precio y $k/4$ para el tiempo) exclusivamente en las regiones de alta no linealidad. Al concentrar la resolución computacional precisamente donde más se necesita, el AMM logra precisión comparable a un árbol uniforme extremadamente fino pero con una fracción mínima del costo computacional, típicamente menos del $1\%$ de nodos adicionales.
+El principio fundamental que sustenta el Modelo de Malla Adaptativa es una observación simple pero poderosa sobre la naturaleza del error numérico en la valoración de opciones: no todas las regiones del espacio precio-tiempo contribuyen igualmente al error total. En un árbol trinomial estándar, se utiliza una resolución uniforme en todo el dominio computacional, dedicando el mismo esfuerzo de cálculo a regiones donde el valor de la opción varía suavemente que a regiones donde presenta alta no linealidad. Este enfoque es ineficiente, desperdiciando poder computacional en áreas donde una red gruesa sería suficiente mientras que proporciona resolución insuficiente en las zonas críticas. El AMM actúa como una técnica de refinamiento selectivo: mantiene una red gruesa con pasos de precio $h$ (en log-espacio, como se detalla a continuación) y pasos de tiempo $k$ para la mayor parte del árbol, pero injerta una red fina con pasos reducidos (típicamente $h/2$ para el precio y $k/4$ para el tiempo) exclusivamente en las regiones de alta no linealidad. Al concentrar la resolución computacional precisamente donde más se necesita, el AMM logra precisión comparable a un árbol uniforme extremadamente fino pero con una fracción mínima del costo computacional, típicamente menos del $1\%$ de nodos adicionales.
 
 \subsection{Arquitectura en el Espacio de Logaritmos}
 
@@ -158,20 +158,20 @@ Las opciones barrera presentan un desafío particular: el error de no linealidad
 
 \subsection{El Problema de Convergencia ``Dentada''}
 
-La convergencia en modelos estándar es ``dentada'' porque la probabilidad de tocar la barrera salta discretamente cuando el número de pasos cambia el tamaño del paso de precio $h$. Si $h$ es grande, el árbol puede ``saltar sobre'' la barrera sin detectarla correctamente.
+La convergencia en modelos estándar es ``dentada'' porque la barrera continua $H$ debe ser reemplazada por una barrera efectiva en el nodo más cercano del árbol. Por ejemplo, si $H=90$ pero los nodos adyacentes se ubican en $S=88$ y $S=93$, el modelo debe elegir uno de ellos como barrera efectiva: si usa 93, la opción recibe ``espacio extra'' antes del knockout y su valor se sobreestima. Si usa 88, el knockout ocurre prematuramente y el valor se subestima. La magnitud de este error depende de cuán cerca caiga el nodo más cercano de $H$, lo cual cambia erráticamente al variar $n$ (y por tanto $h$): para ciertos valores de $n$ un nodo cae casi exactamente sobre $H$ (error pequeño), mientras que para otros la distancia es máxima (error grande). Este comportamiento produce los saltos irregulares característicos de la convergencia ``dentada''.
 
 \subsection{El Problema del Límite}
 
-Cuando el precio inicial $S_0$ está muy cerca de la barrera $H$, un árbol trinomial estándar requiere que haya al menos un paso de precio entre $S_0$ y $H$. Esto implica:
+Cuando el precio inicial $S_0$ está muy cerca de la barrera $H$, surge un problema adicional. Para que el árbol pueda aplicar correctamente la condición de knockout, necesita al menos un nodo entre $S_0$ y $H$ que le permita distinguir entre ``estar cerca de la barrera'' y ``haber cruzado la barrera''. En el espacio logarítmico, esto requiere que el paso $h$ sea menor que la distancia entre ambos puntos:
 \begin{equation}
-h = \frac{S_0(u-d)}{2} < |S_0 - H|
+h < |\ln(S_0) - \ln(H)|
 \end{equation}
 
-Si $S_0$ está extremadamente cerca de $H$ (por ejemplo, a una distancia de 1/8 de punto), esto puede obligar a usar miles de pasos de tiempo, haciendo el cálculo inmanejable.
+Si $S_0$ está extremadamente cerca de $H$ (por ejemplo, $S_0=100$ y $H=99.90$, donde $|\ln(100) - \ln(99.90)| \approx 0.001$), se necesita un $h$ tan pequeño que obliga a usar miles de pasos de tiempo, haciendo el cálculo inmanejable.
 
 \subsection{Estructura AMM para Barreras}
 
-Se construye una malla fina junto a la barrera $H$:
+Para construir una malla adaptativa para opciones barrera, se construye una malla fina junto a la barrera $H$:
 
 \begin{itemize}
     \item \textbf{Región espacial}: La malla fina se extiende exclusivamente del lado activo de la barrera, es decir, en la zona donde la opción aún existe. Para una opción down-and-out, la malla cubre desde $\ln(H)$ hasta $\ln(H) + h$ (un paso grueso por encima de la barrera en log-espacio). Los nodos situados sobre la barrera misma toman el valor cero (o el rebate), y el árbol no se extiende más allá de ese límite.
@@ -239,7 +239,7 @@ Según Figlewski y Gao, un modelo AMM-2 con solo 25 pasos de tiempo es más prec
     \item Un modelo binomial de 1000 pasos (que requiere 250 veces más tiempo de ejecución)
 \end{itemize}
 
-Basado en el análisis de Figlewski y Gao para un conjunto de prueba de 27 opciones put europeas:
+La Tabla~\ref{tab:amm_performance_detailed} resume los resultados del análisis de Figlewski y Gao para un conjunto de prueba de 27 opciones put europeas, comparando la Raíz del Error Cuadrático Medio (RMSE) en precio y griegas:
 
 \begin{table}[H]
 \centering

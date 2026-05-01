@@ -127,7 +127,7 @@ for t in [0, T-1, T]:
 
 # Configuración de ejes
 ax.set_xlabel('Tiempo (pasos)', fontsize=13, fontweight='bold')
-ax.set_ylabel('Nivel de Precio', fontsize=13, fontweight='bold')
+ax.set_ylabel('Nivel', fontsize=13, fontweight='bold')
 ax.set_title('AMM para Opciones Vanilla: Árbol Trinomial con Refinamiento cerca del Strike', 
             fontsize=14, fontweight='bold', pad=15)
 
