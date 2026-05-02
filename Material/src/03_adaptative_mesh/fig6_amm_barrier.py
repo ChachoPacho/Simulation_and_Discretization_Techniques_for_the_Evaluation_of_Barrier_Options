@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import numpy as np
+import math
 
 fig, ax = plt.subplots(figsize=(14, 10))
 
@@ -74,7 +75,7 @@ for (step, level), (x, y) in nodes.items():
 
 # Dibujar malla fina en región crítica (banda alrededor de H [H-2h, H+2h], todo el tiempo)
 for t in np.arange(0, time_steps + 0.25, 0.25):
-    for p in np.arange(H - 2.0, H + 2.0 + 0.25, 0.5):
+    for p in np.arange(H - 1.0, H + 1.0 + 0.25, 0.5):
         x = t
         y = p
         ax.scatter(x, y, s=25, color='#2ecc71', alpha=0.9, zorder=4, 
@@ -88,11 +89,11 @@ ax.axhline(y=H, color='#3498db', linewidth=4, linestyle='-',
 ax.scatter(0, S0, s=300, color='gold', marker='*', edgecolors='black', 
           linewidth=2, label=f'S₀ = {S0} (cerca de H)', zorder=6)
 
-# Rectángulo destacando banda de refinamiento [H-2h, H+2h]
+# Rectángulo destacando banda de refinamiento [ln(H), ln(H) + h]
 rect = mpatches.Rectangle(
-    (-0.3, H - 2.0 - 0.3),
+    (-0.3, H - h + 0.75),
     time_steps + 0.6,
-    4.6,
+    h,
     linewidth=3, edgecolor='#f39c12', facecolor='yellow', 
     alpha=0.15, linestyle='--', zorder=2
 )
@@ -102,30 +103,30 @@ ax.add_patch(rect)
 # De malla gruesa a malla fina
 for t in [2, 5, 8]:
     # Desde arriba
-    ax.annotate('', xy=(t, H + 1.5), xytext=(t + 1.5, H + 3),
+    ax.annotate('', xy=(t, H + 0.5), xytext=(t + 1, H + 1.5),
                 arrowprops=dict(arrowstyle='->', color='purple', lw=2.5, 
                               linestyle='--', alpha=0.7))
     # Desde abajo
-    ax.annotate('', xy=(t, H - 1.5), xytext=(t + 1.5, H - 3),
+    ax.annotate('', xy=(t, H - 0.5), xytext=(t + 1, H - 1.5),
                 arrowprops=dict(arrowstyle='->', color='purple', lw=2.5, 
                               linestyle='--', alpha=0.7))
 
 # Etiqueta de flujo
-ax.text(6.5, H + 3, 'Flujo de información:\nMalla gruesa → Malla fina', 
+ax.text(6.5, H + 2, 'Flujo de información:\nMalla gruesa → Malla fina', 
        fontsize=11, fontweight='bold', ha='center',
        bbox=dict(boxstyle='round', facecolor='purple', alpha=0.3))
 
 # Anotaciones
-ax.text(0.75, H - 2.5, 'Banda de Refinamiento\n[H-2h, H+2h]', 
+ax.text(0.75, H - 0.4, 'Banda de Refinamiento\n[ln(H), ln(H) + h]', 
        fontsize=12, fontweight='bold',
        bbox=dict(boxstyle='round', facecolor='#f39c12', alpha=0.7),
        ha='center')
 
-# Flecha indicando ancho de banda [H-2h, H+2h]
-ax.annotate('', xy=(time_steps + 0.5, H + 2.0), 
-           xytext=(time_steps + 0.5, H - 2.0),
+# Flecha indicando ancho de banda [ln(H), ln(H) + h]
+ax.annotate('', xy=(time_steps + 0.5, H + h), 
+           xytext=(time_steps + 0.5, H - 0.5 * h),
            arrowprops=dict(arrowstyle='<->', color='#f39c12', lw=3))
-ax.text(time_steps, H + 2.25, '[H-2h,H+2h]', fontsize=10, 
+ax.text(time_steps, H + 1.25 * h, '[ln(H),ln(H)+h]', fontsize=10, 
        fontweight='bold', rotation=0, va='center', color='#f39c12')
 
 # Configuración de ejes

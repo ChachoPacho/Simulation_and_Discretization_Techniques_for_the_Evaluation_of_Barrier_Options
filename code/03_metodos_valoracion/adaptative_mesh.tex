@@ -11,7 +11,11 @@ La aplicación directa de modelos trinomiales estándar a la valoración de opci
 
 En un árbol trinomial estándar, los nodos se distribuyen en capas horizontales correspondientes a diferentes niveles de precio del activo subyacente. El espaciamiento vertical entre estas capas está determinado por los factores de movimiento $u$ (hacia arriba) y $d$ (hacia abajo), que a su vez dependen de la volatilidad $\sigma$ y del número de pasos temporales $n$. El problema surge porque la barrera $H$, que es un parámetro fijo del contrato, raramente coincide exactamente con alguna de estas capas de nodos. En la mayoría de los casos, $H$ cae entre dos capas horizontales, lo que genera una ambigüedad fundamental, ¿en qué momento exactamente se considera que la barrera ha sido tocada? Esta desalineación produce estimaciones sesgadas del valor de la opción y una convergencia notablemente lenta hacia el valor teórico, con errores que persisten incluso cuando se aumenta significativamente el número de pasos.
 
-Boyle y Lau resolvieron este problema mediante una técnica que denominaron ``bumping the barrier''. La idea central es elegir estratégicamente el número de pasos $n$ de manera que los nodos del árbol coincidan exactamente con el nivel de la barrera. Matemáticamente, esto se logra resolviendo la ecuación $S_0 u^j d^{n-j} = H$ para encontrar valores de $n$ que garanticen que existe al menos un par de enteros $(j, n-j)$ que satisface esta igualdad. Al forzar esta coincidencia, se elimina la ambigüedad: cualquier trayectoria que pase por un nodo en el nivel $H$ se considera que ha tocado la barrera y el modelo puede aplicar correctamente las reglas de knock-out o knock-in. Esta técnica mejoró dramáticamente la precisión de los modelos de árbol para opciones barrera, eliminando el sesgo sistemático y acelerando la convergencia.
+Boyle y Lau resolvieron este problema mediante una técnica que denominaron ``bumping the barrier''. La idea central no es hacer coincidir un nodo exactamente sobre $H$, sino elegir el número de pasos $n$ de manera que una capa horizontal de nodos quede inmediatamente más allá de la barrera (\textit{just beyond the barrier}) y lo más cerca posible de ella. Para seleccionar $n$ óptimo, los autores proponen evaluar la función:
+\begin{equation}
+F(m) = \frac{m^2 \sigma^2 T}{\bigl(\ln(S_0/H)\bigr)^2}
+\end{equation}
+El valor óptimo de $n$ es el mayor entero por debajo de $F(m)$ que satisface las condiciones de alineación para algún entero $m$. Con esta elección, el nodo más cercano a $H$ queda suficientemente próximo como para minimizar el sesgo sin requerir un número de pasos prohibitivo. Es importante notar que en el \textbf{Modelo Trinomial Restringido (RTM)} se fuerza la coincidencia exacta de los nodos sobre la barrera. Esta distinción es relevante porque el RTM hereda directamente las limitaciones que se describen a continuación. Al reducir la distancia nodo-barrera, ambos métodos mejoran dramáticamente la precisión frente al trinomial estándar, eliminando el sesgo sistemático y acelerando la convergencia.
 
 Sin embargo, el método de Boyle y Lau tiene una limitación crítica conocida como el ``problema del límite'' (boundary problem). Cuando el precio inicial del activo $S_0$ está muy cerca de la barrera $H$, la condición de alineación requiere que el tamaño del paso de precio $h$ sea extremadamente pequeño para que al menos un nodo caiga exactamente sobre $H$. Esto se traduce en la necesidad de un número de pasos $n$ prohibitivamente grande. Por ejemplo, si $S_0$ está a solo 1/8 de punto de distancia de la barrera, el método puede requerir miles o incluso decenas de miles de pasos temporales para lograr la alineación, haciendo el cálculo computacionalmente inmanejable. Esta limitación es particularmente problemática en la práctica, ya que las opciones barrera son frecuentemente negociadas precisamente en situaciones donde el precio del subyacente está cerca de la barrera, momento en el cual la valoración precisa es más crítica. Es precisamente esta limitación del método de Boyle y Lau la que motivó el desarrollo del Modelo de Malla Adaptativa (AMM) de Figlewski y Gao, que abordaremos en la siguiente sección. El AMM ofrece una solución elegante al problema del límite mediante el uso de mallas de resolución variable, permitiendo valoraciones precisas incluso cuando $S_0$ y $H$ están arbitrariamente cerca.
 
@@ -56,25 +60,19 @@ En cada nodo del árbol con precio $S$, el precio en el siguiente paso temporal 
 
 donde $u > 1 > d > 0$ son los factores de movimiento.
 
-Los parámetros se calibran para aproximar el proceso continuo:
+A diferencia de las parametrizaciones clásicas (como la de Cox, Ross y Rubinstein), el AMM construye el árbol en el espacio logarítmico $X = \ln(S)$ y define las probabilidades directamente en función del paso espacial $h$, el paso temporal $k$, la volatilidad $\sigma$ y el drift $a = r - q - \sigma^2/2$. Las probabilidades neutrales al riesgo que exige el modelo de \citep{figlewski1999adaptive} son:
 
 \begin{align}
-u &= e^{\sigma\sqrt{3\Delta t}} \\
-d &= e^{-\sigma\sqrt{3\Delta t}} = \frac{1}{u} \\
-m &= 1
+p_u &= \frac{1}{2}\left(\frac{\sigma^2 k}{h^2} + \frac{a^2 k^2}{h^2} + \frac{a k}{h}\right) \\
+p_d &= \frac{1}{2}\left(\frac{\sigma^2 k}{h^2} + \frac{a^2 k^2}{h^2} - \frac{a k}{h}\right) \\
+p_m &= 1 - p_u - p_d
 \end{align}
 
-Las probabilidades neutrales al riesgo son:
-
-\begin{align}
-p_u &= \frac{1}{6} + \frac{(r-\delta)\sqrt{\Delta t}}{2\sigma\sqrt{3}} \\
-p_m &= \frac{2}{3} \\
-p_d &= \frac{1}{6} - \frac{(r-\delta)\sqrt{\Delta t}}{2\sigma\sqrt{3}}
-\end{align}
+El término $\sigma^2 k / h^2$ controla la difusión, mientras que $a k / h$ introduce la componente de drift. El término cuadrático $a^2 k^2 / h^2$ es habitualmente pequeño pero garantiza que las probabilidades sean consistentes con el proceso lognormal en los dos primeros momentos.
 
 La valoración procede mediante inducción hacia atrás (backward induction), calculando en cada nodo:
 \begin{equation}
-V(S,t) = e^{-r\Delta t}[p_u V(Su,t+\Delta t) + p_m V(S,t+\Delta t) + p_d V(Sd,t+\Delta t)]
+V(X,t) = e^{-r k}\bigl[p_u\, V(X+h,\,t+k) + p_m\, V(X,\,t+k) + p_d\, V(X-h,\,t+k)\bigr]
 \end{equation}
 
 \begin{tcolorbox}[colback=blue!5!white, colframe=blue!75!black]
@@ -171,40 +169,46 @@ Si $S_0$ está extremadamente cerca de $H$ (por ejemplo, $S_0=100$ y $H=99.90$, 
 
 \subsection{Estructura AMM para Barreras}
 
-Para construir una malla adaptativa para opciones barrera, se construye una malla fina junto a la barrera $H$:
+La solución que propone el AMM consiste en concentrar la resolución numérica precisamente donde el modelo estándar falla: en la vecindad inmediata de la barrera $H$. Para lograrlo, se injerta una malla fina sobre el árbol grueso base, pero el diseño de esta malla es fundamentalmente diferente al caso de las opciones vanilla.
 
-\begin{itemize}
-    \item \textbf{Región espacial}: La malla fina se extiende exclusivamente del lado activo de la barrera, es decir, en la zona donde la opción aún existe. Para una opción down-and-out, la malla cubre desde $\ln(H)$ hasta $\ln(H) + h$ (un paso grueso por encima de la barrera en log-espacio). Los nodos situados sobre la barrera misma toman el valor cero (o el rebate), y el árbol no se extiende más allá de ese límite.
-    \item \textbf{Región temporal}: Toda la vida de la opción (no solo cerca del vencimiento)
-\end{itemize}
+En las opciones vanilla, la malla fina solo es necesaria en la última columna temporal (cerca del vencimiento $T$), porque allí es donde ocurre la no linealidad del payoff. En las opciones barrera, en cambio, la condición de knockout puede activarse en \textit{cualquier} instante de la vida de la opción: si el precio cruza $H$ en $t=0.1T$ o en $t=0.9T$, el contrato se anula igualmente. Por esta razón, la malla fina debe extenderse a lo largo de \textbf{toda la dimensión temporal}, no solo cerca del vencimiento.
 
-\textbf{Dirección del flujo de información.} A diferencia del AMM para opciones vanilla (donde la malla fina solo refina el vencimiento y la información fluye ``hacia adentro'' del parche fino), en las opciones barrera la dirección del flujo es descendente: \textbf{la malla gruesa actúa como el marco global que ``inyecta'' las condiciones de borde hacia el parche de alta resolución}. Cuando el precio inicial $S_0$ está muy cerca de la barrera $H$, la malla gruesa es demasiado tosca para resolver la región crítica, pero sí captura correctamente el comportamiento de la opción lejos de la barrera. Sus valores se transfieren a los nodos de interfaz de la malla fina (mediante el mecanismo de nodos colgantes y $\Delta t_{eff}$ descrito en la Sección~\ref{sec:amm_principio}), y esta última ejecuta la inducción hacia atrás con resolución suficiente para detectar con precisión los cruces de barrera.
+En cuanto a la dimensión espacial, la malla fina no se construye simétricamente alrededor de $H$ como si fuera un punto de interés neutral. La barrera es un límite absorvente, es decir, una vez que el precio la cruza, la opción muere y no tiene sentido modelar la dinámica del precio en esa región. Por tanto, la malla fina se extiende exclusivamente del \textbf{lado activo} de la barrera, es decir, del lado donde la opción aún tiene valor. Para una opción down-and-out, ese lado es el que está por encima de $H$ por lo que la malla cubre desde $\ln(H)$ hasta $\ln(H) + h$ en el espacio logarítmico (un paso grueso hacia arriba). Los nodos ubicados exactamente sobre la barrera reciben automáticamente el valor de cero (o del rebate $R$ si lo hubiera), actuando como condición de borde inferior permanente de la malla fina.
+
+\textbf{Dirección del flujo de información.} A diferencia del AMM para opciones vanilla (donde la malla fina es autosuficiente en su región y la información fluye ``hacia adentro'' del parche), en las opciones barrera la dirección del flujo es descendente: \textbf{la malla gruesa actúa como el marco global que ``inyecta'' las condiciones de borde hacia el parche de alta resolución}. El razonamiento es el siguiente: cuando $S_0$ está muy cerca de $H$, la malla gruesa es demasiado tosca para resolver correctamente la probabilidad de cruce en la vecindad de la barrera. Sin embargo, sí captura con suficiente precisión el comportamiento de la opción en nodos alejados de $H$, donde el valor varía suavemente. Esos valores de la malla gruesa se transfieren a los nodos de interfaz de la malla fina (mediante el mecanismo de nodos colgantes y $\Delta t_{eff}$ descrito en la Sección~\ref{sec:amm_principio}), estableciendo las condiciones de borde que necesita la malla fina para ejecutar su propia inducción hacia atrás con alta resolución. Es en esa inducción interna donde el modelo detecta con precisión quirúrgica los cruces de barrera que la malla gruesa no podía resolver.
 
 \begin{figure}[H]
 \centering
 \makebox[\textwidth][c]{%
 \includegraphics[width=1.5\textwidth]{./03_metodos_valoracion/figures/amm_barrier.png}
 }
-\caption{Estructura del AMM para opciones barrera. Se ilustra el árbol trinomial base con una banda vertical de malla fina a lo largo de toda la dimensión temporal, centrada en la barrera $H$. La región de refinamiento está delimitada por $[H-2h, H+2h]$. Se muestra el precio inicial $S_0$ cerca de $H$ para evidenciar la solución al problema del límite. Las flechas indican el flujo de información (condiciones de borde) que se transfiere desde la malla gruesa hacia la malla fina para la valoración.}
+\caption{Estructura del AMM para opciones barrera. Se ilustra el árbol trinomial base con una banda vertical de malla fina a lo largo de toda la dimensión temporal. La malla fina se construye exclusivamente del lado activo de la barrera: para una opción down-and-out, la banda de refinamiento cubre el intervalo $[\ln(H),\,\ln(H)+h]$ en el espacio logarítmico, es decir, desde la barrera $H$ hasta el primer nodo grueso por encima de ella. Se muestra el precio inicial $S_0$ cerca de $H$ para evidenciar la solución al problema del límite. Las flechas indican el flujo de información (condiciones de borde) que se transfiere desde la malla gruesa hacia la malla fina para la valoración.}
 \label{fig:amm_barrier}
 \end{figure}
 
 \subsection{Manejo de la Barrera}
 
-Para opciones knock-out:
-\begin{itemize}
-    \item Si un nodo en la malla fina cruza la barrera $H$, su valor se establece en el rebate $R$
-    \item La malla fina permite detectar el cruce con mucha mayor precisión que la malla gruesa
-\end{itemize}
+Una vez construida la malla fina alrededor de $H$, el modelo aplica las condiciones del contrato directamente sobre sus nodos. El mecanismo concreto depende del tipo de opción barrera.
 
-Para opciones knock-in, se usa la relación de paridad:
+Para una \textbf{opción knock-out}, el contrato estipula que si el precio del activo toca o cruza la barrera $H$ en algún momento, la opción queda inmediatamente cancelada. En el árbol, esto se implementa forzando el valor de cualquier nodo ubicado sobre la barrera a ser igual al rebate $R$ (que típicamente es cero, aunque algunos contratos establecen un pago compensatorio). Gracias a la malla fina, este chequeo se realiza en incrementos de precio muy pequeños ($h/2$ en lugar de $h$), lo que reduce drásticamente la probabilidad de que el árbol ``salte'' sobre la barrera sin detectarla. En la malla gruesa, un paso de precio de $h$ podía ser tan grande que el precio pasaba de un nodo claramente por encima de $H$ a otro claramente por debajo en un solo salto, sin que ningún nodo intermedio cayera sobre la barrera. La malla fina elimina este problema al ofrecer una resolución suficiente para capturar el cruce.
+
+Para una \textbf{opción knock-in}, el contrato funciona al revés: la opción solo se activa si el precio toca la barrera en algún momento; si nunca la toca, el contrato vence sin valor. Valorar directamente las trayectorias que sí tocan la barrera es más complejo, pero existe una relación de paridad entre opciones barrera que simplifica el cálculo. Dado que toda trayectoria o bien toca la barrera (knock-in) o bien no la toca (knock-out), la suma de ambas debe equivaler al valor de una opción vanilla estándar sin restricciones de barrera:
+\begin{equation}
+V_{\text{vanilla}} = V_{\text{KI}} + V_{\text{KO}}
+\end{equation}
+
+Despejando, el precio de la knock-in se obtiene como:
 \begin{equation}
 V_{\text{KI}} = V_{\text{vanilla}} - V_{\text{KO}}
 \end{equation}
 
-\subsection{Rendimiento}
+Esto permite valorar la knock-in sin modificar el algoritmo del AMM: basta con calcular primero la knock-out mediante el procedimiento descrito y luego restarle su valor al de la vanilla (que se calcula, por ejemplo, analíticamente con las fórmulas de Black-Scholes).
 
-Mientras que un Modelo Trinomial Restringido (RTM) se vuelve inmanejable cuando $S_0$ se acerca extremadamente a la barrera, el AMM alcanza resultados precisos casi instantáneamente. Un AMM de 100 pasos puede ser más preciso que un RTM de 10,000 pasos que tarda 100 veces más.
+\subsection{Eficiencia Computacional}
+
+El verdadero test de un método numérico no es solo su precisión sino su relación entre precisión y costo computacional. En el contexto de las opciones barrera, el método de referencia natural para comparar es el \textbf{Modelo Trinomial Restringido (RTM)}, que es precisamente la técnica de Boyle y Lau descrita al inicio de este capítulo, un árbol trinomial estándar donde se elige el número de pasos $n$ de manera que los nodos queden alineados con la barrera. La palabra ``restringido'' alude a esa restricción sobre $n$.
+
+El problema del RTM es que cuando $S_0$ está muy cerca de $H$, la condición de alineación fuerza a elegir valores de $n$ prohibitivamente grandes. En ese escenario, el costo computacional del RTM crece de manera desproporcionada (potencialmente en varios órdenes de magnitud) para lograr una precisión aceptable. El AMM resuelve este problema con una arquitectura completamente diferente, en lugar de aumentar la resolución de todo el árbol, concentra los nodos adicionales únicamente en la vecindad de $H$, manteniendo el árbol grueso para el resto del dominio. El resultado es que el número total de nodos adicionales requeridos es mínimo, y la ventaja computacional frente al RTM es especialmente pronunciada precisamente cuando $S_0 \approx H$, que es la situación de mayor interés práctico. Esta mejora en eficiencia fue documentada por \cite{figlewski1999adaptive} en el artículo original del método.
 
 \section{AMM para Opciones Vanilla}
 
@@ -214,8 +218,8 @@ Para opciones europeas o americanas estándar, la mayor no linealidad ocurre alr
 
 Se añade una malla fina con pasos de precio $h/2$ y tiempo $k/4$ solo en la región:
 \begin{itemize}
-    \item Temporal: Entre $T-k$ y $T$ (último paso temporal del árbol grueso)
-    \item Espacial: Alrededor de $K$, típicamente $[K - 2h, K + 2h]$
+    \item \textbf{Temporal}: El último paso del árbol grueso, entre $T-k$ y $T$.
+    \item \textbf{Espacial}: La banda alrededor del strike $K$, anclada a los dos nodos de la malla gruesa que encierran a $K$ (es decir, $X_K^- \leq \ln(K) < X_K^+$), más cuatro pasos finos adicionales hacia cada lado ($4 \times h/2 = 2h$). En notación aproximada esto corresponde al intervalo $[K - 2h,\, K + 2h]$, garantizando que toda la región de no linealidad quede cubierta independientemente de dónde caiga $K$ respecto a la grilla.
 \end{itemize}
 
 \begin{figure}[H]
@@ -277,24 +281,35 @@ AMM-2 & 1000 & 1,002,081 & 8.5854 & 0.000016 & 0.000085 & 0.000014 \\
 
 \section{AMM para el Cálculo de Griegas}
 
-La estimación de Delta ($\Delta$) y Gamma ($\Gamma$) mediante perturbaciones pequeñas del precio inicial es ruidosa debido al error de no linealidad.
+Las griegas Delta ($\Delta$) y Gamma ($\Gamma$) miden la sensibilidad del precio de la opción ante cambios en el precio del activo subyacente. Numéricamente, se calculan como derivadas aproximadas: se evalúa el modelo en dos (o tres) precios iniciales levemente distintos y se estima la pendiente (o curvatura) de la función de valor. A este procedimiento se lo llama \textbf{perturbación} y por lo general se ``perturba'' el precio inicial $S_0$ en una cantidad pequeña $\epsilon$ hacia arriba y hacia abajo, se obtiene el valor de la opción en cada caso, y luego se aplica la fórmula de diferencias finitas.
+
+El problema es que en un árbol trinomial estándar la perturbación más chica posible es $\epsilon = h$ (un paso completo de precio), porque los únicos nodos disponibles en $t=0$ son $S_0$, $S_0 \cdot u$ y $S_0 \cdot d$. En el espacio logarítmico, eso equivale a $\epsilon = h = \sigma\sqrt{3k}$, que para parámetros típicos puede ser del orden del $5\%$ o más del precio. Una perturbación tan grande introduce un error enorme en la estimación de la derivada, especialmente en regiones de alta curvatura (Gamma elevada).
 
 \subsection{Extensión del Árbol}
 
-Una técnica común es extender el árbol un paso hacia atrás desde el tiempo 0 para obtener tres valores de opción y calcular derivadas numéricas. Sin embargo, esto usa un paso de precio $h$ completo, que puede ser demasiado grande.
+Una técnica estándar para obtener tres puntos de valoración consiste en extender el árbol un paso temporal hacia atrás desde $t=0$, añadiendo un nodo ``raíz'' en $t=-k$ del cual brotan los nodos $S_0 \cdot u$, $S_0$ y $S_0 \cdot d$ en $t=0$. Esto provee tres valores de opción con una perturbación de tamaño $h$, pero como se señaló, ese tamaño suele ser demasiado grande para estimar derivadas con precisión.
 
 \subsection{Ramificación Cuadrinomial}
 
-Para permitir perturbaciones menores ($\epsilon < h$) sin que los nodos de la malla fina se desvíen de la malla gruesa (lo que generaría probabilidades negativas), el AMM utiliza ramificación cuadrinomial (cuatro ramas) en los nodos de perturbación añadidos (ubicados en $X_0\pm \epsilon$).
+Para calcular las griegas con mayor precisión, el AMM permite usar perturbaciones más pequeñas que $h$. La idea es añadir en $t=0$ dos nodos auxiliares ubicados en $X_0 \pm \epsilon$, donde $X_0 = \ln(S_0)$ es el log-precio inicial y $\epsilon < h$ es la perturbación (por ejemplo, $\epsilon = h/2$ o $\epsilon = h/4$). En el espacio de precios, esos nodos corresponden a $S_0 e^{+\epsilon}$ y $S_0 e^{-\epsilon}$: valores apenas por encima y por debajo de $S_0$.
 
-Dado que la perturbación $\epsilon$ se aplica en el espacio logarítmico ($X = \ln(S)$), las fórmulas de diferencias finitas deben incorporar la regla de la cadena para expresar las derivadas respecto al precio $S$. Definiendo $V'_X$ y $V''_X$ como las diferencias finitas en log-espacio:
+El desafío de añadir estos nodos en posiciones no estándar es que no forman parte de la malla del árbol, por lo que sus vecinos no coinciden exactamente con los nodos ya existentes. Para resolverlo sin generar probabilidades de transición negativas, el AMM emplea una \textbf{ramificación cuadrinomial}: desde cada nodo perturbado en $t=0$, el precio puede moverse a \textbf{cuatro} nodos en lugar de los tres habituales del trinomial. El destino temporal depende del nivel de refinamiento aplicado:
+
+\begin{itemize}
+    \item \textbf{Primer nivel AMM} ($\epsilon = h/2$): los nodos perturbados en $X_0 \pm h/2$ ramifican directamente hacia los nodos de la malla gruesa en $t = k$. La cuarta rama permite alcanzar nodos que caen fuera de las tres posiciones trinomiales estándar.
+    \item \textbf{Segundo nivel AMM} ($\epsilon = h/4$): los nodos perturbados en $X_0 \pm h/4$ ramifican hacia los nodos de la malla fina en $t = k/4$, aprovechando la resolución adicional del primer nivel de refinamiento.
+\end{itemize}
+
+En ambos casos, los destinos están espaciados de modo que se solapan exactamente con la malla existente, garantizando probabilidades válidas y no negativas.
+
+Con los valores de la opción en $X_0 + \epsilon$ y $X_0 - \epsilon$ obtenidos de esta manera, se calculan las diferencias finitas en log-espacio. Como el árbol vive en el espacio logarítmico, al convertir estas diferencias a sensibilidades respecto al precio $S$ se debe aplicar la regla de la cadena. Definiendo:
 
 \begin{align}
 V'_X &= \frac{V(X_0 + \epsilon) - V(X_0 - \epsilon)}{2\epsilon} \\
 V''_X &= \frac{V(X_0 + \epsilon) - 2V(X_0) + V(X_0 - \epsilon)}{\epsilon^2}
 \end{align}
 
-las griegas se obtienen como:
+las griegas respecto a $S$ se obtienen como:
 
 \begin{align}
 \Delta &= \frac{\partial V}{\partial S} = \frac{1}{S_0} \, V'_X \\
@@ -314,13 +329,9 @@ con $\epsilon = h/2$ o incluso $\epsilon = h/4$. Es fundamental no confundir $\e
 
 \subsection{Precisión}
 
-El uso de AMM reduce el Error Cuadrático Medio (RMSE) de:
-\begin{itemize}
-    \item Delta: en aproximadamente 2/3
-    \item Gamma: en aproximadamente 1/2
-\end{itemize}
+El método natural de calcular las griegas en un árbol trinomial sin AMM es extender el árbol un paso hacia atrás y usar la perturbación mínima disponible: $\epsilon = h$ (un paso de precio completo). Esa es la línea de base con la que se compara el AMM.
 
-sin aumentar significativamente el tiempo de ejecución. Un AMM de 25 pasos es más preciso que un modelo trinomial estándar de 1000 pasos que tarda 500 veces más.
+Al sustituir esa perturbación gruesa por la ramificación cuadrinomial, el AMM reduce el RMSE (Error Cuadrático Medio respecto al valor teórico de Black-Scholes) de las griegas de manera sustancial. Sin embargo, el grado de mejora depende críticamente de cuántos niveles de refinamiento se apliquen y en qué extremos del árbol. Según \cite{figlewski1999adaptive}, una configuración AMM con refinamiento únicamente en $t=0$ (por ejemplo, AMM(1,0) o AMM(2,0)) produce un RMSE en Delta de $\sim$0.001087, que es \textbf{peor} que el 0.000079 de un trinomial de 1000 pasos. Solo la configuración \textbf{AMM(3,3)} (tres niveles de refinamiento tanto al inicio $t=0$ como al vencimiento $t=T$) logra reducir el error a $\sim$0.000053 y superar al trinomial de 1000 pasos, con un tiempo de ejecución que es del orden de 500 veces menor. Por ello, la afirmación correcta sería que un AMM de 25 pasos con \textbf{tres niveles de refinamiento en ambos extremos} es más preciso que un trinomial estándar de 1000 pasos.
 
 \begin{figure}[H]
 \centering
