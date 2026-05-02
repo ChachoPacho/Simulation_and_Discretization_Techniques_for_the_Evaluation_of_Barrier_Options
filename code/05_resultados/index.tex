@@ -18,7 +18,7 @@ El segundo escenario se enfoca en el problema de la cobertura en el mercado real
 
 Dado que la valoración de opciones americanas introduce el problema del ejercicio anticipado, el diseño experimental para la simulación de Monte Carlo requiere un enfoque distinto. Para aislar el efecto de la regresión transversal introducida por el método de Longstaff-Schwartz (LSM), el caso de prueba se basará en una opción Put americana estándar, evitando temporalmente la interferencia de una barrera.
 
-Los parámetros base establecen un precio de ejercicio $K=40$, una tasa libre de riesgo del $6\%$ y una volatilidad del $20\%$. Evaluaremos la opción para dos horizontes temporales distintos ($T=1$ y $T=2$ años) y bajo tres condiciones de moneyness inicial: in-the-money ($S_0=36$), at-the-money ($S_0=40$) y out-of-the-money ($S_0=44$). Este abanico de escenarios garantiza que el algoritmo de regresión del LSM, basado en polinomios de Laguerre, sea puesto a prueba en trayectorias donde la decisión de ejercicio temprano es trivial frente a aquellas donde el valor de continuación y el valor intrínseco son casi idénticos
+Los parámetros base establecen un precio de ejercicio $K=40$, una tasa libre de riesgo del $6\%$ y una volatilidad del $20\%$. Evaluaremos la opción para dos horizontes temporales distintos ($T=1$ y $T=2$ años) y bajo tres condiciones de moneyness inicial: in-the-money ($S_0=36$), at-the-money ($S_0=40$) y out-of-the-money ($S_0=44$). Este abanico de escenarios garantiza que el algoritmo de regresión del LSM, basado en polinomios de Laguerre, sea puesto a prueba en trayectorias donde la decisión de ejercicio temprano es trivial frente a aquellas donde el valor de continuación y el valor intrínseco son casi idénticos.
 
 \subsection{Métricas de Evaluación}
 
@@ -181,7 +181,7 @@ Esta característica revela el principal compromiso (trade-off) de la simulació
 \section{Comparación Global de Métodos}
 \label{sec:comparacion_global}
 
-Tras haber analizado el rendimiento individual de cada algoritmo frente a sus desaffíos intrínsecos, resulta fundamental establecer una comparación cruzada que consolide los hallazgos de esta investigación. Esta evaluación global no busca declarar un único método como superior de manera absoluta, sino mapear las fortalezas y debilidades de cada enfoque frente a las distintas dimensiones del problema de valoración de opciones barrera.
+Tras haber analizado el rendimiento individual de cada algoritmo frente a sus desafíos intrínsecos, resulta fundamental establecer una comparación cruzada que consolide los hallazgos de esta investigación. Esta evaluación global no busca declarar un único método como superior de manera absoluta, sino mapear las fortalezas y debilidades de cada enfoque frente a las distintas dimensiones del problema de valoración de opciones barrera.
 
 \subsection{Resumen de Desempeño}
 

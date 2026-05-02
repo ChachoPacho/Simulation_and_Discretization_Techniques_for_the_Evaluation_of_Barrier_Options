@@ -197,6 +197,7 @@ Tiempos típicos (CPU Intel i7, single-thread):
 \begin{table}[H]
 \centering
 \small
+\caption{Tiempos de ejecución para opciones americanas con barrera}
 \begin{tabular}{ccc}
 \toprule
 \textbf{Simulaciones (M)} & \textbf{Pasos (N)} & \textbf{Tiempo} \\
@@ -206,7 +207,6 @@ Tiempos típicos (CPU Intel i7, single-thread):
 100,000 & 252 & 728 ms \\
 \bottomrule
 \end{tabular}
-\caption{Tiempos de ejecución para opciones americanas con barrera}
 \end{table}
 
 \subsection{Validación de Monte Carlo}
@@ -221,6 +221,7 @@ El error estándar teórico es $\text{SE} = \sigma/\sqrt{M}$, donde $\sigma$ es 
 
 \begin{table}[H]
 \centering
+\caption{Convergencia del error estándar respecto al número de simulaciones}
 \begin{tabular}{cc}
 \toprule
 \textbf{Simulaciones (M)} & \textbf{Error Estándar} \\
@@ -232,7 +233,6 @@ El error estándar teórico es $\text{SE} = \sigma/\sqrt{M}$, donde $\sigma$ es 
 100,000 & 0.000298 \\
 \bottomrule
 \end{tabular}
-\caption{Convergencia del error estándar respecto al número de simulaciones}
 \end{table}
 
 Se verifica que el error decrece aproximadamente como $O(1/\sqrt{M})$: al multiplicar $M$ por 4, el error se reduce a la mitad, confirmando la teoría.
@@ -310,6 +310,7 @@ Para validar la implementación, se verifica que cuando la barrera está muy lej
 
 \begin{table}[H]
 \centering
+\caption{Convergencia al límite vanilla cuando la barrera se aleja}
 \begin{tabular}{lcc}
 \toprule
 \textbf{Tipo de Opción} & \textbf{Precio} & \textbf{Diferencia vs Vanilla} \\
@@ -319,7 +320,6 @@ Down-and-Out (H=50) & 7.8815 & 0.0005 \\
 Down-and-Out (H=10) & 7.8819 & 0.0000 \\
 \bottomrule
 \end{tabular}
-\caption{Convergencia al límite vanilla cuando la barrera se aleja}
 \end{table}
 
 Los resultados confirman que:

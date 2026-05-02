@@ -35,7 +35,7 @@ Una vez fijado $h$ por la restricción espacial, el paso de tiempo $k$ no puede 
   \item Resultar en un número entero de pasos de tiempo $N$ hasta el vencimiento $T$.
 \end{enumerate}
 
-Dado que calcular $k$ directamente a partir de $h$ y la volatilidad $\sigma$ raramente produce un entero para $T$, se implementa el ``Parámetro de Estiramiento'' (\textit{Stretch Parameter}). El algoritmo calcula un $k$ provisional y luego lo "estira" ligeramente para ajustar $N$ al entero más cercano.
+Dado que calcular $k$ directamente a partir de $h$ y la volatilidad $\sigma$ raramente produce un entero para $T$, se implementa el ``Parámetro de Estiramiento'' (\textit{Stretch Parameter}). El algoritmo calcula un $k$ provisional y luego lo ``estira'' ligeramente para ajustar $N$ al entero más cercano.
 La fórmula implementada, derivada de la Ecuación 17 de Figlewski y Gao (1999), es:
 \begin{equation} 
   k = \frac{T}{\text{int}\left( \frac{j \sigma^2 T}{h^2} \right)} \label{eq:amm_k_stretch} 
@@ -104,7 +104,7 @@ Las probabilidades ajustadas para un nodo con paso de tiempo efectivo $\Delta t_
 \textbf{Lógica de Bucle:} En el código, para cada intervalo grueso entre $t$ y $t+k$, se deben calcular tres sets de probabilidades distintos para los nodos frontera: 
 
 \begin{itemize} 
-  \item \textbf{Para nodos en $t+k/4$:} Usar $\Delta t_{eff}=3k/4$. 
+  \item \textbf{Para nodos en t+k/4:} Usar $\Delta t_{eff}=3k/4$. 
 
   \item \textbf{Para nodos en t+2k/4:} Usar $\Delta t_{eff}=2k/4$. 
   
@@ -380,15 +380,19 @@ Se evaluó el desempeño del modelo en el escenario crítico donde el precio ini
 
 \textbf{Resultados Comparativos:}
 
-\begin{table}[h] \centering 
-  \begin{tabular}{|l|c|c|c|} 
-    \hline \textbf{Método} & \textbf{Pasos de Tiempo (N)} & \textbf{Valor Calculado} & \textbf{Error Relativo} \\ 
-    \hline Solución Exacta (Merton) & - & \textbf{$\approx 0.161648$} & - \\ 
-    \hline Árbol Trinomial ($M=0$) & N/A & \textit{Fallo (Oscilación)} & $>100\%$ \\ 
-    \hline AMM Nivel 2 ($M=2$) & $6083$ & $0.161312$ & $0.21\%$ \\ 
-    \hline AMM Nivel 4 ($M=4$) & $380$ & \textbf{$0.161532$} & $0.07\%$ \\ 
-    \hline 
-  \end{tabular} \caption{Comparación de convergencia cerca de la barrera ($S_0=90.125$).} \label{tab:amm_results} 
+\begin{table}[h]
+\centering
+\caption{Comparación de convergencia cerca de la barrera ($S_0=90.125$).}
+\label{tab:amm_results}
+  \begin{tabular}{|l|c|c|c|}
+    \hline
+    \textbf{Método} & \textbf{Pasos de Tiempo (N)} & \textbf{Valor Calculado} & \textbf{Error Relativo} \\
+    \hline Solución Exacta (Merton) & - & \textbf{$\approx 0.161648$} & - \\
+    \hline Árbol Trinomial ($M=0$) & N/A & \textit{Fallo (Oscilación)} & $>100\%$ \\
+    \hline AMM Nivel 2 ($M=2$) & $6083$ & $0.161312$ & $0.21\%$ \\
+    \hline AMM Nivel 4 ($M=4$) & $380$ & \textbf{$0.161532$} & $0.07\%$ \\
+    \hline
+  \end{tabular}
 \end{table}
 
 \textbf{Análisis:} Como se observa en la Tabla \ref{tab:amm_results}, el árbol estándar es incapaz de valorar la opción con una malla razonable porque el paso de precio mínimo es mayor que la distancia $S_0-H$. El AMM con $M=4$ logra una precisión de $4$ decimales manteniendo el costo computacional bajo ($N=100$ pasos base), resolviendo efectivamente el problema del límite mediante la inserción local de nodos.

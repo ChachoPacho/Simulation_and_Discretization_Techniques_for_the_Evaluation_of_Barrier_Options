@@ -105,7 +105,11 @@ Para garantizar la correctitud de la implementación algorítmica de las fórmul
 
 \subsubsection{Verificación de Relaciones de Paridad}
 
-Una propiedad teórica fundamental en la estructuración de opciones exóticas es que un portafolio compuesto por una opción knock-in y una opción knock-out idénticas (mismo strike, vencimiento y barrera) equivale exactamente a una opción europea estándar (vanilla). A nivel de código, se validó sistemáticamente que para cualquier vector de precios de entrada, la suma de las rutinas computacionales cumpla con la identidad: \lstinline{Precio_Call_Vanilla(S, K, T, r, sigma) == Precio_Down_In_Call(...) + Precio_Down_Out_Call(...)} Esta prueba garantiza que el manejo de los interruptores binarios $\eta$ y $\phi$, así como la combinación de los términos de valoración, no omiten ningún flujo de caja.
+Una propiedad teórica fundamental en la estructuración de opciones exóticas es que un portafolio compuesto por una opción knock-in y una opción knock-out idénticas (mismo strike, vencimiento y barrera) equivale exactamente a una opción europea estándar (vanilla). A nivel de código, se validó sistemáticamente que para cualquier vector de precios de entrada, la suma de las rutinas computacionales cumpla con la identidad:
+\begin{lstlisting}[language=Python]
+Precio_Call_Vanilla(S, K, T, r, sigma) == Precio_Down_In_Call(...) + Precio_Down_Out_Call(...)
+\end{lstlisting}
+Esta prueba garantiza que el manejo de los interruptores binarios $\eta$ y $\phi$, así como la combinación de los términos de valoración, no omiten ningún flujo de caja.
 
 \subsubsection{Verificación de Límites Asintóticos}
 
@@ -118,4 +122,4 @@ Se comprobó la robustez de la implementación analizando el comportamiento de l
 
 \subsubsection{Aislamiento del Término de Reembolso (Rebate)}
 
-Los autores destacan un caso particular contraintuitivo: el valor de una opción Up-and-Out Call cuando el precio de ejercicio es mayor que la barrera ($K>H$). Puesto que para que el activo subyacente alcance el strike primero debe cruzar la barrera (lo cual extingue la opción), esta configuración nunca puede generar un pago (payoff) ordinario. Por lo tanto, su valor reside única y exclusivamente en el pago del rebate al momento del impacto. Se incluyeron pruebas que verifican este caso de frontera, al ejecutar la función correspondiente con $K>H$, el algoritmo aísla y retorna correctamente solo la evaluación del Término 6 de la ecuación, confirmando el correcto manejo de la densidad del tiempo de primer paso (first passage time) y el factor de descuento condicional
+Los autores destacan un caso particular contraintuitivo: el valor de una opción Up-and-Out Call cuando el precio de ejercicio es mayor que la barrera ($K>H$). Puesto que para que el activo subyacente alcance el strike primero debe cruzar la barrera (lo cual extingue la opción), esta configuración nunca puede generar un pago (payoff) ordinario. Por lo tanto, su valor reside única y exclusivamente en el pago del rebate al momento del impacto. Se incluyeron pruebas que verifican este caso de frontera, al ejecutar la función correspondiente con $K>H$, el algoritmo aísla y retorna correctamente solo la evaluación del Término 6 de la ecuación, confirmando el correcto manejo de la densidad del tiempo de primer paso (first passage time) y el factor de descuento condicional.
