@@ -29,7 +29,7 @@ Finalmente, la eficiencia algrítmica se evalúa de forma dual. Por un lado, se 
 \section{Resultados para Opciones Europeas}
 \label{sec:resultados_europeas}
 
-\subsection{Superando el ``Problema del Límite'': Trinomial Estándar vs. AMM}
+\subsection{Superando el ``Problema del Límite'': AMM vs. Trinomial Estándar}
 
 La valoración de opciones barrera mediante redes discretas enfrenta un desafío geométrico crítico cuando el precio inicial del activo subyacente se encuentra muy cerca del nivel de la barrera. Como se explicó en capítulos anteriores, para evitar errores severos de estimación, los modelos de árbol requieren que una capa horizontal de nodos coincida exactamente con la barrera. Sin embargo, forzar esta alineación implica que el tamaño del paso de precio ($h$) no puede ser mayor que la distancia entre el precio inicial y la barrera. Dado que el paso de tiempo ($k$) debe ser proporcional al cuadrado del paso de precio para mantener la estabilidad probabilística, reducir $h$ provoca que el número total de pasos de tiempo ($N$) crezca de manera cuadrática. Este fenómeno, conocido como el ``problema del límite'', puede volver al método estándar computacionalmente inmanejable.
 
@@ -42,7 +42,7 @@ Para ilustrar este comportamiento y evaluar la solución propuesta por el Modelo
   \makebox[\textwidth][c]{%
     \begin{tabular}{c|c|c|c}
       \hline
-      \textbf{Precio Inicial} & \textbf{Valor Analítico} & \textbf{Trinomial Estándar} & \textbf{Malla Adaptativa AMM} \\
+      \textbf{Precio Inicial} & \textbf{Valor Analítico} & \textbf{Trinomial Estándar} & \textbf{AMM} \\
       \textbf{($S_0$)} & \textbf{(R\&R)} & \textbf{(Valor / Pasos N)} & \textbf{(Valor / Nivel M)} \\
       \hline
       92.000 & 2.506 & 2.507 (N=388) & 2.507 (M=0) \\
@@ -77,8 +77,8 @@ El experimento consiste en construir el portafolio replicante variando la frecue
       \hline
       Valor Teórico Objetivo (R\&R) & 1.913 & --- & --- \\
       \hline
-      Portafolio (6 ajustes / frecuencia bimestral) & 2.284 & +0.371 & $\approx$19.4\% \\
-      Portafolio (24 ajustes / frecuencia quincenal) & 2.010 & +0.097 & $\approx$5.0\% \\
+      Portafolio (6 ajustes / frec. bimestral) & 2.284 & +0.371 & $\approx$19.4\% \\
+      Portafolio (24 ajustes / frec. quincenal) & 2.010 & +0.097 & $\approx$5.0\% \\
       \hline
     \end{tabular}
   }
@@ -93,17 +93,18 @@ Para consolidar el análisis de las opciones de estilo europeo, resulta sumament
 
 \begin{table}[H]
   \centering
+  \small
   \caption{Comparación Unificada de Métodos para Opciones Europeas}
   \label{tab:comparacion_unificada}
   \makebox[\textwidth][c]{%
     \begin{tabular}{l|l|c|c}
       \hline
-      \textbf{Método de} & \textbf{Enfoque} & \textbf{Valor} & \textbf{Error Absoluto} \\
+      \textbf{Método de} & \textbf{Enfoque} & \textbf{Valor} & \textbf{Err. Abs.} \\
       \textbf{Valoración} & \textbf{Principal} & \textbf{Calculado} & \textbf{vs R\&R} \\
       \hline
-      Reiner \& Rubinstein (R\&R) & Teórico Exacto (Oráculo) & 1.913 & --- \\
+      R\&R & Teórico Exacto (Oráculo) & 1.913 & --- \\
       \hline
-      Malla Adaptativa (AMM) & Precisión Numérica (Nivel M=2) & 1.913 & $<$0.001 \\
+      AMM & Precisión Numérica (Nivel M=2) & 1.913 & $<$0.001 \\
       Replicación Estática & Cobertura de Mercado (24 ajustes) & 2.010 & +0.097 \\
       \hline
     \end{tabular}
@@ -123,6 +124,7 @@ Los parámetros base establecen un precio de ejercicio $K=40$, tasa libre de rie
 
 \begin{table}[H]
   \centering
+  \small
   \caption{Comparación de Valoración para Put Americana (Diferencias Finitas vs. LSM). Parámetros: $K=40$, $r=0.06$, $\sigma=0.20$. Simulación LSM con 100,000 trayectorias, 50 pasos temporales por año, 3 polinomios de Laguerre.}
   \label{tab:lsm_americanas}
   \makebox[\textwidth][c]{%
@@ -161,7 +163,7 @@ En cada uno de los $50$ pasos temporales, no solo debe ejecutar la regresión pa
   \makebox[\textwidth][c]{%
     \begin{tabular}{c|c|c|c}
       \hline
-      \textbf{Simulaciones} & \textbf{Error Estándar} & \textbf{Intervalo de Confianza} & \textbf{Tiempo} \\
+      \textbf{Simulaciones} & \textbf{Err. Estándar} & \textbf{Int. de Confianza} & \textbf{Tiempo} \\
       \textbf{(M)} & \textbf{(SE)} & \textbf{(95\%)} & \textbf{(milisegundos)} \\
       \hline
       1,000 & 0.003069 & $\pm$0.127 & $<$5 \\
@@ -188,6 +190,7 @@ Tras haber analizado el rendimiento individual de cada algoritmo frente a sus de
 Para sintetizar las propiedades observadas a lo largo de los experimentos numéricos, la Tabla 5.6 presenta un resumen conceptual del perfil de desempeño de las cuatro metodologías estudiadas.
 
 \begin{table}[H]
+  \small
   \centering
   \caption{Resumen del Perfil de Desempeño de los Métodos de Valoración}
   \label{tab:resumen_desempeno}
@@ -195,18 +198,20 @@ Para sintetizar las propiedades observadas a lo largo de los experimentos numér
     \begin{tabular}{l|l|l|l|l}
       \hline
       \textbf{Método} & \textbf{Naturaleza} & \textbf{Precisión} & \textbf{Costo} & \textbf{Flexibilidad /} \\
-       &  & \textbf{Numérica} & \textbf{Computacional} & \textbf{Extensibilidad} \\
+       &  & \textbf{Numérica} & \textbf{Comp.} & \textbf{Extensibilidad} \\
       \hline
-      Fórmulas R\&R & Analítica / Continua & Exacta (Teórica) & Instantáneo (Bajo) & Muy Baja (Solo Europeas) \\
+      R\&R & Analítica & Exacta & Instantáneo & Muy Baja \\
+       & / Continua & (Teórica) & (Bajo) & - Solo Europeas \\
       \hline
       AMM & Red Discreta & Muy Alta & Muy Bajo & Moderada \\
-       & (Determinista) &  & $O(N)$ & (Opciones 1D) \\
+       & (Determinista) &  & $O(N)$ & - Opciones 1D \\
       \hline
-      Replicación & Portafolio de & Moderada / Alta & Bajo & Alta \\
-      Estática & Mercado &  &  & (Depende del mercado) \\
+      Replicación & Portafolio de & Moderada & Bajo & Alta \\
+      Estática & Mercado & / Alta &  & (Depende del mercado) \\
       \hline
-      Monte Carlo & Simulación & Moderada (SE) & Alto & Muy Alta \\
-      (LSM) & (Estocástica) &  & $O(1/\sqrt{M})$ & (Americanas / Multi-activo) \\
+      LSM & Simulación & Moderada & Alto & Muy Alta \\
+      & (Estocástica) & (SE) & $O(1/\sqrt{M})$ & - Americanas \\
+      & & & & - Multi-activo \\
       \hline
     \end{tabular}
   }

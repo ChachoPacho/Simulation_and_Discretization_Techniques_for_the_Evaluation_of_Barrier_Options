@@ -1,5 +1,5 @@
 \chapter{Método 2: Modelo de Malla Adaptativa (AMM)}
-\label{sec:metodo_arboles_mallas}
+\label{chapter:metodo_arboles_mallas}
 
 El Modelo de Malla Adaptativa (Adaptive Mesh Model, AMM), desarrollado por \cite{figlewski1999adaptive}, representa un avance significativo en la valoración numérica de opciones. Este método permite aumentar la precisión en varios órdenes de magnitud sin incrementar sustancialmente el tiempo de ejecución, mediante el injerto de secciones de alta resolución sobre un árbol trinomial base en regiones críticas donde el valor de la opción es altamente no lineal.
 
@@ -32,7 +32,7 @@ En un árbol binomial, desde cada nodo con precio $S$, el precio en el siguiente
     \item $S \cdot d$ con probabilidad $1-p$ (movimiento hacia abajo)
 \end{itemize}
 
-donde $u > 1$ y $d < 1$ son los factores de movimiento. En el modelo clásico de Cox, Ross y Rubinstein (CRR), estos se calibran como:
+donde $u > 1$ y $0 < d < u$ son los factores de movimiento. En el modelo clásico de Cox, Ross y Rubinstein (CRR), estos se calibran como:
 
 \begin{align}
 u &= e^{\sigma\sqrt{\Delta t}} \\
@@ -58,7 +58,7 @@ En cada nodo del árbol con precio $S$, el precio en el siguiente paso temporal 
     \item $S \cdot d$ con probabilidad $p_d$ (movimiento hacia abajo)
 \end{itemize}
 
-donde $u > 1 > d > 0$ son los factores de movimiento.
+donde $0 < d < u$ son los factores de movimiento.
 
 A diferencia de las parametrizaciones clásicas (como la de Cox, Ross y Rubinstein), el AMM construye el árbol en el espacio logarítmico $X = \ln(S)$ y define las probabilidades directamente en función del paso espacial $h$, el paso temporal $k$, la volatilidad $\sigma$ y el drift $a = r - q - \sigma^2/2$. Las probabilidades neutrales al riesgo que exige el modelo de \citep{figlewski1999adaptive} son:
 
@@ -74,6 +74,7 @@ La valoración procede mediante inducción hacia atrás (backward induction), ca
 \begin{equation}
 V(X,t) = e^{-r k}\bigl[p_u\, V(X+h,\,t+k) + p_m\, V(X,\,t+k) + p_d\, V(X-h,\,t+k)\bigr]
 \end{equation}
+donde $V(X, t)$ es el valor de la opción en el tiempo $t$ si el precio del activo es $X$.
 
 \begin{tcolorbox}[colback=blue!5!white, colframe=blue!75!black]
 La inducción hacia atrás (backward induction) es el procedimiento algorítmico fundamental para valorar opciones mediante modelos de árbol binomial o trinomial. A diferencia de la simulación de Monte Carlo, que avanza hacia adelante en el tiempo generando trayectorias desde el presente hacia el futuro, los métodos de árbol trabajan en dirección temporal inversa. El proceso comienza en el vencimiento $T$, donde el valor de la opción es conocido con certeza: es simplemente el payoff terminal, por ejemplo $\max(S_T - K, 0)$ para una opción call europea. Desde este punto de partida, el algoritmo retrocede paso a paso hacia el tiempo inicial, calculando en cada nodo el valor de la opción como el valor esperado descontado de los valores en los nodos hijos (futuros). Matemáticamente, en un árbol trinomial, el valor en un nodo con precio $S$ en el tiempo $t$ se calcula como $V(S,t) = e^{-r\Delta t}[p_u V(Su,t+\Delta t) + p_m V(S,t+\Delta t) + p_d V(Sd,t+\Delta t)]$, donde $p_u$, $p_m$ y $p_d$ son las probabilidades neutrales al riesgo de movimiento hacia arriba, medio y abajo respectivamente y $\Delta t$ es el tamaño del paso temporal. Este proceso de retroceso continúa hasta alcanzar el nodo raíz en $t=0$ con precio $S_0$, cuyo valor calculado es precisamente el precio justo de la opción. Para opciones americanas, el algoritmo se modifica ligeramente: en cada nodo se toma el máximo entre el valor de continuación (calculado como antes) y el valor de ejercicio inmediato, reflejando la decisión óptima del tenedor de la opción.
@@ -137,7 +138,7 @@ El procedimiento de valoración se divide en tres fases:
 
 \begin{enumerate}
     \item \textbf{Valoración en la Malla Gruesa:} El proceso inicia calculando los valores de la opción sobre la malla gruesa estándar, ignorando temporalmente la zona refinada. Esto genera una matriz base de valores aproximados con resolución $h$ y $k$.
-    \item \textbf{Gestión de la Interfaz (Nodos Colgantes):} Los nodos ubicados en los límites de la malla fina (nodos de interfaz) actúan como puentes de información. Para los nodos colgantes, que caen en instantes intermedios donde no existen nodos gruesos, la conexión se logra utilizando un \textbf{paso de tiempo efectivo} ($\Delta t_{eff}$) que cubre la distancia temporal exacta restante hasta la siguiente columna de nodos de la malla gruesa. Por ejemplo, un nodo colgante en $t+k/4$ se proyecta hacia los nodos gruesos en $t+k$ usando $\Delta t_{eff} = 3k/4$; uno en $t+2k/4$ usa $\Delta t_{eff} = 2k/4$, y así sucesivamente. Las probabilidades de transición se recalculan con este $\Delta t_{eff}$, y el valor del nodo se obtiene descontando con $e^{-r \cdot \Delta t_{eff}}$. Este mecanismo inyecta la información de la malla gruesa hacia el interior del parche fino.
+    \item \textbf{Gestión de la Interfaz (Nodos Colgantes):} Los nodos ubicados en los límites de la malla fina (nodos de interfaz) actúan como puentes de información. Para los nodos colgantes, que caen en instantes intermedios donde no existen nodos gruesos, la conexión se logra utilizando un \textbf{paso de tiempo efectivo} ($\Delta t_{\mbox{ef}}$) que cubre la distancia temporal exacta restante hasta la siguiente columna de nodos de la malla gruesa. Por ejemplo, un nodo colgante en $t+k/4$ se proyecta hacia los nodos gruesos en $t+k$ usando $\Delta t_{\mbox{ef}} = 3k/4$; uno en $t+2k/4$ usa $\Delta t_{\mbox{ef}} = 2k/4$, y así sucesivamente. Las probabilidades de transición se recalculan con este $\Delta t_{\mbox{ef}}$, y el valor del nodo se obtiene descontando con $e^{-r \cdot \Delta t_{\mbox{ef}}}$. Este mecanismo inyecta la información de la malla gruesa hacia el interior del parche fino.
     \item \textbf{Inducción en la Malla Fina:} Con las condiciones de borde establecidas en los nodos de interfaz, el algoritmo ejecuta la inducción hacia atrás exclusivamente por el interior de la malla fina. Utilizando pasos reducidos ($k/4$ y $h/2$), atraviesa la región crítica modelando con alta fidelidad las áreas donde el valor cambia abruptamente (como la cercanía a una barrera o a un strike). El resultado de la valoración se extrae siempre del nodo inicial de la malla fina ($t=0$).
 \end{enumerate}
 
@@ -151,6 +152,7 @@ El procedimiento de valoración se divide en tres fases:
 \end{figure}
 
 \section{AMM para Opciones Barrera}
+\label{sec:amm_barrier}
 
 Las opciones barrera presentan un desafío particular: el error de no linealidad ocurre en cada punto del tiempo cuando el precio se acerca a la barrera $H$, no solo al vencimiento.
 
@@ -175,7 +177,7 @@ En las opciones vanilla, la malla fina solo es necesaria en la última columna t
 
 En cuanto a la dimensión espacial, la malla fina no se construye simétricamente alrededor de $H$ como si fuera un punto de interés neutral. La barrera es un límite absorvente, es decir, una vez que el precio la cruza, la opción muere y no tiene sentido modelar la dinámica del precio en esa región. Por tanto, la malla fina se extiende exclusivamente del \textbf{lado activo} de la barrera, es decir, del lado donde la opción aún tiene valor. Para una opción down-and-out, ese lado es el que está por encima de $H$ por lo que la malla cubre desde $\ln(H)$ hasta $\ln(H) + h$ en el espacio logarítmico (un paso grueso hacia arriba). Los nodos ubicados exactamente sobre la barrera reciben automáticamente el valor de cero (o del rebate $R$ si lo hubiera), actuando como condición de borde inferior permanente de la malla fina.
 
-\textbf{Dirección del flujo de información.} A diferencia del AMM para opciones vanilla (donde la malla fina es autosuficiente en su región y la información fluye ``hacia adentro'' del parche), en las opciones barrera la dirección del flujo es descendente: \textbf{la malla gruesa actúa como el marco global que ``inyecta'' las condiciones de borde hacia el parche de alta resolución}. El razonamiento es el siguiente: cuando $S_0$ está muy cerca de $H$, la malla gruesa es demasiado tosca para resolver correctamente la probabilidad de cruce en la vecindad de la barrera. Sin embargo, sí captura con suficiente precisión el comportamiento de la opción en nodos alejados de $H$, donde el valor varía suavemente. Esos valores de la malla gruesa se transfieren a los nodos de interfaz de la malla fina (mediante el mecanismo de nodos colgantes y $\Delta t_{eff}$ descrito en la Sección~\ref{sec:amm_principio}), estableciendo las condiciones de borde que necesita la malla fina para ejecutar su propia inducción hacia atrás con alta resolución. Es en esa inducción interna donde el modelo detecta con precisión quirúrgica los cruces de barrera que la malla gruesa no podía resolver.
+\textbf{Dirección del flujo de información.} A diferencia del AMM para opciones vanilla (donde la malla fina es autosuficiente en su región y la información fluye ``hacia adentro'' del parche), en las opciones barrera la dirección del flujo es descendente: \textbf{la malla gruesa actúa como el marco global que ``inyecta'' las condiciones de borde hacia el parche de alta resolución}. El razonamiento es el siguiente: cuando $S_0$ está muy cerca de $H$, la malla gruesa es demasiado tosca para resolver correctamente la probabilidad de cruce en la vecindad de la barrera. Sin embargo, sí captura con suficiente precisión el comportamiento de la opción en nodos alejados de $H$, donde el valor varía suavemente. Esos valores de la malla gruesa se transfieren a los nodos de interfaz de la malla fina (mediante el mecanismo de nodos colgantes y $\Delta t_{\mbox{ef}}$ descrito en la Sección~\ref{sec:amm_principio}), estableciendo las condiciones de borde que necesita la malla fina para ejecutar su propia inducción hacia atrás con alta resolución. Es en esa inducción interna donde el modelo detecta con precisión quirúrgica los cruces de barrera que la malla gruesa no podía resolver.
 
 \begin{figure}[H]
 \centering
@@ -211,6 +213,9 @@ El verdadero test de un método numérico no es solo su precisión sino su relac
 El problema del RTM es que cuando $S_0$ está muy cerca de $H$, la condición de alineación fuerza a elegir valores de $n$ prohibitivamente grandes. En ese escenario, el costo computacional del RTM crece de manera desproporcionada (potencialmente en varios órdenes de magnitud) para lograr una precisión aceptable. El AMM resuelve este problema con una arquitectura completamente diferente, en lugar de aumentar la resolución de todo el árbol, concentra los nodos adicionales únicamente en la vecindad de $H$, manteniendo el árbol grueso para el resto del dominio. El resultado es que el número total de nodos adicionales requeridos es mínimo, y la ventaja computacional frente al RTM es especialmente pronunciada precisamente cuando $S_0 \approx H$, que es la situación de mayor interés práctico. Esta mejora en eficiencia fue documentada por \cite{figlewski1999adaptive} en el artículo original del método.
 
 \section{AMM para Opciones Vanilla}
+\label{sec:amm_vanilla}
+
+Aunque el enfoque principal de este trabajo recae sobre las opciones barrera, las siguientes secciones (\ref{sec:amm_vanilla} y \ref{sec:amm_greek}) ilustran el Modelo de Malla Adaptativa utilizando opciones estándar (vanilla) como caso de estudio. Esta separación temporal del problema de la barrera se realiza con un fin didáctico, para explicar de forma aislada las arquitecturas específicas desarrolladas para resolver la no linealidad alrededor del precio de ejercicio al vencimiento y el cálculo numérico de las griegas en el instante inicial $t=0$. No obstante, es fundamental destacar que la arquitectura del AMM es inherentemente modular y flexible. Las técnicas que se exponen a continuación, como el refinamiento focalizado en el strike y la ramificación cuadrinomial, son totalmente complementarias y pueden superponerse de forma natural a la estructura de banda continua desarrollada para opciones barrera en la Sección \ref{sec:amm_barrier}. Esta modularidad permite combinar distintas mallas en un mismo árbol para obtener, por ejemplo, griegas de alta precisión en opciones barrera sin arrastrar errores de discretización en el precio.
 
 Para opciones europeas o americanas estándar, la mayor no linealidad ocurre alrededor del precio de ejercicio $K$ al vencimiento $T$.
 
@@ -280,6 +285,7 @@ AMM-2 & 1000 & 1,002,081 & 8.5854 & 0.000016 & 0.000085 & 0.000014 \\
 \end{table}
 
 \section{AMM para el Cálculo de Griegas}
+\label{sec:amm_greek}
 
 Las griegas Delta ($\Delta$) y Gamma ($\Gamma$) miden la sensibilidad del precio de la opción ante cambios en el precio del activo subyacente. Numéricamente, se calculan como derivadas aproximadas: se evalúa el modelo en dos (o tres) precios iniciales levemente distintos y se estima la pendiente (o curvatura) de la función de valor. A este procedimiento se lo llama \textbf{perturbación} y por lo general se ``perturba'' el precio inicial $S_0$ en una cantidad pequeña $\epsilon$ hacia arriba y hacia abajo, se obtiene el valor de la opción en cada caso, y luego se aplica la fórmula de diferencias finitas.
 

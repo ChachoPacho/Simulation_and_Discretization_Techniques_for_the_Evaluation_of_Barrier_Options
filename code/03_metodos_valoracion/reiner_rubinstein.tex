@@ -1,5 +1,5 @@
 \chapter{Método 1: Fórmulas Analíticas de Reiner y Rubinstein}
-\label{sec:metodo_rr}
+\label{chapter:metodo_rr}
 
 El trabajo seminal de \cite{reiner1991breaking} proporciona una metodología sistemática para obtener fórmulas cerradas para los ocho tipos básicos de opciones barrera europeas bajo el modelo de Black-Scholes.
 
@@ -42,17 +42,20 @@ Recordemos que la prima de cualquier opción se calcula como el valor esperado d
 Este \textit{payoff} es una variable aleatoria y el valor esperado se calcula utilizando la función de densidad de la variable subyacente (el logaritmo del retorno) al momento del ejercicio. Para calcular este valor esperado considerando los diferentes tipos de trayectorias (con y sin cruce de barrera), Reiner y Rubinstein proponen tres densidades fundamentales:
 
 \begin{itemize}
-    \item $f(u)$: densidad tradicional del logaritmo natural del activo al vencimiento, sin considerar la trayectoria. Se utiliza para modelar las trayectorias donde \textbf{no se cruza} la barrera. Matemáticamente:
+    \item $f(u)$: densidad tradicional del logaritmo natural del activo al vencimiento ($u \in \mathbb{R}$), sin considerar la trayectoria. Se utiliza para modelar las trayectorias donde \textbf{no se cruza} la barrera. Matemáticamente:
     \begin{equation*}
         f(u)=\frac{1}{\sigma \sqrt{2\pi (T-t)}} e^{-v^2/2} \quad \text{donde} \quad v=\frac{u-\mu (T-t)}{\sigma \sqrt{T-t}}
     \end{equation*}
     con $\mu=r - q - \frac{1}{2}\sigma^2$.
-    \item $g(u)$: densidad especial que incorpora información sobre la trayectoria mediante el principio de reflexión. Pondera exclusivamente aquellas trayectorias que \textbf{sí cruzaron} la barrera en algún momento pero que terminaron en un nivel particular. Matemáticamente:
+    \item $g(u)$: densidad especial ($u \in \mathbb{R}$) que incorpora información sobre la trayectoria mediante el principio de reflexión. Pondera exclusivamente aquellas trayectorias que \textbf{sí cruzaron} la barrera en algún momento pero que terminaron en un nivel particular. Matemáticamente:
     \begin{equation*}
         g(u)=e^{2\eta\alpha \mu \sigma^{-2}} \frac{1}{\sigma \sqrt{2\pi (T-t)}} e^{-v_g^2/2} \quad \text{donde} \quad v_g=\frac{u - 2\eta\alpha - \mu (T-t)}{\sigma \sqrt{T-t}}
     \end{equation*}
     con $\alpha=\ln(H/S)$ y donde $\eta$ es un parámetro direccional que toma el valor $1$ si la barrera está por debajo del precio inicial (\textit{Down}) y $-1$ si está por encima (\textit{Up}).
-    \item $h(\tau)$: densidad del tiempo de primer pasaje. Se utiliza para modelar la probabilidad de que la barrera sea tocada exactamente en el instante $\tau$, siendo útil para pagar rebates en el momento del toque/cruce de la barrera.
+    \item $h(\tau)$: densidad del tiempo de primer pasaje. Se utiliza para modelar la probabilidad de que la barrera sea tocada exactamente en el instante $\tau > 0$, siendo útil para pagar rebates en el momento del toque/cruce de la barrera. Matemáticamente:
+    \begin{equation*}
+        h(\tau) = \frac{-\eta \alpha}{\sigma \sqrt{2\pi \tau^3}} e^{-\frac{(-\eta\alpha + \eta\mu \tau)^2}{2\sigma^2 \tau}}
+    \end{equation*}
 \end{itemize}
 
 \section{Desarrollo para una Opción Call Down-and-In}

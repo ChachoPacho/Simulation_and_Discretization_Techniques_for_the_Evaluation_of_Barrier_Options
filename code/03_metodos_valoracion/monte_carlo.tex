@@ -1,6 +1,6 @@
 
 \chapter{Método 4: Monte Carlo para Opciones Americanas}
-\label{sec:metodo_montecarlo}
+\label{chapter:metodo_montecarlo}
 
 La simulación de Monte Carlo es una técnica fundamental en finanzas computacionales que permite valorar derivados complejos mediante la generación de trayectorias aleatorias del precio del activo subyacente. Aunque es naturalmente adecuada para opciones europeas, su aplicación a opciones americanas presenta desafíos significativos debido a la posibilidad de ejercicio anticipado.
 
@@ -89,7 +89,7 @@ El problema es que en Monte Carlo avanzamos hacia adelante en el tiempo, pero la
 
 Este problema circular requiere un enfoque sofisticado.
 
-\chapter{Método de Longstaff-Schwartz (LSM)}
+\section{Método de Longstaff-Schwartz (LSM)}
 
 La simulación de Monte Carlo enfrenta una paradoja fundamental cuando se aplica a opciones americanas, derivada de la tensión entre la dirección temporal de la simulación y la naturaleza de la decisión de ejercicio óptimo. En Monte Carlo, generamos trayectorias aleatorias del precio del activo avanzando hacia adelante en el tiempo, desde $t=0$ hasta el vencimiento $T$. Sin embargo, para decidir si es óptimo ejercer la opción en un punto intermedio $t_j$, necesitamos comparar el valor de ejercicio inmediato (conocido) con el valor de continuación, que es el valor esperado de mantener la opción viva. Este valor de continuación depende de todas las decisiones de ejercicio futuras, que a su vez dependen de valores de continuación aún más futuros, creando una dependencia circular que no puede resolverse avanzando hacia adelante. El método de Longstaff-Schwartz resuelve esta paradoja mediante un truco estadístico elegante basado en regresión de mínimos cuadrados. La idea es generar primero todas las trayectorias completas hasta el vencimiento y luego trabajar hacia atrás en el tiempo (como en los árboles). En cada punto de decisión $t_j$, el método utiliza regresión para aproximar el valor de continuación como una función del precio actual del activo, típicamente usando polinomios de Laguerre como funciones base. Específicamente, para todas las trayectorias que están in-the-money en $t_j$, se realiza una regresión donde la variable independiente es el precio $S_{t_j}$ y la variable dependiente es el valor descontado que esas trayectorias alcanzaron en $t_{j+1}$ (conocido porque ya trabajamos hacia atrás desde el final). Los coeficientes de regresión resultantes proporcionan una estimación del valor de continuación condicional al precio actual, permitiendo compararlo con el valor de ejercicio inmediato y tomar la decisión óptima. Este enfoque convierte un problema de optimización dinámica intratable en una secuencia de problemas de regresión estándar, cada uno resoluble eficientemente mediante mínimos cuadrados ordinarios.
 
@@ -173,7 +173,7 @@ Para opciones americanas con barreras, el algoritmo LSM se modifica para incorpo
     \item \textbf{Knock-in}: La trayectoria solo puede ejercerse después de que se haya cruzado la barrera. Antes del cruce, solo se considera el valor de continuación.
 \end{itemize}
 
-\section{Ventajas y Limitaciones del Método LSM}
+\subsection{Ventajas y Limitaciones del Método LSM}
 
 \textbf{Ventajas:}
 \begin{itemize}
@@ -191,7 +191,7 @@ Para opciones americanas con barreras, el algoritmo LSM se modifica para incorpo
     \item \textbf{Costo computacional}: Para alta precisión, puede ser más lento que métodos de árbol para problemas de baja dimensionalidad
 \end{itemize}
 
-\section{Comparación con Otros Métodos}
+\subsection{Comparación con Otros Métodos}
 
 El método LSM es particularmente valioso cuando:
 \begin{itemize}
