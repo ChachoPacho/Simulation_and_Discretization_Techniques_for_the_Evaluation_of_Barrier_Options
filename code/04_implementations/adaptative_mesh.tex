@@ -386,11 +386,16 @@ Se evaluó el desempeño del modelo en el escenario crítico donde el precio ini
 \label{tab:amm_results}
   \begin{tabular}{|l|c|c|c|}
     \hline
-    \textbf{Método} & \textbf{Pasos de Tiempo (N)} & \textbf{Valor Calculado} & \textbf{Error Relativo} \\
-    \hline Solución Exacta (Merton) & - & \textbf{$\approx 0.161648$} & - \\
-    \hline Árbol Trinomial ($M=0$) & N/A & \textit{Fallo (Oscilación)} & $>100\%$ \\
-    \hline AMM Nivel 2 ($M=2$) & $6083$ & $0.161312$ & $0.21\%$ \\
-    \hline AMM Nivel 4 ($M=4$) & $380$ & \textbf{$0.161532$} & $0.07\%$ \\
+    \textbf{Método} & \textbf{Timesteps} & \textbf{Valor Calculado} & \textbf{Err. Relativo} \\
+    & \textbf{(N)} & & \\
+    \hline Solución Exacta & - & \textbf{$\approx 0.161648$} & - \\
+    (Merton) & & & \\
+    \hline Árbol Trinomial & N/A & \textit{Fallo (Oscilación)} & $>100\%$ \\
+    ($M=0$) & & & \\
+    \hline AMM Nivel 2 & $6083$ & $0.161312$ & $0.21\%$ \\
+    ($M=2$) & & & \\
+    \hline AMM Nivel 4 & $380$ & \textbf{$0.161532$} & $0.07\%$ \\
+    ($M=4$) & & & \\
     \hline
   \end{tabular}
 \end{table}

@@ -7,29 +7,29 @@ Esta técnica se fundamenta en los supuestos estándar de la teoría de valoraci
 
 \section{Concepto de Replicación Estática}
 
-El concepto central de la replicación estática radica en igualar los flujos de caja y los valores de frontera de la opción objetivo utilizando un portafolio de instrumentos más simples.
+El concepto central de la replicación estática radica en igualar los flujos de caja y los valores de frontera de la opción objetivo utilizando un portafolio de instrumentos más simples. En este contexto, se denomina ``frontera'' a los límites espaciales y temporales que definen el contrato de la opción, típicamente, esto incluye el nivel de precio del activo subyacente que actúa como barrera (donde la opción se activa o desactiva) y la fecha de vencimiento.
 
 \subsubsection*{La idea: replicación con un portafolio de opciones vanilla} 
 
 La estrategia consiste en construir un portafolio de opciones estándar (calls y puts europeas con diferentes precios de ejercicio y vencimientos) que replique el valor de la opción exótica en sus fronteras. Por ejemplo, para una opción barrera up-and-out (que deja de existir si el precio del subyacente toca un nivel superior), el objetivo es crear un portafolio que tenga el mismo pago que la opción estándar al vencimiento (si no toca la barrera), pero cuyo valor neto sea cero si el precio del activo alcanza la barrera antes del vencimiento.
 
-Esto se logra ``anulando'' el valor de la opción original en la barrera mediante la venta en corto de otras opciones que tengan valor positivo en ese mismo punto. De esta manera, el portafolio estático imita el comportamiento de ``desaparición'' de la opción barrera sin necesidad de vender la opción exótica en sí misma.
+Esto se logra ``anulando'' el valor de la opción original en la barrera mediante la venta en corto de otras opciones que tengan valor positivo en ese mismo punto. Es importante aclarar que la ``venta en corto'' (\textit{short selling}) consiste en tomar una posición vendedora sobre un instrumento que no se posee, en el caso de las opciones, implica emitir el contrato asumiendo sus obligaciones a cambio de recibir una prima inicial. De esta manera, el portafolio estático imita el comportamiento de ``desaparición'' de la opción barrera sin necesidad de vender la opción exótica en sí misma.
 
 \subsubsection*{Fundamento teórico: ¿Por qué funciona?} 
 
-La validez del método descansa en el Principio de Replicación Estática. Este principio establece que si dos portafolios tienen los mismos valores en todas las fronteras de una región determinada (precio del activo y tiempo) y satisfacen la misma ecuación diferencial (la ecuación backward o de Black-Scholes) dentro de dicha región, entonces deben tener el mismo valor en cualquier punto interior de esa región.
+La validez del método descansa en el Principio de Replicación Estática. Este principio establece que si dos portafolios tienen los mismos valores en todas las fronteras de una región determinada (precio del activo y tiempo) y satisfacen la misma ecuación diferencial (la ecuación de Black-Scholes) dentro de dicha región, entonces deben tener el mismo valor en cualquier punto interior de esa región.
 
-Por lo tanto, no es necesario igualar el valor de la opción en cada punto posible del futuro; basta con construir un portafolio que coincida con el valor de la opción objetivo en sus fronteras naturales (por ejemplo, al vencimiento y sobre la barrera de precio). Una vez que los valores en la frontera están alineados, la teoría de valoración por inducción hacia atrás (backward induction) garantiza que el valor actual y la sensibilidad del portafolio replicante serán iguales a los de la opción objetivo.
+Por lo tanto, no es necesario igualar el valor de la opción en cada punto posible del futuro; basta con construir un portafolio que coincida con el valor de la opción objetivo en sus fronteras naturales (al vencimiento y sobre la barrera de precio). Una vez que los valores en la frontera están alineados, la teoría de valoración por inducción hacia atrás (backward induction) garantiza que el valor actual y la sensibilidad del portafolio replicante serán iguales a los de la opción objetivo.
 
 \subsubsection*{Ventajas frente a la cobertura dinámica} 
 
-La principal ventaja de este método es que elimina la necesidad de rebalanceo continuo. La cobertura dinámica tradicional (Delta hedging) requiere ajustar las posiciones constantemente a medida que pasa el tiempo o cambia el precio del activo, lo cual presenta dos dificultades mayores: 
+La principal ventaja de este método es que elimina la necesidad de rebalanceo continuo. Cabe definir previamente que una ``cobertura'' (\textit{hedge}) es una estrategia financiera diseñada para reducir o mitigar el riesgo de mercado, y una ``posición'' es la cantidad de un activo o derivado que un inversor posee (si está comprado) o debe (si está vendido). La cobertura dinámica tradicional (como el \textit{Delta hedging}) requiere ajustar estas posiciones constantemente a medida que pasa el tiempo o cambia el precio del activo, lo cual presenta dos dificultades mayores: 
 \begin{enumerate} 
   \item El ajuste continuo es imposible en la práctica y el rebalanceo discreto genera errores de cobertura. 
   \item Los costos de transacción asociados al ajuste frecuente pueden erosionar el margen de beneficio de la opción. 
 \end{enumerate}
 
-La replicación estática utiliza pesos fijos determinados al inicio, evitando estos costos y dificultades operativas. Además, es particularmente útil para opciones exóticas con alta ``gamma'' (como las opciones barrera cerca de su nivel de activación/desactivación), donde la cobertura dinámica se vuelve costosa e imprecisa debido a la necesidad de realizar grandes ajustes ante pequeños movimientos del mercado.
+La replicación estática utiliza pesos fijos determinados al inicio, evitando estos costos y dificultades operativas. Además, es particularmente útil para opciones exóticas con un valor $\Gamma$ alto (como las opciones barrera cerca de su nivel de activación/desactivación), donde la cobertura dinámica se vuelve costosa e imprecisa debido a la necesidad de realizar grandes ajustes ante pequeños movimientos del mercado.
 
 \section{Metodología de Derman-Ergener-Kani}
 
