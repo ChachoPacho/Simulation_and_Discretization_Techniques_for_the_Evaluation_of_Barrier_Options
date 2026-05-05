@@ -184,67 +184,6 @@ Con las condiciones de frontera superior ($B_{2,j}$ calculados en Fase 2) e infe
 \paragraph{Generalización Recursiva (Para $M>1$)} 
 
 Si el modelo utiliza múltiples niveles de refinamiento ($M>1$), este proceso se vuelve recursivo. La propiedad de isomorfismo del AMM permite que, una vez resuelta la malla de Nivel 1 (Nodos $B$), esta actúe como la ``Malla Gruesa'' para el Nivel 2 (Nodos $C$).
-Un código preliminar es:
-
-\begin{verbatim}
-def Resolver_AMM(S0, K, T, r, q, sigma, H, M):
-  # 1. CALIBRACIÓN GLOBAL (Para la malla más profunda)
-  h_coarse_base, k_base, N_base = calibrar_geometria(S0, H, T, sigma, M)
-
-  # 2. CONSTRUIR MALLA BASE (NIVEL 0)
-  A_grid = build_coarse_mesh(S0, K, T, r, q, sigma, H, h_coarse_base, k_base, N_base)
-  
-  # 3. BUCLE DE REFINAMIENTO (NIVEL 1 hasta M)
-  current_grid = A_grid
-  current_h, current_k, current_N = h_coarse_base, k_base, N_base
-  
-  for level in range(1, M + 1):
-    fine_grid = build_fine_mesh(current_grid, current_h, current_k, current_N, r, 
-                  q, sigma, H, K) # La nueva malla fina se "injerta" en la actual
-    
-    current_grid = fine_grid # La fina de hoy es la gruesa de mañana
-    current_h, current_k, current_N = actualizar_parametros(...)
-  
-  return current_grid[1, 0] # Retornar el valor actual (t=0) del nodo central
-
-def build_coarse_mesh(S0, K, T, r, q, sigma, H, h, k, N):
-  pu_A, pm_A, pd_A = calcular_probs(k, h, r, q, sigma) # Eq. 9 para malla gruesa
-  
-  A_grid = initialize_coarse_mesh()
-  A_grid[max_price_nodes, N] = actualizar_payoff_terminal(...)
-  A_grid[:, 0:N-1] = Standard_Backward_Induction(...)
-  return A_grid
-
-def build_fine_mesh(coarse_grid, h_coarse, k_coarse, N_coarse, r, q, sigma, H, K):   
-  total_fine_steps = N_coarse * 4
-  B_grid = initialize_fine_mesh()
-  
-  # 1. INYECCIÓN DE NODOS (Eq. 11)
-  for j in range(N_coarse): # Lógica de interpolación (Eq. 12 y 13)
-    t_start = j * 4
-    B_grid[2, t_start] = coarse_grid[1, j] # El source siempre es la malla previa
-    V_Ad, V_Am, V_Au = coarse_grid[:, j+1] # Nodos intermedios (Interpolación)
-    
-    for sub_step in range(1, 4):
-      dt_eff = (4 - sub_step) * (k_coarse / 4) # Distancia efectiva a próximo A
-      pu_adj, pm_adj, pd_adj = calcular_probs(dt_eff, h_coarse, r, q, sigma)
-      
-      # Valorar usando los nodos A del FUTURO
-      B_grid[2, t_start + sub_step] = (pu_adj * V_Au + 
-                                        pm_adj * V_Am + 
-                                        pd_adj * V_Ad) * np.exp(-r * dt_eff)
-    
-  # 2. RELLENO INTERNO (Backward Induction)
-  h_fine, k_fine = h_coarse / 2, k_coarse / 4
-  pu, pm, pd = calcular_probs(k_fine, h_fine, r, q, sigma)
-
-  B_grid[2, total_fine_steps] = coarse_grid[1, N_coarse]
-  B_grid[:, total_fine_steps] = actualizar_payoff_terminal(...)
-  B_grid[:, 0:total_fine_steps-1] = Standard_Backward_Induction(...)
-  return B_grid
-\end{verbatim}
-
-Esta estructura garantiza que la información fluya correctamente desde la resolución más baja hacia la más alta (flujo downward para barreras), permitiendo obtener el precio de alta precisión en $t=0$.
 
 \subsection{Detalles de Implementación}
 \label{sec:detalles_impl_arboles}
@@ -351,6 +290,78 @@ La mayor complejidad del AMM reside en los nodos ``colgantes'' de la interfaz (F
 
 \paragraph{3. El Bucle de Refinamiento Recursivo} 
 
+Este bucle es la implementación práctica de la propiedad de isomorfismo del AMM. Como el modelo es isomorfo, se pueden añadir niveles sucesivos de refinamiento aplicando exactamente el mismo procedimiento matemático. En el código, esto se refleja en cómo el bucle toma la malla fina recién generada y la convierte en la ``malla gruesa'' de la siguiente iteración (\texttt{current\_grid = fine\_grid}).
+
+\begin{lstlisting}[language=Python, caption={Generalización recursiva y bucle de refinamiento}]
+def Resolver_AMM(S0, K, T, r, q, sigma, H, M):
+  # 1. CALIBRACION GLOBAL (Para la malla mas profunda)
+  h_coarse_base, k_base, N_base = calibrar_geometria(
+                                    S0, H, T, sigma, M)
+
+  # 2. CONSTRUIR MALLA BASE (NIVEL 0)
+  A_grid = build_coarse_mesh(S0, K, T, r, q, sigma, H, 
+                          h_coarse_base, k_base, N_base)
+  
+  # 3. BUCLE DE REFINAMIENTO (NIVEL 1 hasta M)
+  current_grid = A_grid
+  current_h, current_k, current_N = h_coarse_base, k_base, N_base
+  
+  for level in range(1, M + 1):
+    # La nueva malla fina se "injerta" en la actual
+    fine_grid = build_fine_mesh(current_grid, current_h,
+                                current_k, current_N, r,
+                                q, sigma, H, K)
+    
+    current_grid = fine_grid # La fina de hoy es la gruesa de manana
+    current_h, current_k, current_N = actualizar_parametros(...)
+  
+  return current_grid[1, 0] # Retornar el valor actual (t=0) del nodo central
+
+def build_coarse_mesh(S0, K, T, r, q, sigma, H, h, k, N):
+  # Eq. 9 para malla gruesa
+  pu_A, pm_A, pd_A = calcular_probs(k, h, r, q, sigma)
+  
+  A_grid = initialize_coarse_mesh()
+  A_grid[max_price_nodes, N] = actualizar_payoff_terminal(...)
+  A_grid[:, 0:N-1] = Standard_Backward_Induction(...)
+  return A_grid
+
+def build_fine_mesh(coarse_grid, h_coarse, k_coarse, 
+  N_coarse, r, q, sigma, H, K):   
+  total_fine_steps = N_coarse * 4
+  B_grid = initialize_fine_mesh()
+  
+  # 1. INYECCION DE NODOS (Eq. 11)
+  for j in range(N_coarse): # Logica de interpolacion (Eq. 12 y 13)
+    t_start = j * 4
+
+    # El source siempre es la malla previa
+    B_grid[2, t_start] = coarse_grid[1, j]
+    
+    # Nodos intermedios (Interpolacion)
+    V_Ad, V_Am, V_Au = coarse_grid[:, j+1]
+    
+    for sub_step in range(1, 4):
+      # Distancia efectiva a proximo A
+      dt_eff = (4 - sub_step) * (k_coarse / 4)
+      pu_adj, pm_adj, pd_adj = calcular_probs(dt_eff, h_coarse, r, q, sigma)
+      
+      # Valorar usando los nodos A del FUTURO
+      B_grid[2, t_start + sub_step] = (pu_adj * V_Au + 
+                                        pm_adj * V_Am + 
+                                        pd_adj * V_Ad) * np.exp(-r * dt_eff)
+    
+  # 2. RELLENO INTERNO (Backward Induction)
+  h_fine, k_fine = h_coarse / 2, k_coarse / 4
+  pu, pm, pd = calcular_probs(k_fine, h_fine, r, q, sigma)
+
+  B_grid[2, total_fine_steps] = coarse_grid[1, N_coarse]
+  B_grid[:, total_fine_steps] = actualizar_payoff_terminal(...)
+  B_grid[:, 0:total_fine_steps-1] = Standard_Backward_Induction(...)
+  return B_grid
+\end{lstlisting}
+
+Esta estructura garantiza que la información fluya correctamente desde la resolución más baja hacia la más alta (flujo \textit{downward} para barreras), permitiendo obtener el precio de alta precisión en $t=0$.
 \subsection{Validación} 
 \label{sec:validacion_arboles}
 
