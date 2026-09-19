@@ -66,13 +66,37 @@ Si $S_T = 90$, entonces $\text{Payoff}_{\text{Call}} = \max(90 - 105, 0) = 0$.
 \text{Payoff}_{\text{Put}} = \max(K - S_T, 0)
 \end{equation}
 
+En la \autoref{fig:payoffs_call_put} se ilustran los perfiles de beneficio neto (restando la prima pagada) para ambos tipos de contratos. Se aprecia claramente la asimetría del instrumento: para el comprador, el riesgo de pérdida se encuentra acotado de manera estricta al monto desembolsado por la prima inicial (zona sombreada en rojo), mientras que el potencial de ganancia se despliega en cuanto el precio del subyacente supera o perfora el umbral de equilibrio ($K + \text{prima}$ para una Call y $K - \text{prima}$ para una Put). En particular, la opción Put constituye el instrumento prototípico de cobertura para productores agropecuarios (por ejemplo, en el mercado de la soja), quienes la utilizan como un seguro de precio mínimo que les garantiza cubrir los costos operativos fijos o el arrendamiento del campo frente a eventuales desplomes de cotización.
+
+\begin{figure}[H]
+\centering
+\makebox[\textwidth][c]{%
+    \includegraphics[width=0.74\textwidth]{./02_marco_teorico/figures/dummy_payoff_call.png}\hspace{0.5cm}%
+    \includegraphics[width=0.74\textwidth]{./02_marco_teorico/figures/dummy_payoff_put.png}%
+}
+\caption{Perfiles de pagos (\textit{payoff}) y beneficio neto para opciones estándar Call (izquierda) y Put (derecha) con precio de ejercicio $K=100$ y prima de \$8. Las áreas verdes representan zonas de ganancia neta, mientras que las áreas rojas delimitan la pérdida máxima acotada al valor de la prima.}
+\label{fig:payoffs_call_put}
+\end{figure}
+
 \subsection{Opciones Europeas vs Americanas}
 
-Según el momento en que puede ejercerse la opción, se clasifican en europeas y americanas:
+Según la ventana temporal en la cual el comprador tiene la potestad de ejercer su derecho, las opciones se clasifican en dos grandes familias:
 
-\textbf{Opciones Europeas}: Solo pueden ejercerse en la fecha de vencimiento. Son más simples de valorar analíticamente.
+\textbf{Opciones Europeas}: Solo pueden ejercerse en la fecha exacta de vencimiento $T$. Su estructura es matemáticamente más manejable, ya que la distribución de probabilidad relevante se evalúa en un único instante temporal.
 
-\textbf{Opciones Americanas}: Pueden ejercerse en cualquier momento hasta el vencimiento. Esta flexibilidad adicional las hace más valiosas que sus contrapartes europeas, pero también más difíciles de valorar.
+\textbf{Opciones Americanas}: Pueden ejercerse en cualquier instante a lo largo de la vida del contrato ($t \in [0, T]$). Esta flexibilidad adicional otorga al tenedor la posibilidad de capturar ganancias de forma anticipada ante movimientos favorables del mercado, lo cual incrementa el valor del contrato (incorporando una prima por ejercicio anticipado) pero transforma su tasación en un complejo problema de parada óptima (\textit{optimal stopping problem}).
+
+La \autoref{fig:timelines_european_american} resume esquemáticamente la divergencia operativa entre ambos estilos. Esta distinción resultará determinante al abordar las técnicas numéricas de valoración: mientras que las opciones de estilo europeo admiten soluciones analíticas cerradas y métodos de malla trinomial directos, las opciones de estilo americano requerirán algoritmos especializados como el de Longstaff-Schwartz mediante simulación de Monte Carlo.
+
+\begin{figure}[H]
+\centering
+\makebox[\textwidth][c]{%
+    \includegraphics[width=0.74\textwidth]{./02_marco_teorico/figures/dummy_timeline_european.png}
+    \includegraphics[width=0.74\textwidth]{./02_marco_teorico/figures/dummy_timeline_american.png}
+}
+\caption{Comparación entre las líneas de tiempo de ejercicio de una opción europea (ejercicio exclusivo en $t=T$) y una opción americana (ejercicio admisible en cualquier instante continuo $t \in [0,T]$).}
+\label{fig:timelines_european_american}
+\end{figure}
 
 \subsection{Opciones Exóticas}
 
@@ -92,14 +116,20 @@ Las opciones exóticas son aquellas cuyas características difieren de las opcio
 
 Las opciones barrera son el foco principal de este trabajo. Su característica distintiva es que, a diferencia de las opciones tradicionales, su existencia depende de si el precio del activo subyacente alcanza o cruza un nivel de precio predeterminado (la barrera $H$) en algún instante durante la vida de la opción.
 
-Para asimilar esto más despacio, retomemos el \textbf{ejemplo práctico} de la sección anterior. El inversor compraba el derecho a adquirir una acción a un \textit{strike} de \$105 (sabiendo que hoy vale \$100). Ahora imaginemos que, para pagar una prima más barata, el inversor adquiere una \textbf{Opción Barrera tipo Call}.
-El contrato mantiene el \textit{strike} de \$105, pero le agregamos una condición extra: una barrera en \$90. Acuerdan que si el precio de la acción toca o cae por debajo de \$90 en \textit{cualquier momento} durante ese mes, la opción se \textbf{cancela automáticamente} (se desactiva).
-\begin{itemize}
-    \item Si la acción sube progresivamente a \$120 sin tocar nunca el límite de \$90, el inversor ejerce la opción al final del mes y obtiene su beneficio normalmente.
-    \item Pero si a mitad de mes hay una caída repentina y la acción toca los \$89, su opción deja de existir. Si luego la acción se recupera milagrosamente y termina el mes a \$120, el inversor ya no puede ejercerla, porque el contrato dejó de existir en el momento en que se cruzó la barrera.
-\end{itemize}
+Para asimilar esto más despacio, retomemos el \textbf{ejemplo práctico} de la sección anterior. Imaginemos a un productor agropecuario que desea asegurar la venta de su cosecha de soja a un precio de ejercicio $K = \$260/\text{tn}$, partiendo de una cotización actual de $S_0 = \$300/\text{tn}$. La compra de una opción Put \textit{vanilla} tradicional le ofrece una cobertura completa frente a cualquier descenso por debajo de \$260, pero a cambio de una prima elevada que reduce sustancialmente el margen de su negocio.
 
-Desde una perspectiva matemática y de programación algorítmica, esto significa que el \textit{payoff} ya no es una función simple del precio final $S_T$, sino que es necesario monitorear y registrar la función del precio $S_t$ en todo momento temporal $t$ para verificar si la condición $S_t \leq 90$ se cumple. Esto es lo que se conoce como un instrumento ``dependiente de la trayectoria'' (\textit{path-dependent}).
+Para abaratar el costo de esta póliza financiera, el productor puede optar por una \textbf{Opción Barrera}. Si considera que una caída moderada del mercado puede ser absorbida por su propia estructura operativa, pero teme una debacle severa en el precio, puede fijar una barrera de activación (por ejemplo, $H = \$220/\text{tn}$). El contrato nace inactivo y solo si la soja colapsa y perfora los \$220, la opción se activa automáticamente, cobrando vida como una Put estándar. Al renunciar a la cobertura en caídas menores intermedias, el comprador obtiene un descuento sustancial en la prima inicial.
+
+\begin{figure}[H]
+\centering
+\makebox[\textwidth][c]{%
+    \includegraphics[width=1.5\textwidth]{./02_marco_teorico/figures/dummy_soja_barrera.png}
+}
+\caption{Dinámica temporal del precio de un activo subyacente (por ejemplo, soja) frente a una opción barrera Up-and-Out fijada en $H = \$220$. El Escenario 1 (verde) muestra una evolución normal que no alcanza la barrera, manteniendo la opción viva hasta su vencimiento $T$. El Escenario 2 (rojo) exhibe un movimiento que toca la barrera $H$, provocando un evento de \textit{Knock-out} que extingue el contrato de forma irrevocable.}
+\label{fig:soja_barrera_trayectoria}
+\end{figure}
+
+Desde una perspectiva matemática y de programación algorítmica, la \autoref{fig:soja_barrera_trayectoria} evidencia que el \textit{payoff} ya no es una simple función del precio terminal $S_T$, sino que exige registrar y evaluar la trayectoria continua del precio $S_t$ en todo $t \in [0, T]$. Esta propiedad define a las opciones barrera como instrumentos estrictamente dependientes de la trayectoria (\textit{path-dependent}).
 
 \subsection{Clasificación de Opciones Barrera}
 

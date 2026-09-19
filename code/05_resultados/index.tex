@@ -187,7 +187,7 @@ Tras haber analizado el rendimiento individual de cada algoritmo frente a sus de
 
 \subsection{Resumen de Desempeño}
 
-Para sintetizar las propiedades observadas a lo largo de los experimentos numéricos, la Tabla 5.6 presenta un resumen conceptual del perfil de desempeño de las cuatro metodologías estudiadas.
+Para sintetizar las propiedades observadas a lo largo de los experimentos numéricos, la \autoref{tab:resumen_desempeno} presenta un resumen conceptual del perfil de desempeño de las cuatro metodologías estudiadas, mientras que la \autoref{tab:comparativa_practica} sistematiza la correspondencia entre los métodos y los perfiles de usuarios de la industria financiera (incorporando la dimensión operativa observada en la práctica de mercado).
 
 \begin{table}[H]
   \small
@@ -217,6 +217,45 @@ Para sintetizar las propiedades observadas a lo largo de los experimentos numér
   }
 \end{table}
 
+\begin{table}[H]
+  \small
+  \centering
+  \caption{Comparativa Práctica: Métodos de Valoración según Caso de Uso y Perfil Operativo}
+  \label{tab:comparativa_practica}
+  \makebox[\textwidth][c]{%
+    \begin{tabular}{l|p{3.5cm}|l|l|l}
+      \hline
+      \textbf{Método} & \textbf{Perfil de Usuario / Caso de Uso} & \textbf{Estilo} & \textbf{Velocidad} & \textbf{Precisión} \\
+      \hline
+      Analítico (R\&R) & Inversor / Benchmarking y calibración & Solo Europea & Instantánea & Exacta (5/5) \\
+      AMM & \textit{Broker} / Creador de mercado (alta frecuencia) & Europea / Americana & Milisegundos & Muy Alta (4/5) \\
+      Replicación Est. & Gestor de tesorería / Cobertura en bolsa & Solo Europea & Alta & Moderada (3/5) \\
+      Monte Carlo LSM & Analista cuantitativo / Derivados complejos & Europea / Americana & Segundos & Estocástica (2/5) \\
+      \hline
+    \end{tabular}
+  }
+\end{table}
+
+Las Figuras \ref{fig:errores_absolutos_global} y \ref{fig:tiempos_ejecucion_global} consolidan empíricamente el contraste de precisión y costo temporal entre los métodos deterministas evaluados en la batería completa de contratos.
+
+\begin{figure}[H]
+\centering
+\makebox[\textwidth][c]{%
+  \includegraphics[width=1.5\textwidth]{./05_resultados/figures/errores_absolutos.png}
+}
+\caption{Diferencia absoluta en escala logarítmica respecto al método exacto de Reiner-Rubinstein para diversas opciones barrera. Las variantes AMM (AMM-1 y AMM-2) exhiben errores despreciables del orden de $10^{-4}$ a $10^{-5}$, mientras que los portafolios estáticos muestran un error acotado que decrece conforme aumenta la cantidad de opciones de ajuste (de 6 a 24 fechas).}
+\label{fig:errores_absolutos_global}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\makebox[\textwidth][c]{%
+  \includegraphics[width=1.5\textwidth]{./05_resultados/figures/tiempos_ejecucion.png}
+}
+\caption{Tiempos de ejecución en segundos (escala logarítmica) requeridos por cada método de valoración. El cálculo analítico y el AMM resuelven la tasación en pocos milisegundos, garantizando la viabilidad de cálculo masivo en tiempo real.}
+\label{fig:tiempos_ejecucion_global}
+\end{figure}
+
 El análisis conjunto revela un claro compromiso (trade-off) entre eficiencia computacional y flexibilidad. Por un lado, las fórmulas cerradas de Reiner y Rubinstein ofrecen respuestas exactas de forma instantánea, pero exigen que el contrato cumpla estrictamente con los supuestos teóricos de Black-Scholes (monitoreo continuo, volatilidad constante y ausencia de ejercicio anticipado). Cuando se requiere relajar estos supuestos sin perder la eficiencia, el Modelo de Malla Adaptativa (AMM) se posiciona como la herramienta numérica más potente. Al injertar alta resolución espacial únicamente donde es estrictamente necesario, el AMM logra replicar la precisión teórica evadiendo la explosión combinatoria que sufren los árboles estándar.
 
 En el otro extremo del espectro, la simulación de Monte Carlo con el método de Longstaff-Schwartz (LSM) sacrifica la convergencia determinista y el bajo tiempo de CPU a cambio de una extensibilidad casi ilimitada. Al no sufrir la maldición de la dimensionalidad, el LSM es capaz de incorporar monitoreo discreto de la barrera y decisiones de ejercicio americano sin que la estructura del algoritmo colapse. Finalmente, la Replicación Estática ocupa un lugar único en esta comparativa: más que un modelo de tasación puramente matemática, es una estrategia de ingeniería financiera. Su precisión no se mide en decimales matemáticos, sino en la capacidad empírica de anular el riesgo de la barrera utilizando instrumentos líquidos y reales.
@@ -227,9 +266,9 @@ La elección del método adecuado en la práctica profesional no obedece a una j
 
 Las \textbf{fórmulas de Reiner y Rubinstein} son el estándar de oro para la validación y el benchmarking académico. Su uso es óptimo como ``oráculo'' en el desarrollo de software financiero, permitiendo a los programadores calibrar el error de sus motores numéricos antes de aplicarlos a casos donde no existe una solución cerrada.
 
-El \textbf{Modelo de Malla Adaptativa (AMM)} es la opción indiscutible cuando el problema requiere tasaciones intensivas y repetitivas sobre opciones de un solo activo subyacente. Un caso de uso óptimo para el AMM es el cálculo de volatilidades implícitas. Puesto que los algoritmos de búsqueda de raíces requieren valorar la misma opción decenas de veces ajustando el  parámetro de volatilidad, un método estocástico como Monte Carlo introduciría ruido y un árbol estándar tomaría demasiado tiempo si el precio está cerca de la barrera. El AMM, con su convergencia suave y tiempos de respuesta de fracciones de segundo, resuelve este problema de manera ideal.
+El \textbf{Modelo de Malla Adaptativa (AMM)} es la opción indiscutible cuando el problema requiere tasaciones intensivas y repetitivas sobre opciones de un solo activo subyacente. Un caso de uso óptimo para el AMM es el cálculo de volatilidades implícitas. Puesto que los algoritmos de búsqueda de raíces requieren valorar la misma opción decenas de veces ajustando el parámetro de volatilidad, un método estocástico como Monte Carlo introduciría ruido y un árbol estándar tomaría demasiado tiempo si el precio está cerca de la barrera. El AMM, con su convergencia suave y tiempos de respuesta de fracciones de segundo, resuelve este problema de manera ideal.
 
-La \textbf{Replicación Estática} encuentra su caso de uso óptimo en las mesas de trading institucional y en la gestión directa de riesgos. Cuando un banco emite una opción exótica fuertemente no lineal (alta gamma cerca de la barrera), la cobertura dinámica (Delta hedging) se vuelve imprecisa y prohibitivamente costosa debido a los costos de transacción. En estos escenarios, construir un portafolio estático con opciones estándar es la estrategia preferida, ya que permite ``inmunizar'' el libro de operaciones frente a los saltos bruscos del mercado sin necesidad de rebalanceo continuo.
+La \textbf{Replicación Estática} encuentra su caso de uso óptimo en las mesas de trading institucional y en la gestión directa de riesgos. Cuando se busca evitar la exposición a derivados exóticos en mercados OTC opacos y se prefiere operar en bolsas reguladas transparentes (como Matba-ROFEX o ByMA), construir un portafolio estático con opciones estándar es la estrategia preferida, ya que permite ``inmunizar'' la posición frente a los saltos del mercado sin necesidad de rebalanceo dinámico continuo ni comisiones permanentes.
 
 Por último, el método \textbf{LSM de Monte Carlo} es la herramienta esencial para derivados de alta complejidad que escapan a los modelos de redes. Su uso es óptimo cuando la opción barrera es de estilo americano, cuando la barrera se monitorea discretamente (por ejemplo, observando el precio solo al cierre de cada día, lo cual invalida las fórmulas continuas), o cuando el derivado depende de múltiples factores de riesgo interrelacionados (como opciones exóticas sobre cestas de acciones).
 

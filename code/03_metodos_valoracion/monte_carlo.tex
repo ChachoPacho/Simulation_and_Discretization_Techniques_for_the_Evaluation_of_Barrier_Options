@@ -75,6 +75,15 @@ En cada paso se verifica si $S_{t_j}$ ha cruzado la barrera $H$:
 
 \textbf{Sesgo de Discretización}: El monitoreo discreto puede no detectar cruces que ocurren entre puntos de observación. Este sesgo se reduce aumentando $N$, pero a costa de mayor tiempo computacional.
 
+\begin{figure}[H]
+\centering
+\makebox[\textwidth][c]{%
+    \includegraphics[width=1.5\textwidth]{./03_metodos_valoracion/figures/mc_20_trayectorias_soja.png}
+}
+\caption{Muestra de 20 trayectorias simuladas para una opción Call Up-and-Out sobre el precio de la soja ($S_0=\$200, K=\$200, H=\$220, T=1$). Las líneas rojas representan trayectorias que tocan la barrera $H$, quedando invalidadas con valor cero. Las líneas verdes corresponden a trayectorias que permanecen por debajo de $H$ y expiran en zona de ganancia ($S_T > K$). Las líneas grises expiran sin valor. El precio de la opción se estima como el promedio descontado de los pagos terminales válidos.}
+\label{fig:mc_20_trayectorias_soja}
+\end{figure}
+
 \subsection{El Problema Fundamental: ¿Cuándo Ejercer?}
 
 Para opciones americanas, el desafío es determinar la estrategia de ejercicio óptima. En cada punto de decisión $t_j$, necesitamos saber si es óptimo ejercer o continuar.
@@ -91,8 +100,18 @@ En cada punto de decisión $t_j$, el modelo estima el valor de continuación con
 
 \subsection{Idea Central}
 
-La intuición del método es:
+La intuición del método se ilustra en el diagrama de flujo de la \autoref{fig:dummy_lsm_decision}:
 
+\begin{figure}[H]
+\centering
+\makebox[\textwidth][c]{%
+    \includegraphics[width=1.5\textwidth]{./03_metodos_valoracion/figures/dummy_lsm_decision.png}
+}
+\caption{Diagrama de decisión y retroceso temporal en el algoritmo de Longstaff-Schwartz (LSM). En cada paso $t_j$, para cada trayectoria simulada se compara el valor intrínseco de ejercicio inmediato $h(t_j)$ con el valor de continuación $C(t_j)$ obtenido mediante la regresión transversal con polinomios de Laguerre.}
+\label{fig:dummy_lsm_decision}
+\end{figure}
+
+El procedimiento recursivo opera en cinco etapas:
 \begin{enumerate}
     \item Generar todas las trayectorias completas desde $t=0$ hasta $t=T$
     \item Trabajar hacia atrás en el tiempo (backward induction)
@@ -184,6 +203,38 @@ Para opciones americanas con barreras, el algoritmo LSM se modifica para incorpo
     \item \textbf{Elección de funciones base}: El rendimiento depende de la elección apropiada de funciones base
     \item \textbf{Costo computacional}: Para alta precisión, puede ser más lento que métodos de árbol para problemas de baja dimensionalidad
 \end{itemize}
+
+\subsection{Análisis de Convergencia y Trade-off Computacional}
+
+La simulación de Monte Carlo se rige por leyes asintóticas estadísticas fundamentalmente distintas a la convergencia determinista de los árboles. La precisión de la estimación se cuantifica a través del error estándar de la media ($\text{SE} = \sigma / \sqrt{M}$), el cual disminuye a una tasa proporcional a $O(1/\sqrt{M})$, independientemente de la dimensionalidad del contrato.
+
+En las Figuras \ref{fig:mc_convergence_plots} y \ref{fig:mc_time_plot} se analizan experimentalmente las propiedades de convergencia y costo computacional del algoritmo LSM para una opción barrera americana a lo largo de un rango de simulaciones que se extiende desde $1.000$ hasta $1.000.000$ de trayectorias.
+
+\begin{figure}[H]
+\centering
+\makebox[\textwidth][c]{%
+    \includegraphics[width=0.74\textwidth]{./03_metodos_valoracion/figures/mc_convergence.png}%
+    \includegraphics[width=0.74\textwidth]{./03_metodos_valoracion/figures/mc_convergence_error.png}%
+}
+\caption{Convergencia estadística del método de Monte Carlo con algoritmo Longstaff-Schwartz. A la izquierda, evolución del precio estimado y estrechamiento del intervalo de confianza al $95\%$ conforme crece el número de trayectorias $M$. A la derecha, caída del error estándar (SE) en escala logarítmica, confirmando un ajuste exacto a la tasa teórica asintótica $O(1/\sqrt{M})$.}
+\label{fig:mc_convergence_plots}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\makebox[\textwidth][c]{%
+    \includegraphics[width=1.5\textwidth]{./03_metodos_valoracion/figures/mc_convergence_time.png}
+}
+\caption{Escalabilidad del tiempo de ejecución (en segundos) en función del número de iteraciones o trayectorias de Monte Carlo simuladas. El crecimiento es estrictamente lineal respecto a $M$, lo que expone el compromiso computacional del método.}
+\label{fig:mc_time_plot}
+\end{figure}
+
+Este análisis pone de manifiesto el compromiso computacional fundamental (\textit{trade-off}) inherente a Monte Carlo:
+\begin{itemize}
+    \item Para reducir el margen de error a la mitad, es imperativo cuadruplicar el número de caminos generados ($M \times 4$).
+    \item Para ganar un decimal de precisión (dividir el error por 10), el volumen de simulación y el tiempo de cálculo deben multiplicarse por 100 ($M \times 100$).
+\end{itemize}
+Como consecuencia, si bien el algoritmo LSM es el único capaz de tasar opciones americanas con múltiples factores de riesgo o monitoreo de barrera arbitrario, resulta computacionalmente ineficiente para problemas unidimensionales sencillos en comparación con modelos de malla adaptativa como el AMM.
 
 \subsection{Comparación con Otros Métodos}
 

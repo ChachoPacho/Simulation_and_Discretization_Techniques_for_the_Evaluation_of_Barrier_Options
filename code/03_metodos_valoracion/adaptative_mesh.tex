@@ -49,6 +49,15 @@ p = \frac{e^{(r-\delta)\Delta t} - d}{u - d}
 En un árbol binomial, la valoración procede por inducción hacia atrás de forma análoga al trinomial, pero con solo dos ramas. Se parte de los valores terminales en $T$ (el payoff de la opción) y se retrocede nodo a nodo calculando $V(S,t) = e^{-r\Delta t}[p \cdot V(Su,t+\Delta t) + (1-p) \cdot V(Sd,t+\Delta t)]$. El árbol binomial tiene la ventaja de su simplicidad, pero su resolución más gruesa (dos estados por nodo en lugar de tres) lo hace más susceptible al error de no linealidad, manifestándose en la conocida oscilación ``par-impar'' de la convergencia.
 \end{tcolorbox}
 
+\begin{figure}[H]
+\centering
+\makebox[\textwidth][c]{%
+    \includegraphics[width=1.5\textwidth]{./03_metodos_valoracion/figures/dummy_binomial_tree.png}
+}
+\caption{Evolución del precio de un activo en un árbol binomial recombinante de Cox, Ross y Rubinstein (CRR) a tres pasos temporales ($t=0, 1, 2, 3$). En cada nodo, el precio puede ascender con probabilidad $p$ o descender con probabilidad $1-p$.}
+\label{fig:dummy_binomial_tree}
+\end{figure}
+
 \subsection{Árbol Trinomial}
 
 En cada nodo del árbol con precio $S$, el precio en el siguiente paso temporal puede ser:
@@ -83,9 +92,9 @@ La inducción hacia atrás (backward induction) es el procedimiento algorítmico
 \begin{figure}[H]
 \centering
 \makebox[\textwidth][c]{%
-\includegraphics[width=1.5\textwidth]{./03_metodos_valoracion/figures/trinomial_tree_structure.png}
+    \includegraphics[width=1.5\textwidth]{./03_metodos_valoracion/figures/dummy_trinomial_tree.png}
 }
-\caption{Estructura de un árbol trinomial con 3 pasos temporales. Desde cada nodo, el precio puede moverse hacia arriba (multiplicado por $u=1.15$, verde), mantenerse (multiplicado por $m=1$, azul), o bajar (multiplicado por $d=1/u\approx 0.870$, rojo). Las probabilidades neutrales al riesgo son $p_u=0.25$, $p_m=0.50$, $p_d=0.25$. El árbol es recombinante: los nodos que alcanzan el mismo precio se fusionan.}
+\caption{Estructura de ramificación y dinámica de precios en un árbol trinomial estándar recombinante a tres pasos temporales. Desde cada nodo se despliegan tres trayectorias alternativas ($u$, $m$, $d$) ponderadas por sus respectivas probabilidades neutrales al riesgo ($p_u, p_m, p_d$).}
 \label{fig:trinomial_structure}
 \end{figure}
 
@@ -103,6 +112,28 @@ Este es el error más crítico y ocurre cuando el valor de la opción es altamen
 
 \subsubsection{1. Problemas cerca de la barrera en cualquier momento del tiempo}
 Para las opciones barrera, la no linealidad ocurre durante toda la vida de la opción siempre que el precio se acerca a la barrera $H$. La probabilidad de tocar la barrera salta discretamente dependiendo de la disposición de los nodos, causando una convergencia ``dentada''. Además, cuando $S_0$ está extremadamente cerca de $H$, el modelo sufre del ``problema del límite'', requiriendo un número intratable de pasos temporales para alinear la red.
+
+En la \autoref{fig:dummy_trinomial_error} se aprecia cómo, en un árbol estándar, la barrera continua $H=\$220$ queda atrapada entre los niveles discretos de $\$215$ y $\$230$. Si la condición de barrera se poda en el nodo superior (\$230), se sobrestima la probabilidad de extinción, mientras que si se poda en el inferior (\$215), se la subestima de forma sistemática.
+
+\begin{figure}[H]
+\centering
+\makebox[\textwidth][c]{%
+    \includegraphics[width=1.5\textwidth]{./03_metodos_valoracion/figures/dummy_trinomial_error.png}
+}
+\caption{Error de discretización geométrica en un árbol trinomial estándar cuando la barrera continua ($H=\$220$) no coincide con una capa de nodos discretos. El salto abrupto entre \$215 y \$230 distorsiona la detección del evento de barrera.}
+\label{fig:dummy_trinomial_error}
+\end{figure}
+
+Para intentar solucionar esto, el modelo RTM (Restricted Trinomial Model), ilustrado en la \autoref{fig:dummy_trinomial_rtm}, recalibra los pasos de precio para obligar a que una línea de nodos coincida exactamente con la barrera $H$. No obstante, hereda el ``problema del límite'': si el precio inicial $S_0$ se halla muy próximo a $H$, el espaciamiento requerido es tan diminuto que el número de pasos temporales $N$ explota cuadráticamente, volviendo el cálculo intratable.
+
+\begin{figure}[H]
+\centering
+\makebox[\textwidth][c]{%
+    \includegraphics[width=1.5\textwidth]{./03_metodos_valoracion/figures/dummy_trinomial_rtm.png}
+}
+\caption{Árbol Trinomial Restringido forzado a alinear una capa horizontal de nodos directamente sobre la barrera $H=\$230$. Aunque previene el sesgo de poda en la frontera roja, sufre una severa explosión de complejidad temporal si $S_0$ se sitúa a poca distancia de $H$.}
+\label{fig:dummy_trinomial_rtm}
+\end{figure}
 
 \subsubsection{2. Problemas al momento del vencimiento (Opciones Vanilla)}
 Para las opciones estándar (vanilla), la mayor no linealidad ocurre exclusivamente al vencimiento $T$, alrededor del precio de ejercicio $K$. El pago de la opción tiene un punto de quiebre brusco. En modelos de redes, esto produce oscilaciones en el error de valoración (históricamente conocido en modelos binomiales como convergencia ``par-impar'') porque la alineación de los nodos finales con el strike $K$ cambia drásticamente según la cantidad de pasos elegidos.
@@ -361,16 +392,34 @@ Al sustituir esa perturbación gruesa por la ramificación cuadrinomial, el AMM 
 \section{Ventajas del AMM}
 
 \begin{itemize}
-    \item \textbf{Eficiencia extrema}: Aumenta la precisión en órdenes de magnitud con incremento mínimo en tiempo de ejecución
+    \item \textbf{Eficiencia extrema}: Aumenta la precisión en órdenes de magnitud con incremento mínimo en tiempo de ejecución.
     
-    \item \textbf{Escalabilidad}: Permite abordar problemas que son computacionalmente prohibitivos con métodos estándar
+    \item \textbf{Escalabilidad}: Permite abordar problemas que son computacionalmente prohibitivos con métodos estándar (resolviendo el problema del límite).
     
-    \item \textbf{Flexibilidad}: Aplicable a opciones vanilla, barrera y cálculo de griegas con estructuras específicas para cada caso
+    \item \textbf{Flexibilidad}: Aplicable a opciones vanilla, barrera y cálculo de griegas con estructuras específicas para cada caso.
     
-    \item \textbf{Convergencia mejorada}: Elimina el comportamiento ``par-impar'' y la convergencia ``dentada'' de los modelos estándar
+    \item \textbf{Convergencia mejorada}: Elimina el comportamiento ``par-impar'' y la convergencia ``dentada'' de los modelos estándar.
     
     \item \textbf{Aplicaciones prácticas}: Especialmente valioso para cálculo de volatilidad implícita (que requiere múltiples valoraciones repetitivas) y opciones exóticas complejas
 \end{itemize}
+
+\subsection{Análisis de Convergencia y Eficiencia Numérica}
+
+Para cuantificar las ventajas prácticas del AMM frente a los métodos discretos tradicionales, se contrastó el desempeño del árbol Binomial (CRR), el árbol Trinomial estándar de Boyle-Lau y dos variantes del Modelo de Malla Adaptativa: AMM-1 (un nivel de refinamiento fino) y AMM-2 (dos niveles de refinamiento fino).
+
+En la \autoref{fig:amm_convergence_efficiency} se visualizan los resultados en términos del Error Cuadrático Medio (RMSE) respecto al valor teórico analítico y su relación con el tiempo de cálculo computacional.
+
+\begin{figure}[H]
+\centering
+\makebox[\textwidth][c]{%
+    \includegraphics[width=0.74\textwidth]{./03_metodos_valoracion/figures/convergence_rmse_vs_N.png}
+    \includegraphics[width=0.74\textwidth]{./03_metodos_valoracion/figures/convergence_efficiency.png}
+}
+\caption{Convergencia del error y eficiencia computacional del AMM frente a modelos de red estándar. A la izquierda, evolución del RMSE en función del número de pasos temporales $N$ (escala logarítmica). A la derecha, diagrama de eficiencia (RMSE vs. tiempo de ejecución en segundos), evidenciando que el AMM-2 alcanza un error inferior a $10^{-4}$ con un tiempo de cómputo sustancialmente menor al de un trinomial estándar de miles de pasos.}
+\label{fig:amm_convergence_efficiency}
+\end{figure}
+
+El gráfico de la izquierda demuestra que, para cualquier cantidad de pasos $N$, el AMM reduce el RMSE en más de dos órdenes de magnitud respecto al árbol trinomial y tres respecto al binomial. Más importante aún es el gráfico de eficiencia de la derecha: al graficar el error contra el tiempo real de procesador, se comprueba que el pequeño sobrecosto operacional de gestionar la malla fina local es ampliamente compensado por la dramática aceleración de la convergencia. Para un broker o institución financiera que requiere cotizar miles de contratos por segundo, AMM-2 ofrece la combinación óptima entre precisión de grado analítico y velocidad de respuesta.
 
 \section{Consistencia Matemática}
 

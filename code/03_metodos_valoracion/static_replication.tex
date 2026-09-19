@@ -115,3 +115,70 @@ Dado que en el mundo real los precios de las acciones son continuos, una replica
 \end{enumerate}
 
 Por ejemplo, los autores demuestran que al pasar de un portafolio de 6 opciones (ajuste bimestral) a uno de 24 opciones (ajuste quincenal) para replicar una opción up-and-out a un año, el error de valor teórico se reduce drásticamente, logrando que el comportamiento del portafolio replicante sea casi indistinguible del de la opción exótica objetivo.
+
+\section{Ejemplo Práctico: Replicación de una Put Down-and-In}
+\label{sec:ejemplo_replicacion_estatica}
+
+\subsection{Motivación de Mercado: La Alternativa a los Mercados OTC}
+
+En la práctica financiera, las opciones barrera suelen negociarse en mercados no estandarizados o sobre el mostrador (\textit{Over The Counter}, OTC). Estos contratos bilaterales privados conllevan riesgos significativos para empresas, tesorerías y productores agropecuarios:
+\begin{enumerate}
+    \item \textbf{Asimetría de información}: La entidad financiera que estructura el derivado exótico posee modelos cuantitativos sofisticados y fija un margen de intermediación elevado.
+    \item \textbf{Riesgo de contraparte}: Al no existir una cámara compensadora centralizada que garantice la liquidación, el comprador asume el riesgo crediticio de su contraparte.
+    \item \textbf{Falta de liquidez}: Resulta muy difícil desarmar o revender una posición exótica antes de su vencimiento si las condiciones del negocio cambian.
+\end{enumerate}
+
+Frente a este escenario, los mercados institucionalizados y regulados (como Matba-ROFEX o ByMA en Argentina, o CME Group a nivel internacional) ofrecen exclusivamente opciones estándar \textit{vanilla}, las cuales cuentan con cotización pública continua, márgenes de garantía regulados y máxima liquidez. La Replicación Estática de Derman, Ergener y Kani provee precisamente la receta matemática y operativa para que un inversor o tesorero pueda construir su propia opción barrera sintética utilizando únicamente opciones vanilla negociadas en bolsas reguladas, eliminando por completo la necesidad de acudir a mercados OTC opacos.
+
+\subsection{Construcción Numérica del Portafolio}
+
+Retomando el caso de la opción Put Down-and-In sobre la soja presentado en capítulos previos ($S_0 = \$300/\text{tn}$, strike $K = \$260/\text{tn}$, barrera $H = \$220/\text{tn}$, vencimiento $T = 6\text{ meses} = 0.5\text{ años}$), aplicamos la relación de paridad universal:
+\begin{equation}
+P_{\text{vanilla}} = P_{\text{DO}} + P_{\text{DI}} \iff P_{\text{DI}} = P_{\text{vanilla}} - P_{\text{DO}}
+\end{equation}
+
+El algoritmo procede en dos etapas:
+
+\textbf{Paso 1: Replicación de la Put Down-and-Out ($P_{\text{DO}}$)}\\
+Se discretiza la vida de la opción en intervalos mensuales ($t_1 = 1/12, t_2 = 2/12, \dots, t_6 = 6/12$). Al vencimiento $T=6\text{ meses}$, se adquiere una Put estándar con strike $K=260$. Luego, para forzar que el valor del portafolio se anule sobre la barrera $H=220$ en cada fecha de control sin alterar el pago final, se incorporan puts con strike $K=H=\$220$ con vencimientos $t_i$. Resolviendo el sistema recursivo de pesos hacia atrás en el tiempo, se obtienen las siguientes posiciones:
+\begin{itemize}
+    \item Venta en corto (\textit{short}) de $8.44$ puts con $K = \$220$ y $T = 6\text{ meses}$
+    \item Compra (\textit{long}) de $3.21$ puts con $K = \$220$ y $T = 5\text{ meses}$
+    \item Compra (\textit{long}) de $1.12$ puts con $K = \$220$ y $T = 4\text{ meses}$
+    \item Compra (\textit{long}) de $0.56$ puts con $K = \$220$ y $T = 3\text{ meses}$
+    \item Compra (\textit{long}) de $0.34$ puts con $K = \$220$ y $T = 2\text{ meses}$
+    \item Compra (\textit{long}) de $0.22$ puts con $K = \$220$ y $T = 1\text{ mes}$
+\end{itemize}
+El costo acumulado de este portafolio estático replicante resulta ser de $\$1.534$.
+
+\textbf{Paso 2: Deducción de la Put Down-and-In ($P_{\text{DI}}$)}\\
+Restando este portafolio de la Put estándar ($P_{\text{vanilla}} \approx \$2.236$), los signos de las opciones de ajuste se invierten, conformando el portafolio definitivo de la opción Down-and-In:
+\begin{itemize}
+    \item Compra de $8.44$ puts con $K = \$220$ y $T = 6\text{ meses}$
+    \item Venta en corto de $3.21$ puts con $K = \$220$ y $T = 5\text{ meses}$
+    \item Venta en corto de $1.12$ puts con $K = \$220$ y $T = 4\text{ meses}$
+    \item Venta en corto de $0.56$ puts con $K = \$220$ y $T = 3\text{ meses}$
+    \item Venta en corto de $0.34$ puts con $K = \$220$ y $T = 2\text{ meses}$
+    \item Venta en corto de $0.22$ puts con $K = \$220$ y $T = 1\text{ mes}$
+\end{itemize}
+
+El valor neto de adquisición de este portafolio es:
+\begin{equation}
+P_{\text{DI}}^{\text{estático}} = 2.236 - 1.534 = \$0.702/\text{tn}
+\end{equation}
+Este valor se aproxima con notable exactitud a la prima teórica continua de Reiner y Rubinstein ($0.847$), utilizando apenas $6$ puntos discretos de control mensual.
+
+\subsection{Convergencia del Error en Función del Número de Ajustes}
+
+La precisión de la cobertura estática depende de la densidad de opciones utilizadas. En la \autoref{fig:static_convergence_dip} se presenta la evolución del error relativo porcentual respecto al valor exacto de Reiner-Rubinstein al variar la cantidad de opciones de ajuste $N$ en la frontera.
+
+\begin{figure}[H]
+\centering
+\makebox[\textwidth][c]{%
+  \includegraphics[width=1.5\textwidth]{./03_metodos_valoracion/figures/static_convergence_dip.png}
+}
+\caption{Evolución del error relativo porcentual de la Replicación Estática frente al modelo de Reiner-Rubinstein para una opción Put Down-and-In en función del número de instrumentos de cobertura $N$. A medida que aumenta la densidad temporal de las opciones de ajuste, el desajuste en la frontera se reduce suavemente hacia cero.}
+\label{fig:static_convergence_dip}
+\end{figure}
+
+Como se observa en la figura, al incrementar el número de instrumentos de ajuste $N$, el error relativo desciende de manera consistente. Un portafolio con $N=24$ ajustes quincenales reduce el desajuste a niveles inferiores al $5\%$, proporcionando una cobertura sumamente robusta sin exigir la intervención dinámica permanente del operador en el mercado.
