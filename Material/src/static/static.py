@@ -9,7 +9,7 @@ def replication_dek_barrier(S0, K, B, T, r, d, sigma, N=10, is_up=True, option_t
     # El portafolio comienza con 1 opción vanilla original
     # Portafolio: Lista de diccionarios {tipo, strike, vencimiento, peso}
     portfolio = [{'type': option_type, 
-                  'K': K, 'T': T, 'w': 1.0}]
+                  'K': K, 'T': T, 'w': 1.0, 'v_port': 0, 'v_adj': 0}]
     
     # Determinamos el instrumento de ajuste según las reglas de frontera DEK:
     # - Fronteras superiores (up barriers): usar CALLS con K >= B
@@ -41,7 +41,7 @@ def replication_dek_barrier(S0, K, B, T, r, d, sigma, N=10, is_up=True, option_t
         
         # Añadir la nueva opción al portafolio
         # La opción vence en T (vencimiento final), pero se añade en tiempo t_exp
-        portfolio.append({'type': adj_type, 'K': adj_strike, 'T': t_exp, 'w': alpha_i})
+        portfolio.append({'type': adj_type, 'K': adj_strike, 'T': t_exp, 'w': alpha_i, 'v_port': v_port, 'v_adj': black_scholes(S0, B, t_exp, r, d, sigma, adj_type)})
         
     return portfolio
 
@@ -72,4 +72,4 @@ def static_portfolio(S0, K, B, T, r, d, sigma, N_ajustes, isCall=True, isIn=True
         vanilla = black_scholes(S0, K, T, r, d, sigma, option_type)
         value = vanilla - value
         
-    return max(value, 0.0)
+    return max(value, 0.0), portafolio

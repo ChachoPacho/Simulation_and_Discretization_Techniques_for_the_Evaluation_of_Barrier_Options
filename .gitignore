@@ -6,3 +6,21 @@ out/*
 Material/src/venv
 
 **/*.pyc
+Material/src/data/random_savings_samples.json
+
+# LaTeX temp files in code/
+code/*.aux
+code/*.log
+code/*.toc
+code/*.lof
+code/*.lol
+code/*.out
+code/*.bbl
+code/*.blg
+code/*.fdb_latexmk
+code/*.fls
+code/*.synctex.gz
+code/*.acn
+code/*.glo
+code/*.xdy
+code/main.pdf
