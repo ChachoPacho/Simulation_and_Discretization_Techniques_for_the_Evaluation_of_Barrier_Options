@@ -5,8 +5,8 @@ out/*
 
 Material/src/venv
 
-**/*.pyc
-Material/src/data/random_savings_samples.json
+Material/src/data/random_savings_samples*
+Material/src/**/__pycache__/
 
 # LaTeX temp files in code/
 code/*.aux
